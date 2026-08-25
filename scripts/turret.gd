@@ -97,6 +97,7 @@ func _face_direction(direction: Vector2) -> void:
 func _shoot() -> void:
 	if bullet_scene == null:
 		return
+	AudioFX.play(preload("res://assets/audio/sfx/turret_shoot.wav"), -6.0)
 	var bullet: Node2D = bullet_scene.instantiate()
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = firing_point.global_position

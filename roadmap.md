@@ -71,6 +71,9 @@ configuration or known unit-scale errors.
       drag/drop; attached combat cars follow its route history as a trailing consist.
 - [x] Complete the first cohesion pass: stronger rails and curves, lane/danger guides,
       larger linked cars, smoke, animated enemies, combat feedback, and a train-aware HUD.
+- [ ] Converge on the recovered illustrated control-desk reference: wooden full-height
+      cabinets, illustrated inventory grid, transport/tutorial controls, challenges,
+      bottom station-health bar, and narrow embedded modular rails.
 
 ### Verification
 

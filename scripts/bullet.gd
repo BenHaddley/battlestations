@@ -19,6 +19,7 @@ func _physics_process(delta: float) -> void:
 
 func _on_body_entered(body: Node2D) -> void:
 	_spawn_hit_effect()
+	AudioFX.play(preload("res://assets/audio/sfx/spider_hit.wav"), -4.0)
 	if body.has_method("take_damage"):
 		body.take_damage(bullet_damage)
 	queue_free()

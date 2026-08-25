@@ -15,6 +15,7 @@ func take_damage(dmg: int) -> void:
 		is_destroyed = true
 		GameEvents.enemy_destroyed.emit()
 		LevelManager.increase_currency(currency_worth)
+		AudioFX.play(preload("res://assets/audio/sfx/spider_death.wav"), -3.0)
 		if get_parent().has_method("play_destroyed_effect"):
 			get_parent().play_destroyed_effect(currency_worth)
 		get_parent().queue_free()

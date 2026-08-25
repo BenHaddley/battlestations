@@ -16,6 +16,8 @@ signal train_drop_requested(tower_index: int, screen_position: Vector2)
 @onready var gunner_button: Button = $LeftPanel/Margin/VBox/GunnerButton
 @onready var slomo_button: Button = $LeftPanel/Margin/VBox/SlomoButton
 @onready var next_wave_button: Button = $LeftPanel/Margin/VBox/NextWaveButton
+@onready var station_bar: ProgressBar = $StationBar
+@onready var station_bar_label: Label = $StationBar/Label
 
 @onready var name_label: Label = $RightPanel/Margin/VBox/NameLabel
 @onready var cost_label: Label = $RightPanel/Margin/VBox/CostLabel
@@ -65,6 +67,9 @@ func _process(_delta: float) -> void:
 
 	if station:
 		health_label.text = "♥ Station  %d/%d" % [station.current_health, station.max_health]
+		station_bar.max_value = station.max_health
+		station_bar.value = station.current_health
+		station_bar_label.text = "%d / %d" % [station.current_health, station.max_health]
 
 	if spawner:
 		wave_label.text = "Wave  %d" % spawner.current_wave

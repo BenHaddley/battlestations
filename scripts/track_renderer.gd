@@ -5,7 +5,7 @@ class_name TrackRenderer
 
 @export var rail_texture: Texture2D
 @export var curve_texture: Texture2D
-@export var tile_scale: float = 0.14
+@export var tile_scale: float = 0.105
 @export var path_step: float = 90.0
 @export var track_bounds: Rect2 = Rect2(-330.0, -270.0, 660.0, 810.0)
 @export_range(3, 4) var minimum_sweeps: int = 3
@@ -65,7 +65,7 @@ func _render_path() -> void:
 	for index in range(path_points.size()):
 		var shadow := Sprite2D.new()
 		shadow.texture = rail_texture
-		shadow.scale = Vector2(tile_scale * 1.08, tile_scale * 1.08)
+		shadow.scale = Vector2(tile_scale * 1.12, tile_scale * 1.12)
 		shadow.position = path_points[index] + Vector2(0.0, 7.0)
 		shadow.modulate = Color(0.04, 0.035, 0.025, 0.38)
 		shadow.z_index = -7
