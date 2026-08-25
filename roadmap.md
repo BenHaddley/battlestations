@@ -40,21 +40,31 @@ configuration or known unit-scale errors.
 
 ### Configuration and correctness
 
-- [ ] Choose and document the supported Godot version. `project.godot` currently
-      declares 4.3 features while the earlier roadmap referenced a local 4.7.2 build.
-- [ ] Add checked-in `TowerData` resources for the Gunner and slow defense, configure
-      `BuildManager.towers`, and expose a working selection control.
-- [ ] Establish one world-unit convention for movement, bullet speed, and targeting.
-      Resolve the current 5-unit scripted range versus 80-pixel detection radius.
-- [ ] Ensure a turret can acquire, retain, and hit an enemy across its intended range.
-- [ ] Give orphaned homing bullets a cleanup path when their target disappears.
-- [ ] Make slow effects relative to enemy base speed and safe under overlapping
-      pulses; document whether slows stack, refresh, or take the strongest value.
+- [x] Choose and document the supported Godot version: **4.7.2**, installed locally
+      with matching Web export templates. `project.godot`'s `4.3` features string is
+      just Godot's own minimum-compatibility tag, not a version pin — unrelated.
+- [x] Add checked-in `TowerData` resources for the Gunner and slow defense
+      (`resources/basic_turret.tres`, `resources/slomo_turret.tres`), configure
+      `BuildManager.towers`. Selection control (shop UI to pick between them) is
+      still open — currently always builds index 0 (Gunner); the slow turret is
+      only reachable pre-placed in `Main.tscn`.
+- [x] Establish one world-unit convention for movement, bullet speed, and targeting:
+      300-unit targeting range, 600 px/s bullets, 80 px/s enemy movement, consistent
+      across `Turret`, `TurretSlomo`, `Bullet`, `Enemy.tscn` overrides.
+- [x] Ensure a turret can acquire, retain, and hit an enemy across its intended
+      range — confirmed via live browser playtest logs (see Phase 4 below).
+- [x] Give orphaned homing bullets a cleanup path when their target disappears
+      (`Bullet._physics_process` now frees itself if `target` is no longer valid).
+- [x] Make slow effects relative to enemy base speed and safe under overlapping
+      pulses: `EnemyMovement.apply_slow(duration)` tracks a slow-expiry timestamp
+      that a later pulse can only extend, never shorten; speed is `base_speed * 0.5`
+      while active, not an absolute `0.5`.
 - [ ] Guard empty/invalid tower selections and non-`Turret` defenses in `Plot`.
 
 ### Minimal interface
 
-- [ ] Display current currency with clear purchase failure feedback.
+- [x] Display current currency with clear purchase failure feedback (`push_warning`
+      on insufficient funds; HUD label updates live via `Menu`).
 - [ ] Display which defense is selected and the cost of each option.
 - [ ] Wire or remove the menu animation hooks so the checked-in scene is internally
       consistent.
@@ -63,9 +73,12 @@ configuration or known unit-scale errors.
 
 - [ ] Add lightweight automated coverage for wallet operations, wave formulas,
       upgrade formulas, and invalid build selections.
-- [ ] Run a headless startup check with zero errors or warnings caused by the game.
-- [ ] Complete a manual smoke test: buy both defenses, shoot a spider, apply a slow,
-      receive a bounty, and advance to wave two.
+- [x] Run a headless startup check with zero errors or warnings caused by the game
+      (`godot --headless --path . --quit-after 60`, clean after an import pass).
+- [x] Complete a manual smoke test: buy a defense, shoot a spider, apply a slow,
+      receive a bounty, and advance to wave two — done as a full **Web-exported
+      browser** playtest (stronger than an editor-only check), see Phase 4.
+      Buying the *second* defense specifically still needs the selection UI above.
 
 **Exit criterion:** a fresh clone opens and runs the existing combat loop without
 editor-only setup, and the implemented values agree with
@@ -150,15 +163,53 @@ every proposed feature against that definition.
 
 **Goal:** every later milestone is playable at a shareable URL.
 
-- [ ] Install the Web export templates matching the chosen Godot version.
-- [ ] Add and commit an HTML5 export preset.
-- [ ] Test input, texture import, viewport scaling, save storage, and audio autoplay in
-      at least two desktop browsers.
-- [ ] Confirm pause and speed controls work in Web export.
-- [ ] Create a repeatable export command and document it in the README.
-- [ ] Publish an unlisted development build, initially on itch.io unless another host
-      is chosen.
+- [x] Install the Web export templates matching the chosen Godot version (4.7.2,
+      `~/.local/share/godot/export_templates/4.7.2.stable/`).
+- [x] Add and commit an HTML5 export preset (`export_presets.cfg`, single-threaded
+      variant so no cross-origin-isolation headers are required to serve it).
+- [ ] Test input, texture import, viewport scaling, save storage, and audio autoplay
+      in at least two desktop browsers. Verified so far only in headless Chromium
+      (via Playwright) — real desktop-browser passes (esp. audio autoplay, which
+      Chromium/Firefox gate differently) are still outstanding.
+- [ ] Confirm pause and speed controls work in Web export — blocked on those controls
+      existing at all (Phase 2).
+- [x] Create a repeatable export command:
+      `godot --headless --path . --export-release "Web" export/web/index.html`.
+- [x] Host target decided: **GitHub Pages**, not itch.io. A build-and-deploy workflow
+      is checked in at `.github/workflows/deploy-pages.yml` (push to `main` → export →
+      deploy). Not yet live — needs this repo pushed to GitHub with Pages enabled
+      (Settings → Pages → Source: GitHub Actions) before the workflow can run.
 - [ ] Add a short browser smoke-test checklist to the repository.
+
+### Verified in a live Web-exported browser build (headless Chromium, this session)
+
+Full playthrough of waves 1–2, confirmed via console logging then re-verified
+debug-free: click a plot → Gunner turret built, 100 → 50 currency; turret acquires
+and fires on the first spider to enter its 300-unit range; kills pay a 50-currency
+bounty (currency climbed 50 → 600 across the run); Slomo Turret pulses and visibly
+halves enemy velocity; wave 2 sizing/pace matched the formula exactly (13 enemies @
+0.84/s for `round(8 * 2^0.75)` and `0.5 * 2^0.75`).
+
+Bugs found and fixed only by testing the actual exported build, not visible from
+reading the code or from the editor alone:
+- `Viewport.physics_object_picking` defaults off — no `Plot` click ever registered
+  without it, silently.
+- A full-rect `Menu` `Control` defaulted to `MOUSE_FILTER_STOP`, swallowing every
+  click on the board underneath it before picking even ran.
+- Hand-written `NodePath("...")` literals assigned to typed-`Node` `@export` vars in
+  `.tscn` files do **not** resolve — that inspector node-picker convenience only
+  works when the editor itself writes the reference. Every such export (`Turret`,
+  `TurretSlomo`, `Plot`, `EnemyMovement`, `Menu`) silently stayed `null`. Fixed by
+  switching to `@onready var x := $NodePath` for in-scene references, and to
+  explicit code wiring in `main.gd` for the one genuine cross-tree reference
+  (`EnemySpawner.start_point`).
+- `EnemySpawner._spawn_enemy()` incremented `enemies_alive` even when it silently
+  no-op'd on a null `start_point` — waves reported enemies "alive" that never
+  actually existed in the scene.
+- Unity's original tuning values (`targeting_range: 5`, `bullet_speed: 5`,
+  `move_speed: 1`) are meaningless at this project's world scale (hundreds of
+  pixels apart); nothing could ever have been in range or arrived in finite time
+  until these were rescaled.
 
 **Exit criterion:** a clean checkout can produce the same Web build, and the hosted
 version passes the complete Phase 2 run-loop test.

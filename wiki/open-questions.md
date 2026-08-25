@@ -29,10 +29,11 @@ question is resolved, then update the affected design page.
 
 | Question | Why it matters | Current evidence |
 |---|---|---|
-| What world-unit scale should targeting, bullets, and movement use? | Current defaults mix 5-unit script ranges with 80-pixel collision areas. | Directly visible in active scripts/scenes. |
+| ~~What world-unit scale should targeting, bullets, and movement use?~~ **Resolved** | Current defaults mixed 5-unit script ranges with 80-pixel collision areas. | Standardized: 300-unit targeting range, 600 px/s bullets, 80 px/s movement, applied consistently across `Turret`, `TurretSlomo`, `Bullet`, `Enemy.tscn`. Verified working in a live browser playtest. |
 | Should a leak and a kill be separate events? | Base damage, bounty, stats, and wave accounting need different semantics. | Both currently emit `enemy_destroyed`. |
 | What targeting policy should turrets use? | Strongly affects strategy and balance. | Current code uses the first overlap returned by physics. |
-| What is the supported Godot version? | Required for reproducible exports. | Project features say 4.3; roadmap mentions a local 4.7.2 engine. |
+| ~~What is the supported Godot version?~~ **Resolved** | Required for reproducible exports. | **4.7.2**, installed locally with matching export templates. Project `features` string (`4.3`) is Godot's own minimum-compatibility tag, unrelated to the actual engine version used. |
+| What is the shop's selection UI going to look like? | Two `TowerData` entries now exist (Gunner, Slomo Turret) but nothing lets the player pick between them — `BuildManager.selected_tower` always defaults to 0. | New this session, not previously tracked. |
 
 ## Recovery checklist
 

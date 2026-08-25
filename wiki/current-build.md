@@ -9,13 +9,15 @@ main scene contains one board, five route markers, three build plots, one enemy
 spawner, and a currency label. The port closely preserves the eleven original Unity
 gameplay scripts as GDScript plus four autoload managers.
 
-The build should be treated as a scaffold rather than a finished playable slice. In
-particular, `BuildManager.towers` has no checked-in resource entries, so clicking a
-plot may fail until the tower catalog is configured.
+The build should be treated as a scaffold, not a finished playable slice — but the
+core plot → build → shoot → kill → currency → wave-scaling loop is now verified
+working end to end, including in an actual Web-exported browser build (see
+[Roadmap, Phase 4](../roadmap.md) for the full verification notes and the bugs that
+testing-in-browser caught that code review and the editor alone did not).
 
 ## Running the project
 
-With a compatible Godot 4 executable installed:
+With a compatible Godot 4 executable installed (developed against 4.7.2):
 
 ```sh
 godot --editor --path .
@@ -24,11 +26,20 @@ godot --editor --path .
 For a headless startup check:
 
 ```sh
+godot --headless --path . --import   # first run, or after adding assets
 godot --headless --path . --quit-after 60
 ```
 
-The configured entry scene is `scenes/Main.tscn`. No Web export preset is currently
-checked in.
+The configured entry scene is `scenes/Main.tscn`. A Web export preset is checked in
+(`export_presets.cfg`); build it with:
+
+```sh
+godot --headless --path . --export-release "Web" export/web/index.html
+```
+
+`export/` is gitignored — it's a build artifact, not source. A GitHub Actions
+workflow (`.github/workflows/deploy-pages.yml`) builds and deploys this to GitHub
+Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 
 ## Runtime architecture
 
@@ -59,7 +70,9 @@ checked in.
 
 ## Known gaps and risks
 
-- No tower catalog is serialized into `BuildManager`.
+- `BuildManager.towers` now has two checked-in `TowerData` resources (Gunner, Slomo
+  Turret), but there's still no shop UI to pick between them — the game always
+  builds index 0. The slow turret is only reachable pre-placed in `Main.tscn`.
 - No base health or penalty for leaked enemies.
 - No win, loss, pause, restart, or speed-control flow.
 - Upgrade methods exist, but no upgrade panel is wired in `Turret.tscn`.
@@ -67,12 +80,13 @@ checked in.
 - Only one generic enemy is spawnable; most art has no gameplay scene.
 - Target selection uses the first overlapping physics body, with no explicit
   first/last/strongest targeting policy.
-- The slow sets speed to an absolute `0.5`, not 50% of each enemy's base speed;
-  overlapping reset timers may also restore speed earlier than expected.
-- A homing bullet whose target disappears remains alive because it has no fallback
-  lifetime or cleanup path.
 - Route completion and enemy death share one event. That is adequate for wave
   accounting, but cannot distinguish kills from leaks.
+
+Resolved this session (were previously listed here): the slow effect now reduces
+speed relative to each enemy's own base speed and safely extends under overlapping
+pulses rather than racing; a homing bullet whose target disappears now frees itself
+instead of drifting forever.
 
 See [Roadmap](../roadmap.md) for planned work rather than treating these gaps as
 settled solutions.
