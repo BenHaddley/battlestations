@@ -1,0 +1,15 @@
+# Unity (legacy_unity/ reference project)
+/Library/
+/Temp/
+/Logs/
+/UserSettings/
+/obj/
+*.csproj
+*.sln
+*.userprefs
+.vs/
+
+# Godot
+/.godot/
+/export/
+*.translation
