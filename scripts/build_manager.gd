@@ -1,7 +1,10 @@
 extends Node
 ## Autoload. Holds the tower catalog and which entry the shop panel has selected.
 
-@export var towers: Array[TowerData] = []
+## Autoload scripts have no scene to wire exports in from the Inspector, so
+## the starter roster is preloaded here directly. Extend this array as more
+## TowerData resources are added under resources/.
+@export var towers: Array[TowerData] = [preload("res://resources/basic_turret.tres")]
 
 var selected_tower: int = 0
 

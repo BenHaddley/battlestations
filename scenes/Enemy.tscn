@@ -12,7 +12,7 @@ height = 40.0
 collision_layer = 2
 collision_mask = 1
 script = ExtResource("1")
-health = NodePath("Health")
+move_speed = 80.0
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("3")

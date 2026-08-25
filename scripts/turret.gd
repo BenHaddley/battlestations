@@ -3,11 +3,12 @@ class_name Turret
 ## Standard damage turret. Acquires the first spider overlapping its
 ## TargetingArea, rotates to face it, fires on a timer. Upgradable in place.
 
-@export var turret_rotation_point: Node2D
 @export var bullet_scene: PackedScene
-@export var firing_point: Node2D
-@export var targeting_area: Area2D
 @export var upgrade_ui: Control
+
+@onready var turret_rotation_point: Node2D = $RotationPoint
+@onready var firing_point: Node2D = $RotationPoint/FiringPoint
+@onready var targeting_area: Area2D = $TargetingArea
 
 @export_group("Attributes")
 @export var targeting_range: float = 5.0

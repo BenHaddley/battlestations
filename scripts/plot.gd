@@ -3,27 +3,25 @@ class_name Plot
 ## Clickable build tile. Hover tint, buys the shop's selected tower when
 ## empty, opens that turret's upgrade panel when occupied.
 
-@export var sprite: Sprite2D
 @export var hover_color: Color = Color(1, 1, 1, 0.6)
+
+@onready var sprite: Sprite2D = $Sprite2D
 
 var tower_node: Node2D = null
 var turret: Turret = null
 var start_color: Color
 
 func _ready() -> void:
-	if sprite:
-		start_color = sprite.modulate
+	start_color = sprite.modulate
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
 	input_event.connect(_on_input_event)
 
 func _on_mouse_entered() -> void:
-	if sprite:
-		sprite.modulate = hover_color
+	sprite.modulate = hover_color
 
 func _on_mouse_exited() -> void:
-	if sprite:
-		sprite.modulate = start_color
+	sprite.modulate = start_color
 
 func _on_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:

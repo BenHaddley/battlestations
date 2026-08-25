@@ -12,6 +12,7 @@ func set_target(t: Node2D) -> void:
 
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(target):
+		queue_free()
 		return
 	var direction: Vector2 = (target.global_position - global_position).normalized()
 	global_position += direction * bullet_speed * delta

@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/board/THE_BOARD.png" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Plot.tscn" id="2"]
@@ -6,9 +6,13 @@
 [ext_resource type="Script" path="res://scripts/enemy_spawner.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/menu.gd" id="5"]
 [ext_resource type="Script" path="res://scripts/main.gd" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/TurretSlomo.tscn" id="7"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("6")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(0.6, 0.6)
 
 [node name="Board" type="Sprite2D" parent="."]
 texture = ExtResource("1")
@@ -41,10 +45,12 @@ position = Vector2(0, -120)
 [node name="Plot3" parent="Plots" instance=ExtResource("2")]
 position = Vector2(200, -120)
 
+[node name="SlomoTurret1" parent="." instance=ExtResource("7")]
+position = Vector2(0, 100)
+
 [node name="EnemySpawner" type="Node2D" parent="."]
 script = ExtResource("4")
 enemy_prefabs = Array[PackedScene]([ExtResource("3")])
-start_point = NodePath("../Path/StartPoint")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -52,8 +58,8 @@ start_point = NodePath("../Path/StartPoint")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 2
 script = ExtResource("5")
-currency_label = NodePath("CurrencyLabel")
 
 [node name="CurrencyLabel" type="Label" parent="CanvasLayer/Menu"]
 offset_left = 20.0

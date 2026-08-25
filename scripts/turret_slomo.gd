@@ -3,7 +3,7 @@ class_name TurretSlomo
 ## Crowd-control turret. Deals no damage — pulses its TargetingArea on a
 ## timer and halves the speed of everything caught inside for a fixed time.
 
-@export var targeting_area: Area2D
+@onready var targeting_area: Area2D = $TargetingArea
 
 @export_group("Attributes")
 @export var targeting_range: float = 5.0
@@ -19,14 +19,6 @@ func _process(delta: float) -> void:
 		time_until_fire = 0.0
 
 func _freeze_enemies() -> void:
-	if targeting_area == null:
-		return
 	for body in targeting_area.get_overlapping_bodies():
-		if body.has_method("update_speed"):
-			body.update_speed(0.5)
-			_reset_after_delay(body)
-
-func _reset_after_delay(enemy: Node) -> void:
-	await get_tree().create_timer(freeze_time).timeout
-	if is_instance_valid(enemy) and enemy.has_method("reset_speed"):
-		enemy.reset_speed()
+		if body.has_method("apply_slow"):
+			body.apply_slow(freeze_time)
