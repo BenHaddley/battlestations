@@ -9,6 +9,7 @@ class_name EnemyMovement
 @onready var health: Health = $Health
 @onready var spider_sprite: Sprite2D = $Sprite2D
 
+var health_dots: SpiderHealthDots
 var base_speed: float
 var leak_y: float = 720.0
 var lane_configured: bool = false
@@ -23,6 +24,10 @@ var _slow_expires_at: int = 0
 func _ready() -> void:
 	base_speed = move_speed
 	primary_texture = spider_sprite.texture
+	health_dots = SpiderHealthDots.new()
+	spider_sprite.add_child(health_dots)
+	health.hit_points_changed.connect(health_dots.set_hit_points)
+	health_dots.set_hit_points(health.hit_points, health.max_hit_points)
 
 func configure_lane(destination_y: float) -> void:
 	leak_y = destination_y

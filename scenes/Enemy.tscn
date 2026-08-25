@@ -13,7 +13,7 @@ height = 72.0
 collision_layer = 2
 collision_mask = 1
 script = ExtResource("1")
-move_speed = 180.0
+move_speed = 50.0
 alternate_texture = ExtResource("4")
 z_index = 30
 

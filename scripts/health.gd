@@ -3,13 +3,20 @@ class_name Health
 ## Sits as a child of an enemy body. Pays out the kill bounty and despawns
 ## the enemy once hit points run out.
 
-@export var hit_points: int = 2
+signal hit_points_changed(current: int, max_hit_points: int)
+
+@export var hit_points: int = 15
 @export var currency_worth: int = 50
 
 var is_destroyed: bool = false
+var max_hit_points: int
+
+func _ready() -> void:
+	max_hit_points = hit_points
 
 func take_damage(dmg: int) -> void:
 	hit_points -= dmg
+	hit_points_changed.emit(maxi(hit_points, 0), max_hit_points)
 
 	if hit_points <= 0 and not is_destroyed:
 		is_destroyed = true
