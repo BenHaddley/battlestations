@@ -15,6 +15,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/effects/puff 1.png" id="14"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Gunner Top 1.png" id="15"]
 [ext_resource type="Texture2D" path="res://assets/sprites/engines/Steam Engine White.png" id="16"]
+[ext_resource type="AudioStream" path="res://assets/audio/Train 45.mp3" id="17"]
 
 [sub_resource type="StyleBoxFlat" id="HudPanel"]
 bg_color = Color(0.075, 0.07, 0.06, 0.96)
@@ -109,6 +110,10 @@ script = ExtResource("6")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(0.375, 0.375)
+
+[node name="MusicPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("17")
+volume_db = -8.0
 
 [node name="Board" type="Sprite2D" parent="."]
 z_index = -100

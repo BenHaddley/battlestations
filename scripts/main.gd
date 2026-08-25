@@ -7,11 +7,13 @@ extends Node2D
 @onready var trains: Node2D = $Trains
 @onready var convoy: Node2D = $Trains/TrainConvoy
 @onready var menu: Menu = $CanvasLayer/Menu
+@onready var music_player: AudioStreamPlayer = $MusicPlayer
 
 var generated_track: PackedVector2Array
 
 func _ready() -> void:
 	get_tree().root.physics_object_picking = true
+	_play_music_looped()
 	generated_track = track.generate_layout()
 	convoy.configure_path(generated_track)
 	if not track.covers_lanes(spawner.lane_x_positions, 360.0):
@@ -20,6 +22,15 @@ func _ready() -> void:
 	menu.train_drag_started.connect(convoy.set_drag_active.bind(true))
 	menu.train_drag_ended.connect(convoy.set_drag_active.bind(false))
 	menu.train_drop_requested.connect(_on_train_drop_requested)
+
+## MP3 streams don't loop by default — the loop flag lives on the stream
+## resource itself, so it has to be set before play() rather than as a
+## one-time .import setting.
+func _play_music_looped() -> void:
+	var stream: AudioStreamMP3 = music_player.stream as AudioStreamMP3
+	if stream:
+		stream.loop = true
+	music_player.play()
 
 func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> void:
 	if tower_index < 0 or tower_index >= BuildManager.towers.size():
