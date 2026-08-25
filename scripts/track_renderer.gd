@@ -5,10 +5,11 @@ class_name TrackRenderer
 
 @export var rail_texture: Texture2D
 @export var curve_texture: Texture2D
-@export var tile_scale: float = 0.12
-@export var track_bounds: Rect2 = Rect2(-360.0, -300.0, 720.0, 900.0)
-@export_range(3, 5) var minimum_sweeps: int = 3
-@export_range(3, 5) var maximum_sweeps: int = 5
+@export var tile_scale: float = 0.14
+@export var path_step: float = 90.0
+@export var track_bounds: Rect2 = Rect2(-330.0, -270.0, 660.0, 810.0)
+@export_range(3, 4) var minimum_sweeps: int = 3
+@export_range(3, 4) var maximum_sweeps: int = 4
 
 var path_points: PackedVector2Array = PackedVector2Array()
 
@@ -17,17 +18,16 @@ func generate_layout() -> PackedVector2Array:
 	for child in get_children():
 		child.queue_free()
 
-	var tile_size: float = rail_texture.get_height() * tile_scale
 	var columns: Array[float] = []
 	var rows: Array[float] = []
 	var x := track_bounds.position.x
 	while x <= track_bounds.end.x + 0.1:
 		columns.append(x)
-		x += tile_size
+		x += path_step
 	var y := track_bounds.position.y
 	while y <= track_bounds.end.y + 0.1:
 		rows.append(y)
-		y += tile_size
+		y += path_step
 
 	var sweep_count: int = randi_range(minimum_sweeps, maximum_sweeps)
 	var selected_row_indices: Array[int] = [randi_range(0, 2), rows.size() / 2, randi_range(rows.size() - 3, rows.size() - 1)]
@@ -63,6 +63,12 @@ func _append_unique(point: Vector2) -> void:
 
 func _render_path() -> void:
 	for index in range(path_points.size()):
+		var shadow := Sprite2D.new()
+		shadow.texture = rail_texture
+		shadow.scale = Vector2(tile_scale * 1.08, tile_scale * 1.08)
+		shadow.position = path_points[index] + Vector2(0.0, 7.0)
+		shadow.modulate = Color(0.04, 0.035, 0.025, 0.38)
+		shadow.z_index = -7
 		var tile := Sprite2D.new()
 		tile.scale = Vector2(tile_scale, tile_scale)
 		tile.position = path_points[index]
@@ -78,10 +84,14 @@ func _render_path() -> void:
 		if previous_direction != Vector2.ZERO and next_direction != Vector2.ZERO and not previous_direction.is_equal_approx(-next_direction):
 			tile.texture = curve_texture
 			tile.rotation = _curve_rotation(previous_direction, next_direction)
+			shadow.texture = curve_texture
+			shadow.rotation = tile.rotation
 		else:
 			tile.texture = rail_texture
 			var direction := next_direction if next_direction != Vector2.ZERO else previous_direction
 			tile.rotation = PI * 0.5 if absf(direction.x) > 0.5 else 0.0
+			shadow.rotation = tile.rotation
+		add_child(shadow)
 		add_child(tile)
 
 func _curve_rotation(a: Vector2, b: Vector2) -> float:

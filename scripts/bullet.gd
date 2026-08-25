@@ -18,6 +18,19 @@ func _physics_process(delta: float) -> void:
 	global_position += direction * bullet_speed * delta
 
 func _on_body_entered(body: Node2D) -> void:
+	_spawn_hit_effect()
 	if body.has_method("take_damage"):
 		body.take_damage(bullet_damage)
 	queue_free()
+
+func _spawn_hit_effect() -> void:
+	var effect := Sprite2D.new()
+	effect.texture = preload("res://assets/sprites/effects/hit effect.png")
+	effect.global_position = global_position
+	effect.scale = Vector2(0.055, 0.055)
+	effect.z_index = 70
+	get_tree().current_scene.add_child(effect)
+	var tween := get_tree().create_tween().set_parallel(true)
+	tween.tween_property(effect, "scale", Vector2(0.1, 0.1), 0.18)
+	tween.tween_property(effect, "modulate:a", 0.0, 0.18)
+	tween.chain().tween_callback(effect.queue_free)

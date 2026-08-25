@@ -12,6 +12,7 @@ signal train_drop_requested(tower_index: int, screen_position: Vector2)
 @onready var currency_label: Label = $LeftPanel/Margin/VBox/CurrencyLabel
 @onready var wave_label: Label = $LeftPanel/Margin/VBox/WaveLabel
 @onready var spiders_label: Label = $LeftPanel/Margin/VBox/SpidersLabel
+@onready var train_label: Label = $LeftPanel/Margin/VBox/TrainLabel
 @onready var gunner_button: Button = $LeftPanel/Margin/VBox/GunnerButton
 @onready var slomo_button: Button = $LeftPanel/Margin/VBox/SlomoButton
 @onready var next_wave_button: Button = $LeftPanel/Margin/VBox/NextWaveButton
@@ -19,19 +20,22 @@ signal train_drop_requested(tower_index: int, screen_position: Vector2)
 @onready var name_label: Label = $RightPanel/Margin/VBox/NameLabel
 @onready var cost_label: Label = $RightPanel/Margin/VBox/CostLabel
 @onready var summary_label: Label = $RightPanel/Margin/VBox/SummaryLabel
+@onready var car_preview: TextureRect = $RightPanel/Margin/VBox/CarPreview
 
 @export var normal_style: StyleBox
 @export var selected_style: StyleBox
 
 var spawner: EnemySpawner
 var station: Station
+var convoy: Node2D
 var station_lost: bool = false
 var dragging_tower: int = -1
 var drag_preview: TextureRect
 
-func configure(enemy_spawner: EnemySpawner, defended_station: Station) -> void:
+func configure(enemy_spawner: EnemySpawner, defended_station: Station, active_convoy: Node2D) -> void:
 	spawner = enemy_spawner
 	station = defended_station
+	convoy = active_convoy
 	station.defeated.connect(func() -> void: station_lost = true)
 
 func _ready() -> void:
@@ -71,6 +75,8 @@ func _process(_delta: float) -> void:
 		else:
 			next_wave_button.disabled = not spawner.can_start_next_wave()
 			next_wave_button.text = "NEXT WAVE" if spawner.can_start_next_wave() else "WAVE IN PROGRESS"
+	if convoy and convoy.has_method("car_count"):
+		train_label.text = "TRAIN  1 engine + %d cars" % convoy.car_count()
 
 func _on_next_wave_pressed() -> void:
 	if spawner:
@@ -117,10 +123,12 @@ func _refresh_selection() -> void:
 		name_label.text = selected.tower_name
 		cost_label.text = "$%d" % selected.cost
 		summary_label.text = selected.summary
+		car_preview.texture = selected.icon
 	else:
 		name_label.text = "None"
 		cost_label.text = ""
 		summary_label.text = ""
+		car_preview.texture = null
 
 ## Selection is shown as a glowing style rather than the disabled state.
 ## Buttons stay clickable even when unaffordable — Plot already blocks and

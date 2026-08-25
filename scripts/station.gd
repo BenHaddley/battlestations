@@ -9,9 +9,11 @@ signal defeated
 @export var max_health: int = 20
 
 var current_health: int
+var resting_position: Vector2
 
 func _ready() -> void:
 	current_health = max_health
+	resting_position = position
 	GameEvents.enemy_leaked.connect(_on_enemy_leaked)
 	health_changed.emit(current_health, max_health)
 
@@ -19,6 +21,9 @@ func _on_enemy_leaked() -> void:
 	if current_health <= 0:
 		return
 	current_health = max(0, current_health - 1)
+	var tween := create_tween()
+	for offset in [Vector2(10, 0), Vector2(-9, 0), Vector2(6, 0), Vector2.ZERO]:
+		tween.tween_property(self, "position", resting_position + offset, 0.045)
 	health_changed.emit(current_health, max_health)
 	if current_health == 0:
 		defeated.emit()

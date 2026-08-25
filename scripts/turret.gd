@@ -101,6 +101,17 @@ func _shoot() -> void:
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = firing_point.global_position
 	bullet.set_target(target)
+	var flash := Sprite2D.new()
+	flash.texture = preload("res://assets/sprites/effects/hit effect.png")
+	flash.global_position = firing_point.global_position
+	flash.scale = Vector2(0.035, 0.035)
+	flash.modulate = Color(1.0, 0.72, 0.2, 0.9)
+	flash.z_index = 65
+	get_tree().current_scene.add_child(flash)
+	var tween := get_tree().create_tween().set_parallel(true)
+	tween.tween_property(flash, "scale", Vector2(0.075, 0.075), 0.12)
+	tween.tween_property(flash, "modulate:a", 0.0, 0.12)
+	tween.chain().tween_callback(flash.queue_free)
 
 func _find_target() -> Node2D:
 	if targeting_area == null:

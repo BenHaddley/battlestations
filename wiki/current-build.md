@@ -55,9 +55,19 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 | `TowerData` | Train shop data, scene, description, price, and drag icon |
 | `TrackRenderer` | Generates a connected courtyard railway with straight and curved tiles; highlights valid drop targets |
 | `TrainConvoy` | Moves the default black engine and makes attached cars follow its movement history |
+| `BattlefieldOverlay` | Draws subdued spider-lane entrances, lane guides, and the station danger line |
 | `Turret` + `Bullet` | Convoy following, target acquisition, rotation, firing, homing, and damage |
 | `TurretSlomo` | Convoy following and periodic area slow without damage |
 | `Menu` | Run HUD, shop drag gestures, selected-train details, and wave control |
+
+### Current visual language
+
+- Rails are inset from the courtyard edge, enlarged, shadowed, and use curved pieces.
+- The engine emits smoke; enlarged cars are spaced by physical length and linked by couplers.
+- Spider lanes have quiet entrance markers and a danger line separate from the railway.
+- Spiders animate and flash on hits; weapons, kills, bounty rewards, Slomo pulses, and
+  station damage all have immediate visual feedback.
+- The warm charcoal/brass HUD shows the live engine/car count and a selected-car preview.
 
 ## Active scenes
 

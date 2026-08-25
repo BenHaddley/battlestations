@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=22 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/board/THE_BOARD.png" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
@@ -11,14 +11,18 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/board/Rail Curve.png" id="10"]
 [ext_resource type="Script" path="res://scripts/train_convoy.gd" id="11"]
 [ext_resource type="Texture2D" path="res://assets/sprites/engines/Steam Engine Black.png" id="12"]
+[ext_resource type="Script" path="res://scripts/battlefield_overlay.gd" id="13"]
+[ext_resource type="Texture2D" path="res://assets/sprites/effects/puff 1.png" id="14"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/Gunner Top 1.png" id="15"]
+[ext_resource type="Texture2D" path="res://assets/sprites/engines/Steam Engine White.png" id="16"]
 
 [sub_resource type="StyleBoxFlat" id="HudPanel"]
-bg_color = Color(0.055, 0.067, 0.078, 0.94)
+bg_color = Color(0.075, 0.07, 0.06, 0.96)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.82, 0.27, 0.18, 1)
+border_color = Color(0.72, 0.46, 0.18, 1)
 corner_radius_top_left = 10
 corner_radius_top_right = 10
 corner_radius_bottom_right = 10
@@ -115,6 +119,10 @@ script = ExtResource("7")
 rail_texture = ExtResource("8")
 curve_texture = ExtResource("10")
 
+[node name="BattlefieldOverlay" type="Node2D" parent="."]
+z_index = -20
+script = ExtResource("13")
+
 [node name="Station" parent="." instance=ExtResource("9")]
 position = Vector2(0, 800)
 
@@ -122,10 +130,11 @@ position = Vector2(0, 800)
 
 [node name="TrainConvoy" type="Node2D" parent="Trains"]
 script = ExtResource("11")
+smoke_texture = ExtResource("14")
 
 [node name="Engine" type="Sprite2D" parent="Trains/TrainConvoy"]
 texture = ExtResource("12")
-scale = Vector2(0.12, 0.12)
+scale = Vector2(0.15, 0.15)
 z_index = 21
 
 [node name="EnemySpawner" type="Node2D" parent="."]
@@ -199,6 +208,12 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.75, 0.82, 0.84, 1)
 theme_override_font_sizes/font_size = 16
 text = "🕷 0 remaining"
+
+[node name="TrainLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.72, 0.34, 1)
+theme_override_font_sizes/font_size = 14
+text = "TRAIN  1 engine + 0 cars"
 
 [node name="Rule2" type="HSeparator" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
 layout_mode = 2
@@ -280,6 +295,13 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.75, 0.82, 0.84, 1)
 theme_override_font_sizes/font_size = 16
 text = "$50"
+
+[node name="CarPreview" type="TextureRect" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+texture = ExtResource("15")
+expand_mode = 3
+stretch_mode = 5
 
 [node name="Rule" type="HSeparator" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
 layout_mode = 2

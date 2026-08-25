@@ -29,6 +29,17 @@ func _freeze_enemies() -> void:
 	for body in targeting_area.get_overlapping_bodies():
 		if body.has_method("apply_slow"):
 			body.apply_slow(freeze_time)
+	var pulse := Sprite2D.new()
+	pulse.texture = preload("res://assets/sprites/effects/Puff.png")
+	pulse.global_position = global_position
+	pulse.scale = Vector2(0.06, 0.06)
+	pulse.modulate = Color(0.4, 0.95, 1.0, 0.48)
+	pulse.z_index = 40
+	get_tree().current_scene.add_child(pulse)
+	var tween := get_tree().create_tween().set_parallel(true)
+	tween.tween_property(pulse, "scale", Vector2(0.36, 0.36), 0.5)
+	tween.tween_property(pulse, "modulate:a", 0.0, 0.5)
+	tween.chain().tween_callback(pulse.queue_free)
 
 func configure_track(track_path: PackedVector2Array, start_index: int) -> void:
 	patrol_path = track_path.duplicate()

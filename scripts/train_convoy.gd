@@ -4,8 +4,9 @@ class_name TrainConvoy
 ## history at increasing distances, producing Snake-like following at turns.
 
 @export var speed: float = 95.0
-@export var car_spacing: float = 76.0
-@export var attachment_radius: float = 90.0
+@export var car_spacing: float = 100.0
+@export var attachment_radius: float = 115.0
+@export var smoke_texture: Texture2D
 
 @onready var engine: Sprite2D = $Engine
 
@@ -14,6 +15,7 @@ var path_index: int = 0
 var path_step: int = 1
 var followers: Array[Node2D] = []
 var history: Array[Dictionary] = []
+var smoke_timer: float = 0.0
 
 func configure_path(track_path: PackedVector2Array) -> void:
 	path = track_path.duplicate()
@@ -48,6 +50,11 @@ func _process(delta: float) -> void:
 			remaining = 0.0
 	_record_history()
 	_update_followers()
+	smoke_timer -= delta
+	if smoke_timer <= 0.0:
+		_emit_smoke()
+		smoke_timer = 0.32
+	queue_redraw()
 
 func attach_car(car: Node2D) -> void:
 	followers.append(car)
@@ -67,6 +74,36 @@ func set_drag_active(active: bool) -> void:
 	for car in followers:
 		if is_instance_valid(car):
 			car.modulate = tint
+
+func car_count() -> int:
+	return followers.size()
+
+func _draw() -> void:
+	var previous := Vector2.ZERO
+	for car in followers:
+		if not is_instance_valid(car):
+			continue
+		var car_local := to_local(car.global_position)
+		draw_line(previous, car_local, Color(0.12, 0.1, 0.07, 0.9), 9.0)
+		draw_circle(previous.lerp(car_local, 0.5), 7.0, Color(0.72, 0.48, 0.18, 1.0))
+		previous = car_local
+
+func _emit_smoke() -> void:
+	if smoke_texture == null:
+		return
+	var puff := Sprite2D.new()
+	puff.texture = smoke_texture
+	puff.scale = Vector2(0.055, 0.055)
+	puff.position = engine.position + Vector2(0.0, -24.0).rotated(engine.rotation)
+	puff.modulate = Color(0.78, 0.75, 0.68, 0.65)
+	puff.z_index = -1
+	add_child(puff)
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(puff, "position", puff.position + Vector2(0.0, -45.0), 0.9)
+	tween.tween_property(puff, "scale", Vector2(0.1, 0.1), 0.9)
+	tween.tween_property(puff, "modulate:a", 0.0, 0.9)
+	tween.chain().tween_callback(puff.queue_free)
 
 func _face_engine(direction: Vector2) -> void:
 	if not direction.is_zero_approx():

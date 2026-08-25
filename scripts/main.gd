@@ -16,7 +16,7 @@ func _ready() -> void:
 	convoy.configure_path(generated_track)
 	if not track.covers_lanes(spawner.lane_x_positions, 360.0):
 		push_error("Generated railway does not cover every spider lane.")
-	menu.configure(spawner, $Station)
+	menu.configure(spawner, $Station, convoy)
 	menu.train_drag_started.connect(convoy.set_drag_active.bind(true))
 	menu.train_drag_ended.connect(convoy.set_drag_active.bind(false))
 	menu.train_drop_requested.connect(_on_train_drop_requested)

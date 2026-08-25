@@ -69,6 +69,8 @@ configuration or known unit-scale errors.
       colliders, render order, and seven top-to-bottom lanes around a 1280×720 viewport.
 - [x] Spawn one default black engine and replace fixed build pads with convoy
       drag/drop; attached combat cars follow its route history as a trailing consist.
+- [x] Complete the first cohesion pass: stronger rails and curves, lane/danger guides,
+      larger linked cars, smoke, animated enemies, combat feedback, and a train-aware HUD.
 
 ### Verification
 
