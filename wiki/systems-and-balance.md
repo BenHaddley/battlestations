@@ -74,9 +74,10 @@ randomized horizontal sweeps, including a central sweep, joined by alternating e
 connectors and curved track pieces. Every sweep crosses all seven spider lanes, so a
 Gunner in the consist can eventually cover every lane. Shop cars may only be dropped
 within 90 world units of the engine or an attached car. A valid car is appended to the
-tail at 100-world-unit spacing. Cars sample the engine's movement history, creating
-Snake-like following through turns and reversals. The convoy travels at 95 world
-units/second.
+tail at 170-world-unit spacing. Cars sample the engine's movement history, creating
+Snake-like following through turns and reversals. A newly bought car remains pending
+until enough unique route history exists for its tail position, preventing cars from
+sharing the oldest recorded point. The convoy travels at 95 world units/second.
 
 ## Enemies and route
 

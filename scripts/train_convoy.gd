@@ -4,7 +4,9 @@ class_name TrainConvoy
 ## history at increasing distances, producing Snake-like following at turns.
 
 @export var speed: float = 95.0
-@export var car_spacing: float = 100.0
+## Cars render at roughly 112.5 world units. This leaves a visible coupling gap
+## on straights and enough clearance while two cars straddle a square corner.
+@export var car_spacing: float = 170.0
 @export var attachment_radius: float = 115.0
 @export var smoke_texture: Texture2D
 
@@ -58,13 +60,18 @@ func _process(delta: float) -> void:
 
 func attach_car(car: Node2D) -> void:
 	followers.append(car)
+	# A newly purchased car waits invisibly until the engine has travelled far
+	# enough to provide it with a unique on-track tail position. Previously all
+	# cars beyond the available history received history[-1] and piled up.
+	car.visible = false
+	car.process_mode = Node.PROCESS_MODE_DISABLED
 	_update_followers()
 
 func can_attach_at(world_position: Vector2) -> bool:
 	if world_position.distance_to(global_position) <= attachment_radius:
 		return true
 	for car in followers:
-		if is_instance_valid(car) and world_position.distance_to(car.global_position) <= attachment_radius:
+		if is_instance_valid(car) and car.visible and world_position.distance_to(car.global_position) <= attachment_radius:
 			return true
 	return false
 
@@ -72,7 +79,7 @@ func set_drag_active(active: bool) -> void:
 	var tint := Color(1.0, 0.85, 0.35, 1.0) if active else Color.WHITE
 	engine.modulate = tint
 	for car in followers:
-		if is_instance_valid(car):
+		if is_instance_valid(car) and car.visible:
 			car.modulate = tint
 
 func car_count() -> int:
@@ -81,7 +88,7 @@ func car_count() -> int:
 func _draw() -> void:
 	var previous := Vector2.ZERO
 	for car in followers:
-		if not is_instance_valid(car):
+		if not is_instance_valid(car) or not car.visible:
 			continue
 		var car_local := to_local(car.global_position)
 		draw_line(previous, car_local, Color(0.12, 0.1, 0.07, 0.9), 9.0)
@@ -117,9 +124,7 @@ func _record_history() -> void:
 	if direction.is_zero_approx():
 		direction = history[0].direction if not history.is_empty() else Vector2.DOWN
 	history.push_front({"position": global_position, "direction": direction})
-	var maximum_samples := ceili((followers.size() + 2) * car_spacing / 2.0) + 120
-	if history.size() > maximum_samples:
-		history.resize(maximum_samples)
+	_trim_history((followers.size() + 2) * car_spacing + 240.0)
 
 func _update_followers() -> void:
 	for index in range(followers.size()):
@@ -127,6 +132,13 @@ func _update_followers() -> void:
 		if not is_instance_valid(car):
 			continue
 		var sample := _sample_history(car_spacing * (index + 1))
+		if not sample.valid:
+			car.visible = false
+			car.process_mode = Node.PROCESS_MODE_DISABLED
+			continue
+		if not car.visible:
+			car.visible = true
+			car.process_mode = Node.PROCESS_MODE_INHERIT
 		if car.has_method("set_convoy_transform"):
 			car.set_convoy_transform(sample.position, sample.direction)
 		else:
@@ -134,7 +146,7 @@ func _update_followers() -> void:
 
 func _sample_history(distance_behind: float) -> Dictionary:
 	if history.is_empty():
-		return {"position": global_position, "direction": Vector2.DOWN}
+		return {"valid": false, "position": global_position, "direction": Vector2.DOWN}
 	var travelled := 0.0
 	for index in range(history.size() - 1):
 		var newer: Vector2 = history[index].position
@@ -143,8 +155,19 @@ func _sample_history(distance_behind: float) -> Dictionary:
 		if travelled + segment >= distance_behind and segment > 0.0:
 			var weight := (distance_behind - travelled) / segment
 			return {
+				"valid": true,
 				"position": newer.lerp(older, weight),
 				"direction": history[index + 1].direction,
 			}
 		travelled += segment
-	return history[-1]
+	return {"valid": false, "position": history[-1].position, "direction": history[-1].direction}
+
+func _trim_history(required_distance: float) -> void:
+	# Retain distance, not a guessed number of frames. This remains correct at
+	# 30, 60, 120 Hz and during occasional long browser frames.
+	var travelled := 0.0
+	for index in range(history.size() - 1):
+		travelled += Vector2(history[index].position).distance_to(history[index + 1].position)
+		if travelled >= required_distance:
+			history.resize(index + 2)
+			return
