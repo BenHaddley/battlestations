@@ -11,10 +11,11 @@ not claims of final balance.
 |---|---:|
 | Starting currency | 100 |
 | Generic spider bounty | 50 |
+| Gunner price | 50 |
+| Slomo Turret price | 75 |
 | Turret base upgrade cost | 100 |
 
-Building spends the selected `TowerData.cost`; no tower price is currently checked
-into the global catalog. Currency has no other sink or source.
+Building spends the selected `TowerData.cost`. Currency has no other sink or source.
 
 The cost shown before upgrading from current level `L` is:
 
@@ -30,16 +31,14 @@ The level increments after payment. Approximate next-upgrade costs at levels 1�
 | Parameter | Default |
 |---|---:|
 | Bullets per second | 1.0 |
-| Script targeting range | 5.0 |
-| Scene detection radius | 80 pixels |
+| Effective targeting range | 360 world units |
+| Scene detection radius | 360 world units |
 | Rotation speed | 5 radians/second in the Godot port |
 | Bullet damage | 1 |
-| Bullet speed | 5 pixels/second |
+| Bullet speed | 900 world units/second |
 
-The script's range check and the physics detection circle use different values. With
-defaults unchanged, a target detected inside the 80-pixel area will be discarded
-unless it is also within 5 pixels. This unit mismatch is a likely porting bug and
-should be resolved before balance work.
+The active scene overrides the inherited Unity-scale script defaults. Its scripted
+range check and physics detection circle now use the same 360-unit radius.
 
 At level `L`, stats are recalculated from their level-one base values:
 
@@ -48,26 +47,30 @@ bullets per second = base BPS × L^0.6
 targeting range    = base range × L^0.4
 ```
 
-For base values 1 BPS and range 5, levels 1–5 yield approximately:
+For the active base values of 1 BPS and range 360, levels 1–5 yield approximately:
 
 | Level | BPS | Range |
 |---:|---:|---:|
-| 1 | 1.00 | 5.00 |
-| 2 | 1.52 | 6.60 |
-| 3 | 1.93 | 7.76 |
-| 4 | 2.30 | 8.71 |
-| 5 | 2.63 | 9.52 |
+| 1 | 1.00 | 360 |
+| 2 | 1.52 | 475 |
+| 3 | 1.93 | 559 |
+| 4 | 2.30 | 627 |
+| 5 | 2.63 | 685 |
 
 ## Slow defense
 
-The white-engine defense pulses every four seconds (`0.25` pulses/second). Every
-overlapping enemy is assigned speed `0.5` for one second, then reset to its original
-speed. It deals no damage and has no upgrade path or defined shop price.
+The white-engine defense costs 75 and pulses every four seconds (`0.25`
+pulses/second). Every overlapping enemy is slowed to half its own base speed for one
+second. Repeated pulses extend the expiry instead of racing reset timers. It deals no
+damage and has no upgrade path.
 
 ## Enemies and route
 
-The active generic spider has 2 HP, speed 1, and a bounty of 50. It follows five
-markers in scene-tree order. Reaching the last marker removes the spider and counts it
+The active generic spider has 2 HP, speed 180 world units/second, and a bounty of 50.
+It uses one 1500×1500 source frame at a normalized visual scale rather than the
+combined 3000×1500 sheet. Each spawn is assigned uniformly to one of seven fixed
+columns and travels straight from the top to the bottom of the courtyard, following
+a Plants-vs.-Zombies-style lane model. Reaching the bottom removes the spider and counts it
 as cleared for wave progression, but does not award currency or damage a base.
 
 ## Waves

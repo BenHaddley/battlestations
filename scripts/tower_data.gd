@@ -5,3 +5,4 @@ class_name TowerData
 @export var tower_name: String = ""
 @export var cost: int = 0
 @export var scene: PackedScene
+@export var summary: String = "" ## One line shown in the selected-defense panel.

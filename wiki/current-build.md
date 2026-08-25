@@ -5,8 +5,8 @@
 ## Status
 
 The active codebase is a Godot 4 scaffold port of the archived Unity prototype. Its
-main scene contains one board, five route markers, three build plots, one enemy
-spawner, and a currency label. The port closely preserves the eleven original Unity
+main scene contains one fitted board, seven vertical enemy lanes, six build
+plots, one enemy spawner, and a two-gutter HUD/shop. The port closely preserves the eleven original Unity
 gameplay scripts as GDScript plus four autoload managers.
 
 The build should be treated as a scaffold, not a finished playable slice — but the
@@ -55,24 +55,23 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 | `Plot` + `TowerData` | Buying the selected defense on a build tile |
 | `Turret` + `Bullet` | Target acquisition, rotation, firing, homing, and damage |
 | `TurretSlomo` | Periodic area slow without damage |
-| `Menu` | Currency text and optional panel animation |
+| `Menu` | Currency display, selected-defense status, and tower selection |
 
 ## Active scenes
 
 | Scene | Current content |
 |---|---|
-| `Main.tscn` | Board, route, three plots, spawner, currency label |
-| `Plot.tscn` | Clickable 96×96 build region using rail art |
+| `Main.tscn` | Fitted board, seven lanes, six plots, spawner, and gutter HUD |
+| `Plot.tscn` | Clickable 90×90 build region using scaled rail art |
 | `Enemy.tscn` | Generic spider body with 2 HP and 50 bounty defaults |
-| `Turret.tscn` | Gunner art, 80-pixel detection area, bullet scene |
-| `TurretSlomo.tscn` | White steam-engine art and 80-pixel slow area |
+| `Turret.tscn` | Normalized Gunner art, 360-unit detection area, bullet scene |
+| `TurretSlomo.tscn` | Normalized white-engine art and 360-unit slow area |
 | `Bullet.tscn` | Homing gunner projectile with enemy collision mask |
 
 ## Known gaps and risks
 
-- `BuildManager.towers` now has two checked-in `TowerData` resources (Gunner, Slomo
-  Turret), but there's still no shop UI to pick between them — the game always
-  builds index 0. The slow turret is only reachable pre-placed in `Main.tscn`.
+- The first shop can select the Gunner or Slomo Turret, but it is still a minimal
+  prototype interface without icons, previews, refunds, or upgrade information.
 - No base health or penalty for leaked enemies.
 - No win, loss, pause, restart, or speed-control flow.
 - Upgrade methods exist, but no upgrade panel is wired in `Turret.tscn`.
@@ -86,7 +85,10 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 Resolved this session (were previously listed here): the slow effect now reduces
 speed relative to each enemy's own base speed and safely extends under overlapping
 pulses rather than racing; a homing bullet whose target disappears now frees itself
-instead of drifting forever.
+instead of drifting forever. The board, spider frame, towers, projectile, plots,
+colliders, lanes, render layers, and HUD are also normalized around a 1280×720
+logical viewport. The full portrait board is fitted by height; its side gutters are
+reserved for interface rather than cropped away.
 
 See [Roadmap](../roadmap.md) for planned work rather than treating these gaps as
 settled solutions.

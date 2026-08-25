@@ -6,23 +6,26 @@
 [ext_resource type="PackedScene" path="res://scenes/Bullet.tscn" id="4"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
-radius = 300.0
+radius = 360.0
 
 [node name="Turret" type="Node2D"]
 script = ExtResource("1")
 bullet_scene = ExtResource("4")
-targeting_range = 300.0
+targeting_range = 360.0
+z_index = 20
 
 [node name="Base" type="Sprite2D" parent="."]
 texture = ExtResource("2")
+scale = Vector2(0.12, 0.12)
 
 [node name="RotationPoint" type="Node2D" parent="."]
 
 [node name="Top" type="Sprite2D" parent="RotationPoint"]
 texture = ExtResource("3")
+scale = Vector2(0.12, 0.12)
 
 [node name="FiringPoint" type="Marker2D" parent="RotationPoint"]
-position = Vector2(0, -60)
+position = Vector2(0, -42)
 
 [node name="TargetingArea" type="Area2D" parent="."]
 collision_layer = 0

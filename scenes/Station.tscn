@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/station.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/engines/Steam Engine Black.png" id="2"]
+
+[node name="Station" type="Node2D"]
+script = ExtResource("1")
+z_index = 15
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2")
+scale = Vector2(0.16, 0.16)
+
+[node name="NameLabel" type="Label" parent="."]
+offset_left = -70.0
+offset_top = -110.0
+offset_right = 70.0
+offset_bottom = -80.0
+theme_override_colors/font_color = Color(1, 0.86, 0.56, 1)
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+text = "STATION"

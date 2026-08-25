@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1")
-tower_name = "Slomo Turret"
+tower_name = "Slomo"
 cost = 75
 scene = ExtResource("2")
+summary = "No damage — slows every spider in range."

@@ -4,16 +4,18 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/projectiles/Gunner Projectile.png" id="2"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
-radius = 6.0
+radius = 8.0
 
 [node name="Bullet" type="Area2D"]
 collision_layer = 4
 collision_mask = 2
 script = ExtResource("1")
-bullet_speed = 600.0
+bullet_speed = 900.0
+z_index = 40
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2")
+scale = Vector2(0.02, 0.02)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_1")

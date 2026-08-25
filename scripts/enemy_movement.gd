@@ -1,15 +1,15 @@
 extends CharacterBody2D
 class_name EnemyMovement
-## Walks a spider along LevelManager.path waypoint-by-waypoint. Reaching the
-## last waypoint is a leak (no base-health system exists yet) — see wiki.
+## Walks a spider straight down its assigned courtyard lane. Reaching the
+## bottom is a leak (no base-health system exists yet) — see wiki.
 
 @export var move_speed: float = 1.0
 
 @onready var health: Health = $Health
 
-var target: Node2D = null
-var path_index: int = 0
 var base_speed: float
+var leak_y: float = 720.0
+var lane_configured: bool = false
 
 ## Absolute ms timestamp (Time.get_ticks_msec()) the current slow expires at.
 ## Tracking an expiry rather than a bool means a second overlapping pulse can
@@ -18,29 +18,21 @@ var _slow_expires_at: int = 0
 
 func _ready() -> void:
 	base_speed = move_speed
-	if LevelManager.path.size() > 0:
-		target = LevelManager.path[path_index]
 
-func _process(_delta: float) -> void:
-	if target == null:
-		return
-
-	if global_position.distance_to(target.global_position) <= 0.1:
-		path_index += 1
-
-		if path_index == LevelManager.path.size():
-			GameEvents.enemy_destroyed.emit()
-			queue_free()
-			return
-
-		target = LevelManager.path[path_index]
+func configure_lane(destination_y: float) -> void:
+	leak_y = destination_y
+	lane_configured = true
 
 func _physics_process(_delta: float) -> void:
-	if target == null:
+	if not lane_configured:
+		return
+	if global_position.y >= leak_y:
+		GameEvents.enemy_destroyed.emit()
+		GameEvents.enemy_leaked.emit()
+		queue_free()
 		return
 	var speed: float = base_speed * 0.5 if Time.get_ticks_msec() < _slow_expires_at else base_speed
-	var direction: Vector2 = (target.global_position - global_position).normalized()
-	velocity = direction * speed
+	velocity = Vector2.DOWN * speed
 	move_and_slide()
 
 ## Slows the enemy to half its base speed for `duration` seconds. Safe to

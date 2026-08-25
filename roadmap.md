@@ -45,11 +45,9 @@ configuration or known unit-scale errors.
       just Godot's own minimum-compatibility tag, not a version pin — unrelated.
 - [x] Add checked-in `TowerData` resources for the Gunner and slow defense
       (`resources/basic_turret.tres`, `resources/slomo_turret.tres`), configure
-      `BuildManager.towers`. Selection control (shop UI to pick between them) is
-      still open — currently always builds index 0 (Gunner); the slow turret is
-      only reachable pre-placed in `Main.tscn`.
+      `BuildManager.towers`, and expose both through the gutter shop UI.
 - [x] Establish one world-unit convention for movement, bullet speed, and targeting:
-      300-unit targeting range, 600 px/s bullets, 80 px/s enemy movement, consistent
+      360-unit targeting range, 900-unit/s bullets, 180-unit/s enemy movement, consistent
       across `Turret`, `TurretSlomo`, `Bullet`, `Enemy.tscn` overrides.
 - [x] Ensure a turret can acquire, retain, and hit an enemy across its intended
       range — confirmed via live browser playtest logs (see Phase 4 below).
@@ -59,15 +57,17 @@ configuration or known unit-scale errors.
       pulses: `EnemyMovement.apply_slow(duration)` tracks a slow-expiry timestamp
       that a later pulse can only extend, never shorten; speed is `base_speed * 0.5`
       while active, not an absolute `0.5`.
-- [ ] Guard empty/invalid tower selections and non-`Turret` defenses in `Plot`.
+- [x] Guard empty/invalid tower selections and safely handle non-`Turret` defenses in
+      `Plot`.
 
 ### Minimal interface
 
 - [x] Display current currency with clear purchase failure feedback (`push_warning`
       on insufficient funds; HUD label updates live via `Menu`).
-- [ ] Display which defense is selected and the cost of each option.
-- [ ] Wire or remove the menu animation hooks so the checked-in scene is internally
-      consistent.
+- [x] Display which defense is selected and the cost of each option.
+- [x] Replace the unwired menu-animation hooks with an intentional two-gutter HUD.
+- [x] Normalize the full board, one-frame spider art, towers, projectiles, plots,
+      colliders, render order, and seven top-to-bottom lanes around a 1280×720 viewport.
 
 ### Verification
 
@@ -78,7 +78,7 @@ configuration or known unit-scale errors.
 - [x] Complete a manual smoke test: buy a defense, shoot a spider, apply a slow,
       receive a bounty, and advance to wave two — done as a full **Web-exported
       browser** playtest (stronger than an editor-only check), see Phase 4.
-      Buying the *second* defense specifically still needs the selection UI above.
+      Repeat both purchase paths after the visual-foundation browser export.
 
 **Exit criterion:** a fresh clone opens and runs the existing combat loop without
 editor-only setup, and the implemented values agree with
