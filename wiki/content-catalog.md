@@ -14,7 +14,7 @@ that its implied mechanic was designed or implemented.
 - Five numbered break pieces.
 - Three rocks.
 
-Only `THE_BOARD.png` and the straight rail tile are used by active scenes.
+`THE_BOARD.png`, the straight rail tile, and the curved rail tile are used by active scenes.
 
 ## Engines
 

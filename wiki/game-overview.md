@@ -4,9 +4,9 @@
 
 ## One-sentence pitch
 
-Battle Stations is a railway-themed tower-defense game in which the player spends
-currency to place and upgrade train-inspired defenses while waves of spiders follow a
-fixed route across the board.
+Battle Stations is a lane-defense game in which a black steam engine automatically
+patrols one generated railway; the player attaches armed cars to its trailing consist while spiders march
+from the top of the courtyard toward the station below.
 
 That wording describes the surviving prototype. A broader narrative, final title
 treatment, audience, platform strategy, and complete win condition are not yet
@@ -14,17 +14,18 @@ documented.
 
 ## Implemented player loop
 
-1. A wave begins after a five-second delay.
-2. Spiders spawn at a rate and quantity that grow by wave.
-3. Spiders travel through a sequence of hand-placed path markers.
-4. The player clicks an empty plot to buy the selected defense.
-5. A gun turret automatically targets spiders and fires homing bullets.
-6. Killing a spider pays currency; reaching the end currently removes it without a
-   player penalty.
-7. The next wave starts five seconds after the current wave is cleared.
+1. The player starts the next wave from the HUD.
+2. Spiders spawn into one of seven fixed lanes and march straight downward.
+3. The player drags a Gunner or Slomo car from the shop onto the moving engine or train.
+4. A valid drop purchases and attaches the car at the tail. It follows the engine's
+   recorded route through every turn; invalid drops spend nothing.
+5. Gunner trains acquire spiders and fire homing bullets; Slomo trains pulse a
+   movement debuff around themselves.
+6. Kills pay currency. Leaks damage the station at the bottom of the board.
+7. After the wave clears, the player chooses when to start the next one.
 
-The build therefore has combat and an economy, but not yet a complete game loop:
-there is no base health, loss, victory, restart flow, or visible wave status.
+The build has combat, economy, station health, a loss condition, and visible wave
+status. Victory, restart flow, and a finished progression structure remain open.
 
 ## Theme and content vocabulary
 
@@ -47,7 +48,6 @@ confirmed.
 - Main target in the roadmap: a browser-playable build.
 - Active board count: one.
 - Active enemy scene count: one.
-- Active defense scenes: two, although the shop catalog is not configured in the
-  checked-in scene or project settings.
+- Active mobile defense scenes: two, both available through drag-and-drop shop cards.
 - Multiplayer, train-car coupling, rail construction, and narrative progression are
   not present in the surviving implementation.

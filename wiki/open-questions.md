@@ -9,7 +9,7 @@ question is resolved, then update the affected design page.
 
 | Question | Why it matters | Current evidence |
 |---|---|---|
-| Are defenses stationary towers, coupled train cars, or both? | Changes the core loop and architecture. | Current code uses stationary plots; the lost sheet describes engines carrying cars. |
+| ~~Are defenses stationary towers, coupled train cars, or both?~~ **Resolved for prototype** | Changes the core loop and architecture. | One default black engine leads a coupled consist. Gunner and Slomo cars are dragged onto it and follow at the tail. |
 | What causes victory and defeat? | Required for a complete run. | Leaks currently disappear; no base or final wave exists. |
 | One board or a level progression? | Affects save data, content scope, and UI. | Only one board is implemented. |
 | What are the intended roles of each unit and spider? | Needed before implementing the roster. | Mostly names and art; the detailed concept sheet is lost. |
@@ -33,7 +33,7 @@ question is resolved, then update the affected design page.
 | Should a leak and a kill be separate events? | Base damage, bounty, stats, and wave accounting need different semantics. | Both currently emit `enemy_destroyed`. |
 | What targeting policy should turrets use? | Strongly affects strategy and balance. | Current code uses the first overlap returned by physics. |
 | ~~What is the supported Godot version?~~ **Resolved** | Required for reproducible exports. | **4.7.2**, installed locally with matching export templates. Project `features` string (`4.3`) is Godot's own minimum-compatibility tag, unrelated to the actual engine version used. |
-| What is the shop's selection UI going to look like? | Two `TowerData` entries now exist (Gunner, Slomo Turret) but nothing lets the player pick between them — `BuildManager.selected_tower` always defaults to 0. | New this session, not previously tracked. |
+| ~~What is the shop's selection UI going to look like?~~ **Resolved for prototype** | Train deployment needs a clear interaction. | Gunner and Slomo cards act as drag sources; a preview follows the cursor and the convoy glows as the valid attachment target. |
 
 ## Recovery checklist
 

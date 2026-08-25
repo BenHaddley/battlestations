@@ -1,7 +1,6 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/board/THE_BOARD.png" id="1"]
-[ext_resource type="PackedScene" path="res://scenes/Plot.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
 [ext_resource type="Script" path="res://scripts/enemy_spawner.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/menu.gd" id="5"]
@@ -9,6 +8,9 @@
 [ext_resource type="Script" path="res://scripts/track_renderer.gd" id="7"]
 [ext_resource type="Texture2D" path="res://assets/sprites/board/Rail Straight.png" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/Station.tscn" id="9"]
+[ext_resource type="Texture2D" path="res://assets/sprites/board/Rail Curve.png" id="10"]
+[ext_resource type="Script" path="res://scripts/train_convoy.gd" id="11"]
+[ext_resource type="Texture2D" path="res://assets/sprites/engines/Steam Engine Black.png" id="12"]
 
 [sub_resource type="StyleBoxFlat" id="HudPanel"]
 bg_color = Color(0.055, 0.067, 0.078, 0.94)
@@ -111,39 +113,20 @@ texture = ExtResource("1")
 [node name="Track" type="Node2D" parent="."]
 script = ExtResource("7")
 rail_texture = ExtResource("8")
-
-[node name="SpawnLabel" type="Label" parent="."]
-offset_left = -380.0
-offset_top = -570.0
-offset_right = 380.0
-offset_bottom = -536.0
-theme_override_colors/font_color = Color(1, 0.86, 0.56, 1)
-theme_override_font_sizes/font_size = 20
-horizontal_alignment = 1
-text = "▼ SPIDER SPAWN ▼"
+curve_texture = ExtResource("10")
 
 [node name="Station" parent="." instance=ExtResource("9")]
 position = Vector2(0, 800)
 
-[node name="Plots" type="Node2D" parent="."]
+[node name="Trains" type="Node2D" parent="."]
 
-[node name="Plot1" parent="Plots" instance=ExtResource("2")]
-position = Vector2(-300, -260)
+[node name="TrainConvoy" type="Node2D" parent="Trains"]
+script = ExtResource("11")
 
-[node name="Plot2" parent="Plots" instance=ExtResource("2")]
-position = Vector2(-53, -260)
-
-[node name="Plot3" parent="Plots" instance=ExtResource("2")]
-position = Vector2(53, -260)
-
-[node name="Plot4" parent="Plots" instance=ExtResource("2")]
-position = Vector2(300, -260)
-
-[node name="Plot5" parent="Plots" instance=ExtResource("2")]
-position = Vector2(-183, 150)
-
-[node name="Plot6" parent="Plots" instance=ExtResource("2")]
-position = Vector2(183, 150)
+[node name="Engine" type="Sprite2D" parent="Trains/TrainConvoy"]
+texture = ExtResource("12")
+scale = Vector2(0.12, 0.12)
+z_index = 21
 
 [node name="EnemySpawner" type="Node2D" parent="."]
 script = ExtResource("4")
@@ -224,7 +207,7 @@ layout_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.86, 0.56, 1)
 theme_override_font_sizes/font_size = 18
-text = "BUILD"
+text = "ATTACH CARS"
 
 [node name="GunnerButton" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 48)
@@ -234,7 +217,7 @@ theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("ButtonNormal")
 theme_override_styles/hover = SubResource("ButtonHover")
 theme_override_styles/disabled = SubResource("ButtonDisabled")
-text = "Gunner  $50"
+text = "Drag Gunner  $50"
 
 [node name="SlomoButton" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 48)
@@ -244,7 +227,7 @@ theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("ButtonNormal")
 theme_override_styles/hover = SubResource("ButtonHover")
 theme_override_styles/disabled = SubResource("ButtonDisabled")
-text = "Slomo  $75"
+text = "Drag Slomo  $75"
 
 [node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 4)
@@ -312,7 +295,7 @@ autowrap_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.54, 0.6, 0.62, 1)
 theme_override_font_sizes/font_size = 13
-text = "Click a glowing pad beside the tracks to build."
+text = "Drag this car onto the moving black engine or its connected train."
 autowrap_mode = 2
 
 [node name="Footer" type="Label" parent="CanvasLayer/Menu"]

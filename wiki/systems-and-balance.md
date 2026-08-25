@@ -15,7 +15,8 @@ not claims of final balance.
 | Slomo Turret price | 75 |
 | Turret base upgrade cost | 100 |
 
-Building spends the selected `TowerData.cost`. Currency has no other sink or source.
+Dropping a shop train on a valid rail spends its `TowerData.cost`. Invalid or
+off-track drops spend nothing. Currency has no other sink or source.
 
 The cost shown before upgrading from current level `L` is:
 
@@ -64,14 +65,28 @@ pulses/second). Every overlapping enemy is slowed to half its own base speed for
 second. Repeated pulses extend the expiry instead of racing reset timers. It deals no
 damage and has no upgrade path.
 
+## Train deployment and patrol
+
+The black steam engine spawns automatically and leads the player's single convoy.
+Gunner and Slomo are trailing cars rather than independent towers. Each run builds
+one connected serpentine railway inside the central courtyard. It has three to five
+randomized horizontal sweeps, including a central sweep, joined by alternating edge
+connectors and curved track pieces. Every sweep crosses all seven spider lanes, so a
+Gunner in the consist can eventually cover every lane. Shop cars may only be dropped
+within 90 world units of the engine or an attached car. A valid car is appended to the
+tail at 76-world-unit spacing. Cars sample the engine's movement history, creating
+Snake-like following through turns and reversals. The convoy travels at 95 world
+units/second.
+
 ## Enemies and route
 
 The active generic spider has 2 HP, speed 180 world units/second, and a bounty of 50.
 It uses one 1500×1500 source frame at a normalized visual scale rather than the
 combined 3000×1500 sheet. Each spawn is assigned uniformly to one of seven fixed
 columns and travels straight from the top to the bottom of the courtyard, following
-a Plants-vs.-Zombies-style lane model. Reaching the bottom removes the spider and counts it
-as cleared for wave progression, but does not award currency or damage a base.
+a Plants-vs.-Zombies-style lane model. Reaching the bottom removes the spider, counts
+it as cleared for wave progression, awards no currency, and damages the station by
+one health.
 
 ## Waves
 

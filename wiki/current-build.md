@@ -5,12 +5,12 @@
 ## Status
 
 The active codebase is a Godot 4 scaffold port of the archived Unity prototype. Its
-main scene contains one fitted board, seven vertical enemy lanes, six build
-plots, one enemy spawner, and a two-gutter HUD/shop. The port closely preserves the eleven original Unity
+main scene contains one fitted board, seven vertical enemy lanes, a randomized bounded railway, one enemy
+spawner, a defended station, and a two-gutter HUD/shop. The port closely preserves the eleven original Unity
 gameplay scripts as GDScript plus four autoload managers.
 
 The build should be treated as a scaffold, not a finished playable slice — but the
-core plot → build → shoot → kill → currency → wave-scaling loop is now verified
+core drag → deploy → patrol → shoot/slow → kill → currency → wave-scaling loop is now verified
 working end to end, including in an actual Web-exported browser build (see
 [Roadmap, Phase 4](../roadmap.md) for the full verification notes and the bugs that
 testing-in-browser caught that code review and the editor alone did not).
@@ -49,20 +49,21 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 | `BuildManager` | Global tower catalog and current shop selection |
 | `UIManager` | Prevents board clicks passing through UI |
 | `GameEvents` | Global `enemy_destroyed` signal used for wave accounting |
-| `Main` | Copies scene path markers into `LevelManager` |
+| `Main` | Validates convoy drops, purchases cars, and attaches them to the engine |
 | `EnemySpawner` | Wave timing, scaling, spawning, and alive count |
 | `EnemyMovement` + `Health` | Route traversal, slowing, damage, death, and bounty |
-| `Plot` + `TowerData` | Buying the selected defense on a build tile |
-| `Turret` + `Bullet` | Target acquisition, rotation, firing, homing, and damage |
-| `TurretSlomo` | Periodic area slow without damage |
-| `Menu` | Currency display, selected-defense status, and tower selection |
+| `TowerData` | Train shop data, scene, description, price, and drag icon |
+| `TrackRenderer` | Generates a connected courtyard railway with straight and curved tiles; highlights valid drop targets |
+| `TrainConvoy` | Moves the default black engine and makes attached cars follow its movement history |
+| `Turret` + `Bullet` | Convoy following, target acquisition, rotation, firing, homing, and damage |
+| `TurretSlomo` | Convoy following and periodic area slow without damage |
+| `Menu` | Run HUD, shop drag gestures, selected-train details, and wave control |
 
 ## Active scenes
 
 | Scene | Current content |
 |---|---|
-| `Main.tscn` | Fitted board, seven lanes, six plots, spawner, and gutter HUD |
-| `Plot.tscn` | Clickable 90×90 build region using scaled rail art |
+| `Main.tscn` | Fitted board, generated railway, default black engine, station, spawner, and gutter HUD |
 | `Enemy.tscn` | Generic spider body with 2 HP and 50 bounty defaults |
 | `Turret.tscn` | Normalized Gunner art, 360-unit detection area, bullet scene |
 | `TurretSlomo.tscn` | Normalized white-engine art and 360-unit slow area |
@@ -70,12 +71,11 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 
 ## Known gaps and risks
 
-- The first shop can select the Gunner or Slomo Turret, but it is still a minimal
-  prototype interface without icons, previews, refunds, or upgrade information.
-- No base health or penalty for leaked enemies.
-- No win, loss, pause, restart, or speed-control flow.
+- The first shop can attach Gunner and Slomo cars with image previews, but has no
+  refunds, upgrade information, consist-length limit, or car reordering.
+- There is no victory, restart, pause, or speed-control flow.
 - Upgrade methods exist, but no upgrade panel is wired in `Turret.tscn`.
-- The wave number, countdown, and enemy count are not displayed.
+- Wave number and remaining spiders are displayed, but there is no countdown.
 - Only one generic enemy is spawnable; most art has no gameplay scene.
 - Target selection uses the first overlapping physics body, with no explicit
   first/last/strongest targeting policy.
@@ -85,7 +85,7 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 Resolved this session (were previously listed here): the slow effect now reduces
 speed relative to each enemy's own base speed and safely extends under overlapping
 pulses rather than racing; a homing bullet whose target disappears now frees itself
-instead of drifting forever. The board, spider frame, towers, projectile, plots,
+instead of drifting forever. The board, spider frame, trains, projectile,
 colliders, lanes, render layers, and HUD are also normalized around a 1280×720
 logical viewport. The full portrait board is fitted by height; its side gutters are
 reserved for interface rather than cropped away.

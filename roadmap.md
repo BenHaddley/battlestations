@@ -57,8 +57,7 @@ configuration or known unit-scale errors.
       pulses: `EnemyMovement.apply_slow(duration)` tracks a slow-expiry timestamp
       that a later pulse can only extend, never shorten; speed is `base_speed * 0.5`
       while active, not an absolute `0.5`.
-- [x] Guard empty/invalid tower selections and safely handle non-`Turret` defenses in
-      `Plot`.
+- [x] Guard invalid shop data and charge only after a train is dropped on a valid rail.
 
 ### Minimal interface
 
@@ -66,8 +65,10 @@ configuration or known unit-scale errors.
       on insufficient funds; HUD label updates live via `Menu`).
 - [x] Display which defense is selected and the cost of each option.
 - [x] Replace the unwired menu-animation hooks with an intentional two-gutter HUD.
-- [x] Normalize the full board, one-frame spider art, towers, projectiles, plots,
+- [x] Normalize the full board, one-frame spider art, trains, projectiles,
       colliders, render order, and seven top-to-bottom lanes around a 1280×720 viewport.
+- [x] Spawn one default black engine and replace fixed build pads with convoy
+      drag/drop; attached combat cars follow its route history as a trailing consist.
 
 ### Verification
 
@@ -126,14 +127,15 @@ always knows the run state and available actions.
 **Goal:** decide what Battle Stations fundamentally is before building the full
 roster. This phase is intentionally a gate.
 
-The current code implements stationary defenses on plots. The lost concept sheet
-instead describes engines with different speeds and car capacities. Those models may
-coexist, but the project should not silently assume that they do.
+The current direction is now mobile rail defense: one default black engine patrols a
+procedurally generated courtyard railway, and shop cars attach behind it while fighting spiders. The lost
+concept sheet's coupled-car capacities may extend this model later, but are not yet
+implemented.
 
-- [ ] Decide whether gameplay is:
-  - stationary railway-themed tower defense;
-  - a moving engine with coupled combat/support cars; or
-  - a deliberately scoped hybrid.
+- [x] Choose coupled mobile rail defense over stationary plots: attach shop cars to
+      the default engine and let the whole consist patrol automatically.
+- [ ] Decide whether later trains become coupled multi-car consists or remain
+      ordered cars sharing one engine-led consist.
 - [ ] Decide whether runs use one board, multiple authored levels, or endless boards.
 - [ ] Define the role of engines and whether the eleven liveries are cosmetic.
 - [ ] Define intended roles for the initial defense and spider roster. Mark any new
@@ -184,7 +186,9 @@ every proposed feature against that definition.
 ### Verified in a live Web-exported browser build (headless Chromium, this session)
 
 Full playthrough of waves 1–2, confirmed via console logging then re-verified
-debug-free: click a plot → Gunner turret built, 100 → 50 currency; turret acquires
+debug-free. The placement model has since advanced: drag Gunner from the shop → drop
+onto the engine/consist → currency spent → car joins the tail and visibly follows;
+the turret acquires
 and fires on the first spider to enter its 300-unit range; kills pay a 50-currency
 bounty (currency climbed 50 → 600 across the run); Slomo Turret pulses and visibly
 halves enemy velocity; wave 2 sizing/pace matched the formula exactly (13 enemies @
