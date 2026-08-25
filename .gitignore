@@ -1,9 +1,9 @@
 # Unity (legacy_unity/ reference project)
-/Library/
-/Temp/
-/Logs/
-/UserSettings/
-/obj/
+legacy_unity/Library/
+legacy_unity/Temp/
+legacy_unity/Logs/
+legacy_unity/UserSettings/
+legacy_unity/obj/
 *.csproj
 *.sln
 *.userprefs

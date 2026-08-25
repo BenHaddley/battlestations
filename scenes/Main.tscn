@@ -1,0 +1,63 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/board/THE_BOARD.png" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/Plot.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/enemy_spawner.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/menu.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/main.gd" id="6"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("6")
+
+[node name="Board" type="Sprite2D" parent="."]
+texture = ExtResource("1")
+
+[node name="Path" type="Node2D" parent="."]
+
+[node name="StartPoint" type="Marker2D" parent="Path"]
+position = Vector2(-400, 0)
+
+[node name="Point1" type="Marker2D" parent="Path"]
+position = Vector2(-200, 0)
+
+[node name="Point1End" type="Marker2D" parent="Path"]
+position = Vector2(-200, 200)
+
+[node name="Point2" type="Marker2D" parent="Path"]
+position = Vector2(200, 200)
+
+[node name="Point2End" type="Marker2D" parent="Path"]
+position = Vector2(400, 0)
+
+[node name="Plots" type="Node2D" parent="."]
+
+[node name="Plot1" parent="Plots" instance=ExtResource("2")]
+position = Vector2(-200, -120)
+
+[node name="Plot2" parent="Plots" instance=ExtResource("2")]
+position = Vector2(0, -120)
+
+[node name="Plot3" parent="Plots" instance=ExtResource("2")]
+position = Vector2(200, -120)
+
+[node name="EnemySpawner" type="Node2D" parent="."]
+script = ExtResource("4")
+enemy_prefabs = Array[PackedScene]([ExtResource("3")])
+start_point = NodePath("../Path/StartPoint")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Menu" type="Control" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("5")
+currency_label = NodePath("CurrencyLabel")
+
+[node name="CurrencyLabel" type="Label" parent="CanvasLayer/Menu"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 160.0
+offset_bottom = 46.0
+text = "100"
