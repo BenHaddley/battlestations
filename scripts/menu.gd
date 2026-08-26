@@ -65,7 +65,7 @@ func _input(event: InputEvent) -> void:
 		train_drag_ended.emit()
 
 func _process(_delta: float) -> void:
-	currency_label.text = "$ Funds  %d" % LevelManager.currency
+	currency_label.text = "%d" % LevelManager.currency
 	_style_tower_button(gunner_button, 0)
 	_style_tower_button(slomo_button, 1)
 
@@ -93,11 +93,13 @@ func _on_next_wave_pressed() -> void:
 
 func _toggle_speed() -> void:
 	Engine.time_scale = 2.0 if Engine.time_scale < 1.5 else 1.0
-	speed_button.text = "SPEED 2x" if Engine.time_scale > 1.5 else "SPEED 1x"
+	speed_button.tooltip_text = "Return to normal speed" if Engine.time_scale > 1.5 else "Run at double speed"
+	speed_button.modulate = Color(1.0, 0.82, 0.38) if Engine.time_scale > 1.5 else Color.WHITE
 
 func _toggle_pause() -> void:
 	get_tree().paused = not get_tree().paused
-	pause_button.text = "RESUME" if get_tree().paused else "PAUSE"
+	pause_button.tooltip_text = "Resume" if get_tree().paused else "Pause"
+	pause_button.modulate = Color(1.0, 0.82, 0.38) if get_tree().paused else Color.WHITE
 
 func _select_tower(index: int) -> void:
 	BuildManager.set_selected_tower(index)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3]
+[gd_scene load_steps=30 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/board/THE_BOARD.png" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
@@ -16,6 +16,27 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Gunner Top 1.png" id="15"]
 [ext_resource type="Texture2D" path="res://assets/sprites/engines/Steam Engine White.png" id="16"]
 [ext_resource type="AudioStream" path="res://assets/audio/Train 45.mp3" id="17"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/left side menu 1.png" id="18"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/right side menu.png" id="19"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/speed up.png" id="20"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/pause.png" id="21"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/gifmaker_me_4.png" id="22"]
+
+[sub_resource type="StyleBoxTexture" id="LeftPanelArt"]
+texture = ExtResource("18")
+
+[sub_resource type="StyleBoxTexture" id="RightPanelArt"]
+texture = ExtResource("19")
+
+[sub_resource type="StyleBoxTexture" id="SpeedButtonArt"]
+texture = ExtResource("20")
+
+[sub_resource type="StyleBoxTexture" id="PauseButtonArt"]
+texture = ExtResource("21")
+
+[sub_resource type="AtlasTexture" id="TutorialFrame"]
+atlas = ExtResource("22")
+region = Rect2(0, 0, 950, 530)
 
 [sub_resource type="StyleBoxFlat" id="HudPanel"]
 bg_color = Color(0.25, 0.15, 0.09, 0.98)
@@ -193,7 +214,7 @@ offset_top = 12.0
 offset_right = 230.0
 offset_bottom = 708.0
 mouse_filter = 1
-theme_override_styles/panel = SubResource("HudPanel")
+theme_override_styles/panel = SubResource("LeftPanelArt")
 
 [node name="Margin" type="MarginContainer" parent="CanvasLayer/Menu/LeftPanel"]
 layout_mode = 2
@@ -207,6 +228,7 @@ layout_mode = 2
 theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.86, 0.56, 1)
 theme_override_font_sizes/font_size = 26
@@ -214,9 +236,11 @@ text = "BATTLE
 STATIONS"
 
 [node name="Rule" type="HSeparator" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
+visible = false
 layout_mode = 2
 
 [node name="HealthLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.32, 0.28, 1)
 theme_override_font_sizes/font_size = 20
@@ -225,19 +249,28 @@ text = "♥ Station  20/20"
 [node name="CurrencyLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
-text = "$ Funds  100"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 27
+text = "100"
+horizontal_alignment = 1
+
+[node name="HeaderSpacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
 
 [node name="WaveLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.75, 0.82, 0.84, 1)
+theme_override_colors/font_color = Color(1, 0.88, 0.68, 1)
 theme_override_font_sizes/font_size = 18
 text = "Wave  0"
 
 [node name="SpidersLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.75, 0.82, 0.84, 1)
+theme_override_colors/font_color = Color(1, 0.88, 0.68, 1)
 theme_override_font_sizes/font_size = 16
-theme_override_colors/font_color = Color(0.04, 0.07, 0.06, 1)
 text = "🕷 0 remaining"
 
 [node name="TrainLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
@@ -260,6 +293,7 @@ custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.04, 0.07, 0.06, 1)
 theme_override_styles/normal = SubResource("ButtonNormal")
 theme_override_styles/hover = SubResource("ButtonHover")
 theme_override_styles/disabled = SubResource("ButtonDisabled")
@@ -298,7 +332,7 @@ offset_top = 12.0
 offset_right = 1268.0
 offset_bottom = 620.0
 mouse_filter = 1
-theme_override_styles/panel = SubResource("HudPanel")
+theme_override_styles/panel = SubResource("RightPanelArt")
 
 [node name="Margin" type="MarginContainer" parent="CanvasLayer/Menu/RightPanel"]
 layout_mode = 2
@@ -319,19 +353,24 @@ theme_override_constants/separation = 6
 custom_minimum_size = Vector2(90, 42)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.04, 0.07, 0.06, 1)
-theme_override_styles/normal = SubResource("ButtonNormal")
-theme_override_styles/hover = SubResource("ButtonHover")
-text = "SPEED 1x"
+theme_override_styles/normal = SubResource("SpeedButtonArt")
+theme_override_styles/hover = SubResource("SpeedButtonArt")
+tooltip_text = "Run at double speed"
 
 [node name="PauseButton" type="Button" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/TransportControls"]
 custom_minimum_size = Vector2(90, 42)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.04, 0.07, 0.06, 1)
-theme_override_styles/normal = SubResource("ButtonNormal")
-theme_override_styles/hover = SubResource("ButtonHover")
-text = "PAUSE"
+theme_override_styles/normal = SubResource("PauseButtonArt")
+theme_override_styles/hover = SubResource("PauseButtonArt")
+tooltip_text = "Pause"
+
+[node name="TutorialFrame" type="TextureRect" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 102)
+layout_mode = 2
+texture = SubResource("TutorialFrame")
+expand_mode = 1
+stretch_mode = 6
 
 [node name="Header" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
 layout_mode = 2
@@ -341,12 +380,13 @@ text = "SELECTED"
 
 [node name="NameLabel" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.11, 0.07, 0.045, 1)
 theme_override_font_sizes/font_size = 24
 text = "Gunner"
 
 [node name="CostLabel" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.75, 0.82, 0.84, 1)
+theme_override_colors/font_color = Color(0.18, 0.11, 0.07, 1)
 theme_override_font_sizes/font_size = 16
 text = "$50"
 
@@ -362,14 +402,14 @@ layout_mode = 2
 
 [node name="SummaryLabel" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.83, 0.85, 1)
+theme_override_colors/font_color = Color(0.14, 0.09, 0.055, 1)
 theme_override_font_sizes/font_size = 15
 text = "Reliable single-target damage."
 autowrap_mode = 2
 
 [node name="HintLabel" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.54, 0.6, 0.62, 1)
+theme_override_colors/font_color = Color(0.24, 0.15, 0.09, 1)
 theme_override_font_sizes/font_size = 13
 text = "Drag this car onto the moving black engine or its connected train."
 autowrap_mode = 2
@@ -387,12 +427,14 @@ text = "CHALLENGES"
 layout_mode = 2
 mouse_filter = 2
 theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.14, 0.09, 0.055, 1)
 text = "No leaks this wave"
 
 [node name="ChallengeTwo" type="CheckBox" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.14, 0.09, 0.055, 1)
 text = "Build a three-car train"
 
 [node name="StationBar" type="ProgressBar" parent="CanvasLayer/Menu"]
