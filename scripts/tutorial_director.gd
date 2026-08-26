@@ -124,12 +124,21 @@ func _show_next() -> void:
 		PhaseManager.paused = pause_state_before_sequence
 		return
 	current = queue.pop_front()
-	var waits := not String(current.get("wait_for", "")).is_empty()
-	PhaseManager.paused = not waits
+	# Even requirement-bearing entries begin as conversation. The first advance
+	# switches them into objective mode and releases the station clock.
+	PhaseManager.paused = true
 	overlay.show_entry(current)
 
 func _advance() -> void:
-	if current.is_empty() or not String(current.get("wait_for", "")).is_empty():
+	if current.is_empty():
+		return
+	var requirement := String(current.get("wait_for", ""))
+	if not requirement.is_empty():
+		# Speak the instruction first. Advancing retracts the characters and
+		# exposes a small objective tag while the gameplay event remains armed.
+		if not overlay.waiting_for_action:
+			overlay.show_objective(String(current.get("action_hint", "CONTINUE THE OBJECTIVE")))
+			PhaseManager.paused = false
 		return
 	_show_next()
 
