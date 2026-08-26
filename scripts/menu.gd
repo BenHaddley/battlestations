@@ -76,6 +76,7 @@ func configure(enemy_spawner: EnemySpawner, defended_station: Station, active_tr
 	PhaseManager.configure(spawner)
 
 func _ready() -> void:
+	_style_train_yard()
 	for index in range(TOWER_BUTTONS.size()):
 		var button: Button = get(TOWER_BUTTONS[index])
 		button.pressed.connect(_select_tower.bind(index))
@@ -88,6 +89,86 @@ func _ready() -> void:
 	PhaseManager.phase_changed.connect(_on_phase_changed)
 	_create_drag_preview()
 	_on_phase_changed(PhaseManager.phase_label().to_lower())
+
+## The infowiki roster is presented as a compact tray of physical train pieces.
+## Keeping this styling here also means adding a documented TowerData entry only
+## requires adding its button path above; it cannot silently inherit the old,
+## oversized web-shop treatment.
+func _style_train_yard() -> void:
+	var shop_list: VBoxContainer = $LeftPanel/Margin/VBox/ScrollContainer/ShopList
+	shop_list.add_theme_constant_override("separation", 3)
+	remove_button.custom_minimum_size.y = 38
+	remove_button.add_theme_font_size_override("font_size", 20)
+
+	for index in range(TOWER_BUTTONS.size()):
+		var button: Button = get(TOWER_BUTTONS[index])
+		button.custom_minimum_size.y = 65
+		button.add_theme_stylebox_override("normal", _train_yard_row_style(index, false))
+		button.add_theme_stylebox_override("hover", _train_yard_row_style(index, true))
+
+		var icon := button.find_child("Icon", true, false) as TextureRect
+		if icon:
+			# A Container owns its children's transforms, so rotating the original
+			# TextureRect gets silently reset. Draw a non-container-owned copy over
+			# the card instead, which gives the mockup its horizontal, oversized cars.
+			icon.visible = false
+			var tray_icon := TextureRect.new()
+			tray_icon.name = "TrayIcon"
+			tray_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			tray_icon.texture = icon.texture
+			tray_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tray_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tray_icon.position = Vector2(9, -13)
+			tray_icon.size = Vector2(91, 91)
+			tray_icon.pivot_offset = tray_icon.size * 0.5
+			tray_icon.rotation = (-PI / 2.0) + deg_to_rad([-2.0, 1.5, -1.0, 2.0, -1.5, 1.0, -2.0][index])
+			button.add_child(tray_icon)
+
+		var name_label := button.find_child("NameLabel", true, false) as Label
+		if name_label:
+			name_label.visible = false
+
+		var price_pill := button.find_child("PricePill", true, false) as PanelContainer
+		if price_pill:
+			price_pill.custom_minimum_size = Vector2(82, 52)
+			price_pill.add_theme_stylebox_override("panel", _train_yard_price_style(index))
+
+		var price_label := button.find_child("PriceLabel", true, false) as Label
+		if price_label:
+			price_label.add_theme_color_override("font_color", Color(1.0, 0.98, 0.9))
+			price_label.add_theme_color_override("font_outline_color", Color(0.08, 0.055, 0.035))
+			price_label.add_theme_constant_override("outline_size", 3)
+			price_label.add_theme_font_size_override("font_size", 22)
+
+func _train_yard_row_style(index: int, hovered: bool) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	var paper_colors := [
+		Color("f3dfaa"), Color("ead39b"), Color("f1dda7"),
+		Color("e8ce91"), Color("f0d9a0"), Color("e5ca8e"), Color("efd8a1")
+	]
+	style.bg_color = paper_colors[index % paper_colors.size()].lightened(0.08 if hovered else 0.0)
+	style.border_color = Color("24160d")
+	style.set_border_width_all(3)
+	style.corner_radius_top_left = 2 + (index % 2)
+	style.corner_radius_top_right = 5 - (index % 2)
+	style.corner_radius_bottom_left = 5 - (index % 2)
+	style.corner_radius_bottom_right = 2 + (index % 2)
+	style.content_margin_left = 7
+	style.content_margin_right = 5
+	return style
+
+func _train_yard_price_style(index: int) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("72a77e") if index % 2 == 0 else Color("659b72")
+	style.border_color = Color("24160d")
+	style.set_border_width_all(3)
+	style.corner_radius_top_left = 2
+	style.corner_radius_top_right = 5
+	style.corner_radius_bottom_left = 2
+	style.corner_radius_bottom_right = 4
+	style.content_margin_left = 4
+	style.content_margin_right = 4
+	return style
 
 func _set_price_text(button: Button, cost: int) -> void:
 	var label: Label = button.find_child("PriceLabel", true, false)
