@@ -27,6 +27,8 @@ signal remove_requested(screen_position: Vector2)
 @onready var speed_button: Button = $RightPanel/Margin/VBox/ControlsPanel/Margin/ControlsRow/SpeedButton
 @onready var pause_button: Button = $RightPanel/Margin/VBox/ControlsPanel/Margin/ControlsRow/PauseButton
 
+@onready var portrait: TextureRect = $RightPanel/Margin/VBox/PortraitPanel/Portrait
+
 @onready var schedule_panel: PanelContainer = $RightPanel/Margin/VBox/SchedulePanel
 @onready var phase_dots: Control = $RightPanel/Margin/VBox/SchedulePanel/Margin/VBox/PhaseDots
 @onready var phase_label: Label = $RightPanel/Margin/VBox/SchedulePanel/Margin/VBox/PhaseLabel
@@ -52,6 +54,9 @@ const SCHEDULE_BATTLE_COLOR := Color(0.78, 0.36, 0.24, 1)
 const HP_SHEET := preload("res://assets/sprites/ui/hp/hp_variants.png")
 const HP_FRAME_WIDTH := 39.2
 const HP_FRAME_HEIGHT := 140.0
+
+const PORTRAIT_STATION := preload("res://assets/sprites/ui/portrait/portrait_station.png")
+const PORTRAIT_BATTLE := preload("res://assets/sprites/ui/portrait/portrait_battle.png")
 
 var spawner: EnemySpawner
 var station: Station
@@ -188,6 +193,7 @@ func _on_phase_changed(phase_name: String) -> void:
 	phase_label.text = "BATTLE" if is_battle else "STATION"
 	phase_instruction.text = "DEFEND • FIRE • SURVIVE" if is_battle else "PREPARE • BUY • COUPLE"
 	schedule_panel.add_theme_stylebox_override("panel", _schedule_style(is_battle))
+	portrait.texture = PORTRAIT_BATTLE if is_battle else PORTRAIT_STATION
 
 func _schedule_style(is_battle: bool) -> StyleBox:
 	var style := StyleBoxFlat.new()

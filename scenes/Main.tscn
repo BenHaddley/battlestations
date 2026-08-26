@@ -31,8 +31,10 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/board/tile_sample_light.png" id="54"]
 [ext_resource type="Texture2D" path="res://assets/sprites/board/tile_sample_dark.png" id="55"]
 [ext_resource type="Script" path="res://scripts/heart_icon.gd" id="56"]
-[ext_resource type="Texture2D" path="res://assets/sprites/ui/tutorial_gif/frame_00.png" id="57"]
 [ext_resource type="Script" path="res://scripts/board_frame.gd" id="58"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/portrait/portrait_station.png" id="59"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/portrait/portrait_battle.png" id="60"]
+[ext_resource type="Script" path="res://scripts/hand_drawn_frame.gd" id="61"]
 
 [sub_resource type="StyleBoxTexture" id="SpeedButtonArt"]
 texture = ExtResource("48")
@@ -201,6 +203,18 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
+[sub_resource type="StyleBoxFlat" id="MintHeader"]
+bg_color = Color(0.62, 0.82, 0.72, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.08, 0.06, 0.04, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 8
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 8
+
 [sub_resource type="StyleBoxFlat" id="RemoveStrip"]
 bg_color = Color(0.43, 0.055, 0.045, 1)
 border_width_left = 4
@@ -326,7 +340,9 @@ vertical_alignment = 1
 [node name="ShopTitle" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.14, 0.09, 0.055, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_colors/font_outline_color = Color(0.14, 0.09, 0.055, 0.35)
+theme_override_constants/outline_size = 1
+theme_override_font_sizes/font_size = 22
 text = "TRAIN YARD"
 horizontal_alignment = 1
 
@@ -1016,6 +1032,10 @@ theme_override_styles/normal = SubResource("RemoveStrip")
 theme_override_styles/hover = SubResource("RemoveStrip")
 text = "REMOVE UNIT"
 
+[node name="Frame" type="Control" parent="CanvasLayer/Menu/LeftPanel"]
+layout_mode = 2
+script = ExtResource("61")
+
 [node name="HpRail" type="PanelContainer" parent="CanvasLayer/Menu"]
 layout_mode = 0
 offset_left = 946.0
@@ -1055,6 +1075,13 @@ stretch_mode = 0
 custom_minimum_size = Vector2(0, 22)
 layout_mode = 2
 script = ExtResource("56")
+
+[node name="Frame" type="Control" parent="CanvasLayer/Menu/HpRail"]
+layout_mode = 2
+script = ExtResource("61")
+outline_width = 4.0
+accent_color = Color(0.22, 0.36, 0.19, 1)
+accent_width = 2.0
 
 [node name="RightPanel" type="PanelContainer" parent="CanvasLayer/Menu"]
 layout_mode = 0
@@ -1107,17 +1134,29 @@ theme_override_styles/normal = SubResource("PauseButtonArt")
 theme_override_styles/hover = SubResource("PauseButtonArt")
 tooltip_text = "Pause"
 
+[node name="Frame" type="Control" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/ControlsPanel"]
+layout_mode = 2
+script = ExtResource("61")
+outline_width = 5.0
+accent_width = 2.0
+
 [node name="PortraitPanel" type="PanelContainer" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 128)
+custom_minimum_size = Vector2(0, 156)
 layout_mode = 2
 theme_override_styles/panel = SubResource("CreamPanel")
 
 [node name="Portrait" type="TextureRect" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/PortraitPanel"]
 layout_mode = 2
 mouse_filter = 2
-texture = ExtResource("57")
+texture = ExtResource("59")
 expand_mode = 1
 stretch_mode = 6
+
+[node name="Frame" type="Control" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/PortraitPanel"]
+layout_mode = 2
+script = ExtResource("61")
+outline_width = 5.0
+accent_width = 2.0
 
 [node name="SchedulePanel" type="PanelContainer" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 148)
@@ -1138,7 +1177,7 @@ theme_override_constants/separation = 3
 [node name="IdentityLabel" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/SchedulePanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.24, 0.08, 0.055, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 16
 text = "BATTLE // STATIONS"
 horizontal_alignment = 1
 
@@ -1179,6 +1218,10 @@ theme_override_styles/hover = SubResource("WaveButtonHover")
 theme_override_styles/disabled = SubResource("WaveButtonDisabled")
 text = "SKIP WAIT"
 
+[node name="Frame" type="Control" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/SchedulePanel"]
+layout_mode = 2
+script = ExtResource("61")
+
 [node name="TodoPanel" type="PanelContainer" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 230)
 layout_mode = 2
@@ -1194,44 +1237,66 @@ theme_override_constants/margin_bottom = 12
 
 [node name="VBox" type="VBoxContainer" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/TodoPanel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 14
 
-[node name="TodoTitle" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/TodoPanel/Margin/VBox"]
+[node name="TodoHeader" type="PanelContainer" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/TodoPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.14, 0.09, 0.055, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_styles/panel = SubResource("MintHeader")
+
+[node name="TodoTitle" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/TodoPanel/Margin/VBox/TodoHeader"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.08, 0.06, 0.04, 1)
+theme_override_font_sizes/font_size = 19
 text = "TO-DO LIST"
 horizontal_alignment = 1
-
-[node name="TodoRule" type="HSeparator" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/TodoPanel/Margin/VBox"]
-layout_mode = 2
+vertical_alignment = 1
 
 [node name="TaskHealth" type="CheckBox" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/TodoPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 mouse_filter = 2
 disabled = true
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 17
 theme_override_colors/font_color = Color(0.14, 0.09, 0.055, 1)
 theme_override_colors/font_disabled_color = Color(0.14, 0.09, 0.055, 1)
 text = "Keep HP above 50%"
 
 [node name="TaskNoLeaks" type="CheckBox" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/TodoPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 mouse_filter = 2
 disabled = true
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 17
 theme_override_colors/font_color = Color(0.14, 0.09, 0.055, 1)
 theme_override_colors/font_disabled_color = Color(0.14, 0.09, 0.055, 1)
 text = "No leaks this wave"
 
 [node name="TaskTrain" type="CheckBox" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/TodoPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 mouse_filter = 2
 disabled = true
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 17
 theme_override_colors/font_color = Color(0.14, 0.09, 0.055, 1)
 theme_override_colors/font_disabled_color = Color(0.14, 0.09, 0.055, 1)
 text = "Build a three-car train"
+
+[node name="TodoNote" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/TodoPanel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.3, 0.22, 0.14, 0.6)
+theme_override_font_sizes/font_size = 13
+text = "Tracked automatically
+as you play."
+horizontal_alignment = 1
+vertical_alignment = 0
+autowrap_mode = 2
+
+[node name="Frame" type="Control" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/TodoPanel"]
+layout_mode = 2
+script = ExtResource("61")
+
+[node name="Frame" type="Control" parent="CanvasLayer/Menu/RightPanel"]
+layout_mode = 2
+script = ExtResource("61")
