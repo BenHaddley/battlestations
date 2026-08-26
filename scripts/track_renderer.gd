@@ -37,9 +37,25 @@ func generate_layout(route_count: int = 2) -> Array[PackedVector2Array]:
 		var route := _place_loop(occupied)
 		if not route.is_empty():
 			routes.append(route)
+	# Random placement is allowed to fail, game startup is not. Two compact
+	# loops in opposite board quadrants provide a deterministic safety layout
+	# whenever the randomized packing cannot satisfy the requested train count.
+	if routes.size() < mini(route_count, 2):
+		routes = _fallback_routes(route_count)
 
 	_render_all()
 	return routes
+
+func _fallback_routes(route_count: int) -> Array[PackedVector2Array]:
+	var result: Array[PackedVector2Array] = []
+	var origins: Array[Vector2i] = [Vector2i(0, 1), Vector2i(4, 5)]
+	for route_index in range(mini(route_count, origins.size())):
+		var points := PackedVector2Array()
+		for cell in _rectangle_ring(3, 3):
+			var placed := origins[route_index] + cell
+			points.append(Vector2(columns[placed.x], rows[placed.y]))
+		result.append(points)
+	return result
 
 func _build_grid() -> void:
 	columns = []
