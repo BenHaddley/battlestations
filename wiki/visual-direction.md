@@ -11,8 +11,8 @@ not a conventional dark game dashboard.
 - Available cars use bright turquoise card wells; selection uses warm yellow.
 - The right cabinet owns transport controls, tutorial imagery, progress, and challenges.
 - Station health is a prominent green/red bar beneath the battlefield.
-- Text is short, handwritten or sign-painted in spirit, with pictures carrying most
-  of the shop and tutorial communication.
+- Text is short and set in the bundled Architects Daughter handwriting face, with
+  pictures carrying most of the shop and tutorial communication.
 - Avoid clean dashboard cards, realistic materials, or large explanatory copy; the
   screen should read first as a dense hand-inked board game.
 

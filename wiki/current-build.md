@@ -77,7 +77,7 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
   to the route, and are spaced by physical length with visible couplers.
 - Spiders animate and flash on hits. Gunfire, kills, bounty rewards, station damage,
   and Slomo's rough hand-drawn arrow burst all provide immediate feedback.
-- A recovered crayon-style display font, thick outlines, warm burgundy, bright cyan,
+- Architects Daughter handwriting, thick outlines, warm burgundy, bright cyan,
   and paper yellow unify the interface with the supplied illustrated reference.
 - The opening composition seeds three free starter cars and automatically begins wave
   one, so the board presents moving pieces, enemies, smoke, and combat rather than an

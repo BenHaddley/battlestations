@@ -27,7 +27,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Ballast Blaster.png" id="26"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Passenger Coach.png" id="27"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Minigun Base.png" id="28"]
-[ext_resource type="FontFile" path="res://assets/fonts/DkCoolCrayon.ttf" id="29"]
+[ext_resource type="FontFile" path="res://assets/fonts/ArchitectsDaughter-Regular.ttf" id="29"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/BRAKE VAN.png" id="30"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/OIL TANKER 2.png" id="31"]
 
