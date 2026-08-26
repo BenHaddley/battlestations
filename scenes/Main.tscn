@@ -1,4 +1,4 @@
-[gd_scene load_steps=50 format=3]
+[gd_scene load_steps=47 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/board/THE_BOARD.png" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
@@ -11,8 +11,9 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/board/Rail Curve.png" id="10"]
 [ext_resource type="Script" path="res://scripts/battlefield_overlay.gd" id="13"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Gunner Top 1.png" id="15"]
-[ext_resource type="Texture2D" path="res://assets/sprites/engines/Steam Engine White.png" id="16"]
 [ext_resource type="AudioStream" path="res://assets/audio/Train 45.mp3" id="17"]
+[ext_resource type="AudioStream" path="res://assets/audio/opening screen musicMountain Banjo.mp3" id="65"]
+[ext_resource type="Script" path="res://scripts/music_playlist.gd" id="66"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/COAL CANNON BASE.png" id="25"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Ballast Blaster.png" id="26"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Passenger Coach.png" id="27"]
@@ -21,7 +22,6 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/units/BRAKE VAN.png" id="30"]
 [ext_resource type="Script" path="res://scripts/comic_card.gd" id="32"]
 [ext_resource type="Script" path="res://scripts/gem_icon.gd" id="44"]
-[ext_resource type="Texture2D" path="res://assets/sprites/units/CHAINGUN BASE.png" id="46"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/TENDER.png" id="47"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/hp/hp_variants.png" id="50"]
 [ext_resource type="Script" path="res://scripts/phase_dots.gd" id="52"]
@@ -31,7 +31,6 @@
 [ext_resource type="Script" path="res://scripts/heart_icon.gd" id="56"]
 [ext_resource type="Script" path="res://scripts/board_frame.gd" id="58"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/portrait/portrait_station.png" id="59"]
-[ext_resource type="Texture2D" path="res://assets/sprites/ui/portrait/portrait_battle.png" id="60"]
 [ext_resource type="Script" path="res://scripts/hand_drawn_frame.gd" id="61"]
 [ext_resource type="Script" path="res://scripts/hp_gauge.gd" id="62"]
 [ext_resource type="Script" path="res://scripts/fast_forward_icon.gd" id="63"]
@@ -255,8 +254,9 @@ script = ExtResource("6")
 zoom = Vector2(0.76, 0.76)
 
 [node name="MusicPlayer" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("17")
 volume_db = -8.0
+script = ExtResource("66")
+tracks = Array[AudioStream]([ExtResource("17"), ExtResource("65")])
 
 [node name="Board" type="Sprite2D" parent="."]
 z_index = -100

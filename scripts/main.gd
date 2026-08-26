@@ -9,7 +9,6 @@ const TrainConvoyScene := preload("res://scenes/TrainConvoy.tscn")
 @onready var track: TrackRenderer = $Track
 @onready var trains: Node2D = $Trains
 @onready var menu: Menu = $CanvasLayer/Menu
-@onready var music_player: AudioStreamPlayer = $MusicPlayer
 
 ## One TrainConvoy instance per generated route, in generation order.
 var convoys: Array[Node2D] = []
@@ -54,7 +53,6 @@ var _car_palette_cursor := 0
 
 func _ready() -> void:
 	get_tree().root.physics_object_picking = true
-	_play_music_looped()
 	_generate_and_spawn_trains()
 	menu.configure(spawner, $Station, convoys)
 	for convoy in convoys:
@@ -116,15 +114,6 @@ func _seed_tabletop() -> void:
 		_apply_car_palette(car, _car_palette_cursor)
 		_car_palette_cursor += 1
 		convoy.attach_car(car)
-
-## MP3 streams don't loop by default — the loop flag lives on the stream
-## resource itself, so it has to be set before play() rather than as a
-## one-time .import setting.
-func _play_music_looped() -> void:
-	var stream: AudioStreamMP3 = music_player.stream as AudioStreamMP3
-	if stream:
-		stream.loop = true
-	music_player.play()
 
 func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> void:
 	if tower_index < 0 or tower_index >= BuildManager.towers.size():
