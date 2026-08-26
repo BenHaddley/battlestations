@@ -65,12 +65,10 @@ func _render_path() -> void:
 	for index in range(path_points.size()):
 		var shadow := Sprite2D.new()
 		shadow.texture = rail_texture
-		shadow.scale = Vector2(tile_scale * 1.12, tile_scale * 1.12)
 		shadow.position = path_points[index] + Vector2(0.0, 7.0)
 		shadow.modulate = Color(0.04, 0.035, 0.025, 0.38)
 		shadow.z_index = -7
 		var tile := Sprite2D.new()
-		tile.scale = Vector2(tile_scale, tile_scale)
 		tile.position = path_points[index]
 		tile.z_index = -5
 
@@ -83,13 +81,19 @@ func _render_path() -> void:
 
 		if previous_direction != Vector2.ZERO and next_direction != Vector2.ZERO and not previous_direction.is_equal_approx(-next_direction):
 			tile.texture = curve_texture
+			tile.scale = Vector2(0.125, 0.125)
 			tile.rotation = _curve_rotation(previous_direction, next_direction)
 			shadow.texture = curve_texture
+			shadow.scale = tile.scale * 1.08
 			shadow.rotation = tile.rotation
 		else:
 			tile.texture = rail_texture
+			# Source art is vertical: keep its width narrow while extending its
+			# length slightly beyond the 90-unit path step to eliminate seams.
+			tile.scale = Vector2(tile_scale, 0.125)
 			var direction := next_direction if next_direction != Vector2.ZERO else previous_direction
 			tile.rotation = PI * 0.5 if absf(direction.x) > 0.5 else 0.0
+			shadow.scale = Vector2(tile_scale * 1.12, 0.13)
 			shadow.rotation = tile.rotation
 		add_child(shadow)
 		add_child(tile)
