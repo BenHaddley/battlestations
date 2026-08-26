@@ -43,9 +43,9 @@ func _connect_game() -> void:
 	if level_index == 0 and not _tutorial_was_completed():
 		tutorial_active = true
 		_enqueue([
-			_entry("Duck", "Welcome aboard! See that train? That's your defense."),
-			_entry("Daisy", "Against spiders, specifically. Please don't fire at the furniture."),
-			_entry("Duck", "No promises. Grab that Gunner from the Train Yard and couple it up!", "gunner_placed", "DRAG THE GUNNER ONTO A TRAIN"),
+			_entry("Duck", "Welcome aboard. See that train. That is your defense."),
+			_entry("Daisy", "Against spiders, specifically. Please do not fire at the furniture."),
+			_entry("Duck", "No promises. Grab that Gunner from the Train Yard and couple it up.", "gunner_placed", "DRAG THE GUNNER ONTO A TRAIN"),
 		])
 	else:
 		_enqueue(_campaign_intro(level_index))
@@ -58,29 +58,29 @@ func _process(_delta: float) -> void:
 			if _car_count() > baseline_car_count:
 				_complete_requirement([
 					_entry("Daisy", "Good. The weapons ride the rails instead of sitting around the board."),
-					_entry("Duck", "And the engine handles the driving. Hands free! Mostly."),
-					_entry("Daisy", "Start the wave when you're ready.", "wave_started", "START THE FIRST WAVE"),
+					_entry("Duck", "And the engine handles the driving. Hands free. Mostly."),
+					_entry("Daisy", "Start the wave when you are ready.", "wave_started", "START THE FIRST WAVE"),
 				])
 
 func _on_wave_started(wave: int) -> void:
 	if tutorial_active and String(current.get("wait_for", "")) == "wave_started":
 		_complete_requirement([
-			_entry("Duck", "Spiders incoming! Your Gunner fires whenever one gets close."),
+			_entry("Duck", "Spiders incoming. Your Gunner fires whenever one gets close."),
 			_entry("Daisy", "You steer the plan. The weapon handles the shooting."),
 		])
 	first_wave_seen = true
 	if spawner and spawner.wave_target > 0 and wave == spawner.wave_target and not final_wave_hyped:
 		final_wave_hyped = true
 		_enqueue([
-			_entry("Duck", "Final wave! This is where legends are forged!"),
-			_entry("Daisy", "Or where Duck learns what 'indoor voice' means."),
+			_entry("Duck", "Final wave. This is where legends are forged."),
+			_entry("Daisy", "Or where Duck learns what indoor voice means."),
 		])
 
 func _on_wave_cleared(wave: int) -> void:
 	if tutorial_active and wave == 1 and not first_payout_seen:
 		first_payout_seen = true
 		_enqueue([
-			_entry("Duck", "We survived—and got paid! More Delta means more train cars."),
+			_entry("Duck", "We survived, and got paid. More Delta means more train cars."),
 			_entry("Daisy", "Spend carefully. Every car adds weight to the train."),
 			_entry("Duck", "A heavy train still hits hard. It just stops being graceful."),
 		])
@@ -88,22 +88,22 @@ func _on_wave_cleared(wave: int) -> void:
 func _on_level_completed(_level, _is_finale: bool) -> void:
 	var level_index: int = int(CampaignManager.get("current_level_index"))
 	var ending: Array[Dictionary] = [
-		_entry("Duck", "Station secured! I knew the train would pull through."),
+		_entry("Duck", "Station secured. I knew the train would pull through."),
 		_entry("Daisy", "The player pulled through. The train followed the track."),
 	]
 	if level_index == 0:
-		ending.append(_entry("Duck", "Same thing. Next stop: a bigger arsenal!"))
+		ending.append(_entry("Duck", "Same thing. Next stop, a bigger arsenal."))
 		_mark_tutorial_completed()
 	_enqueue(ending)
 
 func _campaign_intro(level_index: int) -> Array[Dictionary]:
 	match level_index:
-		1: return [_entry("Duck", "Passenger Coach! It makes Delta while the train moves."), _entry("Daisy", "An economy car. Try not to spend its earnings before they exist.")]
+		1: return [_entry("Duck", "Passenger Coach. It makes Delta while the train moves."), _entry("Daisy", "An economy car. Try not to spend its earnings before they exist.")]
 		2: return [_entry("Duck", "The Ballast Blaster is for spiders with no respect for personal space."), _entry("Daisy", "Clusters. He means it works well against clusters.")]
 		3: return [_entry("Duck", "Coal Cannon. Big shell, big noise, very satisfying."), _entry("Daisy", "Save it for tougher spiders. It trades speed for force.")]
-		4: return [_entry("Duck", "Brake Van on the tail! Now the whole train means business."), _entry("Daisy", "It caps the consist and strengthens the cars ahead of it.")]
-		5: return [_entry("Duck", "The Tender lets the engine haul a much heavier defense."), _entry("Daisy", "Put it directly behind the engine or the extra capacity won't count.")]
-		6: return [_entry("Duck", "Chaingunner! Seven shots of extremely enthusiastic problem-solving."), _entry("Daisy", "Powerful bursts, followed by a long cooldown. Plan around both.")]
+		4: return [_entry("Duck", "Brake Van on the tail. Now the whole train means business."), _entry("Daisy", "It caps the consist and strengthens the cars ahead of it.")]
+		5: return [_entry("Duck", "The Tender lets the engine haul a much heavier defense."), _entry("Daisy", "Put it directly behind the engine or the extra capacity will not count.")]
+		6: return [_entry("Duck", "Chaingunner. Seven shots of extremely enthusiastic problem solving."), _entry("Daisy", "Powerful bursts, followed by a long cooldown. Plan around both.")]
 		_: return []
 
 func _entry(speaker: String, text: String, wait_for := "", hint := "") -> Dictionary:
