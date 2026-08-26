@@ -41,17 +41,17 @@ const TOWER_BUTTONS := ["gunner_button", "slomo_button", "minigun_button", "ball
 
 var spawner: EnemySpawner
 var station: Station
-var convoy: Node2D
+var trains: Array[Node2D] = []
 var station_lost: bool = false
 var dragging_tower: int = -1
 var drag_preview: TextureRect
 var current_wave_total: int = 1
 var removing_mode: bool = false
 
-func configure(enemy_spawner: EnemySpawner, defended_station: Station, active_convoy: Node2D) -> void:
+func configure(enemy_spawner: EnemySpawner, defended_station: Station, active_trains: Array[Node2D]) -> void:
 	spawner = enemy_spawner
 	station = defended_station
-	convoy = active_convoy
+	trains = active_trains
 	spawner.wave_started.connect(func(_wave: int) -> void:
 		current_wave_total = max(1, spawner.enemies_remaining())
 	)
@@ -107,10 +107,21 @@ func _process(_delta: float) -> void:
 			next_wave_button.text = "STATION LOST"
 		else:
 			next_wave_button.disabled = not spawner.can_start_next_wave()
-			next_wave_button.text = "NEXT WAVE" if spawner.can_start_next_wave() else "WAVE IN PROGRESS"
-	if convoy and convoy.has_method("car_count"):
-		var capped_note := "  (capped)" if convoy.get("capped") == true else ""
-		train_label.text = "TRAIN  1 engine + %d cars%s" % [convoy.car_count(), capped_note]
+			if spawner.can_start_next_wave():
+				next_wave_button.text = "START WAVE" if spawner.current_wave == 0 else "NEXT WAVE"
+			else:
+				next_wave_button.text = "WAVE IN PROGRESS"
+	if not trains.is_empty():
+		var total_cars := 0
+		var capped_count := 0
+		for train in trains:
+			if not is_instance_valid(train):
+				continue
+			total_cars += train.car_count()
+			if train.get("capped") == true:
+				capped_count += 1
+		var capped_note := "  (%d capped)" % capped_count if capped_count > 0 else ""
+		train_label.text = "TRAINS  %d engines + %d cars%s" % [trains.size(), total_cars, capped_note]
 
 func _on_next_wave_pressed() -> void:
 	if spawner:

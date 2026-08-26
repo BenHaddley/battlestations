@@ -13,6 +13,7 @@ as settled design.
 | [Current build](current-build.md) | What is implemented, how the code fits together, and how to run it |
 | [Systems and balance](systems-and-balance.md) | Verified mechanics, defaults, formulas, and worked values |
 | [Content catalog](content-catalog.md) | Available board, train, weapon, spider, effect, UI, and audio content |
+| [Infowiki unit cards](infowiki-cards.md) | Authoritative per-car design specs (cost, range, weight, bio) from `assets/audio/infowiki/`, and how they diverge from the shipped build |
 | [History and sources](history-and-sources.md) | Project timeline, evidence, provenance, and missing leads |
 | [Open questions](open-questions.md) | Decisions and missing information still needing an answer |
 | [Roadmap](../roadmap.md) | The implementation plan |

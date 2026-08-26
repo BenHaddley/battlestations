@@ -14,10 +14,16 @@ signal wave_cleared(wave_number: int)
 @export_range(20.0, 30.0, 0.5) var journey_duration_seconds: float = 25.0
 
 @export_group("Attributes")
-@export var base_enemies: int = 8
-@export var enemies_per_second: float = 0.5
-@export var difficulty_scaling_factor: float = 0.75
+@export var base_enemies: int = 3
+@export var enemies_per_second: float = 0.4
+## Exponent for the enemy-count curve (see _enemies_per_wave). Kept separate
+## from the spawn-rate exponent below so the two can be tuned independently.
+@export var difficulty_scaling_factor: float = 1.15
+@export var spawn_rate_scaling_factor: float = 0.75
 @export var enemies_per_second_cap: float = 15.0
+@export var early_bounty: int = 40 ## Paid per kill through wave 3, so players can freely experiment.
+@export var wave_bonus_base: int = 25 ## Flat currency awarded on top of the per-wave scaling bonus below.
+@export var wave_bonus_per_wave: int = 10
 
 var current_wave: int = 0
 var time_since_last_spawn: float = 0.0
@@ -65,6 +71,7 @@ func _on_enemy_destroyed() -> void:
 
 func _end_wave() -> void:
 	is_spawning = false
+	LevelManager.increase_currency(wave_bonus_base + wave_bonus_per_wave * current_wave)
 	wave_cleared.emit(current_wave)
 
 func _spawn_enemy() -> void:
@@ -77,17 +84,28 @@ func _spawn_enemy() -> void:
 	enemy.global_position = Vector2(lane_x, spawn_y)
 	if enemy.has_method("configure_difficulty"):
 		enemy.configure_difficulty(_hit_points_for_wave())
+	if enemy.has_method("configure_bounty") and current_wave <= 3:
+		enemy.configure_bounty(early_bounty)
 	if enemy.has_method("configure_lane"):
-		enemy.configure_lane(leak_y, journey_duration_seconds)
+		enemy.configure_lane(leak_y, _journey_duration_for_wave())
 
 func _hit_points_for_wave() -> int:
 	# The visual roster is also the difficulty ladder: wave one starts with
 	# the forgiving one-dot form, then adds exactly one two-hit stage per wave.
-	# Wave six and later use the full six-dot, 15-hit spider.
-	return mini(5 + maxi(current_wave - 1, 0) * 2, 15)
+	# Wave seven and later use the full six-dot, 15-hit spider.
+	return mini(3 + maxi(current_wave - 1, 0) * 2, 15)
 
+## Waves 1–4 target a gentle, hand-tuned 3 / 5 / 7 / 10 count so the opening
+## of a run teaches rather than pressures; the power curve resumes from
+## there so later waves still ramp toward the original intended difficulty.
 func _enemies_per_wave() -> int:
-	return roundi(base_enemies * pow(current_wave, difficulty_scaling_factor))
+	return base_enemies + roundi(2.0 * pow(maxf(current_wave - 1, 0), difficulty_scaling_factor))
 
 func _enemies_per_second() -> float:
-	return clamp(enemies_per_second * pow(current_wave, difficulty_scaling_factor), 0.0, enemies_per_second_cap)
+	return clamp(enemies_per_second * pow(current_wave, spawn_rate_scaling_factor), 0.0, enemies_per_second_cap)
+
+## Early waves walk noticeably slower so a first-time player has time to
+## watch a single spider get chewed up before the pace picks back up.
+func _journey_duration_for_wave() -> float:
+	var early_bonus_seconds := maxf(0.0, 9.0 - 2.0 * (current_wave - 1))
+	return journey_duration_seconds + early_bonus_seconds

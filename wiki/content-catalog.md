@@ -28,20 +28,32 @@ named for the latter three.
 
 ## Defense and train-unit art
 
+All seven placeable cars are implemented and purchasable from the in-game shop; see
+[Placeable cars](systems-and-balance.md#placeable-cars) for cost, stats, and behavior.
+
 | Family | Surviving art | Active gameplay |
 |---|---|---|
-| Gunner | Base, top, projectile | Standard turret |
-| Coal Cannon | Base, top, cannonball, 3 break frames | None |
-| Minigun | Base, top, bullet | None |
-| Ballast Blaster | Unit plus 5 ballast frames | None |
-| Brake Van | Unit | None |
+| Gunner | Base, top, projectile | Single-target homing shot |
+| Slomo | (reuses the white steam-engine livery) | Area slow pulse, no damage |
+| Minigun | Base, top, bullet | 5-shot burst every 3s |
+| Ballast Blaster | Unit plus 5 ballast frames | Short-range hit-everyone-in-range blast |
+| Coal Cannon | Base, top, cannonball; 3 break frames unused | Slow splash shot: 3 direct, 1 splash |
+| Passenger Coach | Unit | Passive income, no weapon |
+| Brake Van | Unit | Caps the train, +20% attack speed buff, no weapon |
 | Oil Tanker | 2 unit variants, 4 tar-tile frames | None |
-| Passenger Coach | Unit | None |
 | Slate Return | 2 unit frames, 2 slate frames | None |
 | Delta | 3 projectile frames, no clearly named unit | None |
 
-Mechanical roles for unused families are **inferred**. Splash, piercing, tar damage,
-and similar behavior in the roadmap are proposals, not recovered specifications.
+Oil Tanker, Slate Return, and Delta remain unimplemented; their mechanical roles are
+still **inferred** from names and art alone. Coal Cannon reuses the generic hit-effect
+sprite for its impact rather than its own 3 coal-break frames, which remain unused.
+Ballast Blaster's five ballast-chunk frames are used, for its firing-spray animation.
+
+## Reference material (not game assets)
+
+`assets/audio/infowiki/` holds eight trading-card-style unit spec sheets — despite
+living under `audio/`, these are reference images, not sound or usable sprite content.
+See [Infowiki unit cards](infowiki-cards.md) for the full transcription.
 
 ## Spider art
 

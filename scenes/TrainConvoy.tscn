@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/train_convoy.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/engines/Steam Engine Black.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/effects/puff 1.png" id="3"]
+
+[node name="TrainConvoy" type="Node2D"]
+script = ExtResource("1")
+smoke_texture = ExtResource("3")
+
+[node name="Engine" type="Sprite2D" parent="."]
+texture = ExtResource("2")
+scale = Vector2(0.17, 0.17)
+z_index = 21

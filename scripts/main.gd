@@ -1,51 +1,93 @@
 extends Node2D
-## Scene glue: generates a bounded railway and turns shop drag/drop requests
-## into mobile trains locked to that route.
+## Scene glue: generates several bounded railway routes and turns shop
+## drag/drop requests into cars attached to whichever train the drop lands
+## near.
+
+const TrainConvoyScene := preload("res://scenes/TrainConvoy.tscn")
 
 @onready var spawner: EnemySpawner = $EnemySpawner
 @onready var track: TrackRenderer = $Track
 @onready var trains: Node2D = $Trains
-@onready var convoy: Node2D = $Trains/TrainConvoy
 @onready var menu: Menu = $CanvasLayer/Menu
 @onready var music_player: AudioStreamPlayer = $MusicPlayer
 
-var generated_track: PackedVector2Array
+## One TrainConvoy instance per generated route, in generation order.
+var convoys: Array[Node2D] = []
 
-@export_range(0, 6) var starting_cars: int = 0
+@export_range(2, 4) var starting_trains: int = 2
+@export_range(0, 6) var starting_cars: int = 1
+@export_range(1, 8) var max_generation_attempts: int = 6
+
+## Distinct engine tints so two trains are never visually ambiguous even
+## before any cars are attached.
+const ENGINE_PALETTE := [
+	Color(1.0, 1.0, 1.0),
+	Color(0.55, 0.85, 1.0),
+	Color(1.0, 0.72, 0.42),
+	Color(0.78, 0.6, 1.0),
+]
 
 func _ready() -> void:
 	get_tree().root.physics_object_picking = true
 	_play_music_looped()
-	generated_track = track.generate_layout()
-	convoy.configure_path(generated_track)
-	if not track.covers_lanes(spawner.lane_x_positions, 360.0):
-		push_error("Generated railway does not cover every spider lane.")
-	menu.configure(spawner, $Station, convoy)
-	menu.train_drag_started.connect(convoy.set_drag_active.bind(true))
-	menu.train_drag_ended.connect(convoy.set_drag_active.bind(false))
+	_generate_and_spawn_trains()
+	menu.configure(spawner, $Station, convoys)
+	for convoy in convoys:
+		menu.train_drag_started.connect(convoy.set_drag_active.bind(true))
+		menu.train_drag_ended.connect(convoy.set_drag_active.bind(false))
 	menu.train_drop_requested.connect(_on_train_drop_requested)
 	menu.remove_requested.connect(_on_remove_requested)
-	spawner.wave_cleared.connect(_on_wave_cleared)
 	_seed_tabletop()
 
-## Open on a game already in motion. The illustrated reference reads as a
-## tabletop mid-turn, so the first frame should not be one lonely locomotive
-## on an empty board. These starter cars are free; bought cars still use the
-## normal drag/drop and currency rules.
+## Regenerates the railway until it passes validation (every lane reachable,
+## every route internally connected, at least two usable routes) or the
+## attempt budget runs out — see track_renderer.gd's module placement and
+## covers_lanes()/routes_are_traversable(). Falling back to whatever the
+## last attempt produced beats a hard failure; the push_error still makes a
+## bad board loudly visible in testing rather than silently shipping one.
+func _generate_and_spawn_trains() -> void:
+	var routes: Array[PackedVector2Array] = []
+	for attempt in range(max_generation_attempts):
+		routes = track.generate_layout(starting_trains)
+		var valid := routes.size() >= 2 \
+			and track.covers_lanes(spawner.lane_x_positions, 360.0) \
+			and track.routes_are_traversable()
+		if valid:
+			break
+	if routes.size() < 2:
+		push_error("Track generation could not place at least two usable routes.")
+	elif not track.covers_lanes(spawner.lane_x_positions, 360.0):
+		push_error("Generated railway does not cover every spider lane.")
+
+	for child in trains.get_children():
+		child.queue_free()
+	convoys = []
+	for route_index in range(routes.size()):
+		var convoy: Node2D = TrainConvoyScene.instantiate()
+		trains.add_child(convoy)
+		convoy.configure_path(routes[route_index])
+		convoy.get_node("Engine").modulate = ENGINE_PALETTE[route_index % ENGINE_PALETTE.size()]
+		convoys.append(convoy)
+
+## The first train opens with one free basic car so a first-time player has
+## something to watch fight immediately; every other starting train opens
+## as a bare engine, matching the "engine only" second train a new player
+## should feel free to specialize however they like. Combat itself waits
+## for the player to press START WAVE (see menu.gd) rather than starting on
+## a timer, so there is always a build phase to look around, pick a train,
+## and buy or attach cars before the first spider spawns.
 func _seed_tabletop() -> void:
+	if convoys.is_empty():
+		return
+	var convoy: Node2D = convoys[0]
 	for index in range(mini(starting_cars, BuildManager.towers.size() * 2)):
 		var tower: TowerData = BuildManager.towers[index % BuildManager.towers.size()]
 		if tower == null or tower.scene == null:
 			continue
-		var train: Node2D = tower.scene.instantiate()
-		trains.add_child(train)
-		_apply_car_palette(train, index)
-		convoy.attach_car(train)
-	get_tree().create_timer(0.65).timeout.connect(spawner.start_next_wave)
-
-func _on_wave_cleared(_wave_number: int) -> void:
-	if not menu.station_lost:
-		get_tree().create_timer(2.5).timeout.connect(spawner.start_next_wave)
+		var car: Node2D = tower.scene.instantiate()
+		trains.add_child(car)
+		_apply_car_palette(car, index)
+		convoy.attach_car(car)
 
 ## MP3 streams don't loop by default — the loop flag lives on the stream
 ## resource itself, so it has to be set before play() rather than as a
@@ -61,13 +103,10 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> voi
 		menu.show_placement_feedback("That train is not configured.", false)
 		return
 
-	if convoy.get("capped") == true:
-		menu.show_placement_feedback("This train is capped by its Brake Van — remove it to add more cars.", false)
-		return
-
 	var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * screen_position
-	if not convoy.can_attach_at(world_position):
-		menu.show_placement_feedback("Drop the car onto the black engine or its connected train.", false)
+	var target_convoy: Node2D = _find_attachable_convoy(world_position)
+	if target_convoy == null:
+		menu.show_placement_feedback("Drop the car near an engine or its connected train.", false)
 		return
 
 	var tower: TowerData = BuildManager.towers[tower_index]
@@ -78,18 +117,34 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> voi
 		menu.show_placement_feedback("Not enough funds for %s." % tower.tower_name, false)
 		return
 
-	var train: Node2D = tower.scene.instantiate()
-	trains.add_child(train)
-	_apply_car_palette(train, convoy.car_count())
-	convoy.attach_car(train)
-	menu.show_placement_feedback("%s connected to the engine." % tower.tower_name, true)
+	var car: Node2D = tower.scene.instantiate()
+	trains.add_child(car)
+	_apply_car_palette(car, target_convoy.car_count())
+	target_convoy.attach_car(car)
+	menu.show_placement_feedback("%s connected to the train." % tower.tower_name, true)
 
 func _on_remove_requested(screen_position: Vector2) -> void:
 	var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * screen_position
-	if convoy.remove_car_near(world_position):
-		menu.show_placement_feedback("Car removed — the train reconnected around the gap.", true)
-	else:
-		menu.show_placement_feedback("Click directly on a car to remove it.", false)
+	for convoy in convoys:
+		if convoy.remove_car_near(world_position):
+			menu.show_placement_feedback("Car removed — the train reconnected around the gap.", true)
+			return
+	menu.show_placement_feedback("Click directly on a car to remove it.", false)
+
+## Nearest train whose attachment radius covers world_position and which
+## isn't capped by a Brake Van — can_attach_at() already returns false for a
+## capped train, so a capped train simply never wins here.
+func _find_attachable_convoy(world_position: Vector2) -> Node2D:
+	var best: Node2D = null
+	var best_distance := INF
+	for convoy in convoys:
+		if not is_instance_valid(convoy) or not convoy.can_attach_at(world_position):
+			continue
+		var distance: float = convoy.global_position.distance_to(world_position)
+		if distance < best_distance:
+			best_distance = distance
+			best = convoy
+	return best
 
 const UNTINTED_CARS := ["Minigun", "Ballast", "CoalCannon", "BrakeVan", "PassengerCoach"]
 

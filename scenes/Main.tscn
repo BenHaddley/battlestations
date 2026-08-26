@@ -1,4 +1,4 @@
-[gd_scene load_steps=52 format=3]
+[gd_scene load_steps=50 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/board/THE_BOARD.png" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
@@ -9,10 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/board/Rail Straight.png" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/Station.tscn" id="9"]
 [ext_resource type="Texture2D" path="res://assets/sprites/board/Rail Curve.png" id="10"]
-[ext_resource type="Script" path="res://scripts/train_convoy.gd" id="11"]
-[ext_resource type="Texture2D" path="res://assets/sprites/engines/Steam Engine Black.png" id="12"]
 [ext_resource type="Script" path="res://scripts/battlefield_overlay.gd" id="13"]
-[ext_resource type="Texture2D" path="res://assets/sprites/effects/puff 1.png" id="14"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Gunner Top 1.png" id="15"]
 [ext_resource type="Texture2D" path="res://assets/sprites/engines/Steam Engine White.png" id="16"]
 [ext_resource type="AudioStream" path="res://assets/audio/Train 45.mp3" id="17"]
@@ -43,6 +40,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/tutorial_gif/frame_07.png" id="42"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/tutorial_gif/frame_08.png" id="43"]
 [ext_resource type="Script" path="res://scripts/gem_icon.gd" id="44"]
+[ext_resource type="PackedScene" path="res://scenes/TrainConvoy.tscn" id="45"]
 
 [sub_resource type="StyleBoxTexture" id="LeftPanelArt"]
 texture = ExtResource("18")
@@ -236,15 +234,6 @@ position = Vector2(0, 800)
 
 [node name="Trains" type="Node2D" parent="."]
 
-[node name="TrainConvoy" type="Node2D" parent="Trains"]
-script = ExtResource("11")
-smoke_texture = ExtResource("14")
-
-[node name="Engine" type="Sprite2D" parent="Trains/TrainConvoy"]
-texture = ExtResource("12")
-scale = Vector2(0.17, 0.17)
-z_index = 21
-
 [node name="EnemySpawner" type="Node2D" parent="."]
 script = ExtResource("4")
 enemy_prefabs = Array[PackedScene]([ExtResource("3")])
@@ -284,7 +273,7 @@ theme_override_constants/margin_bottom = 14
 
 [node name="VBox" type="VBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 7
 
 [node name="Title" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
 visible = false
@@ -709,8 +698,7 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="NextWaveButton" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
-visible = false
-custom_minimum_size = Vector2(0, 56)
+custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 18
@@ -732,7 +720,7 @@ text = "X     REMOVE     X"
 rotation = -0.012
 
 [node name="PointsPanel" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 theme_override_styles/panel = SubResource("PointsStrip")
 

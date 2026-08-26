@@ -13,9 +13,10 @@ question is resolved, then update the affected design page.
 | What causes victory and defeat? | Required for a complete run. | Leaks currently disappear; no base or final wave exists. |
 | One board or a level progression? | Affects save data, content scope, and UI. | Only one board is implemented. |
 | Replace the current board with the proposed 9×11 version? | Changes lane coordinates, rail bounds, camera framing, and illustrated grid alignment. | Awaiting the new board image; the current 2100×1920 source is the older seven-column courtyard. |
-| What are the intended roles of each unit and spider? | Needed before implementing the roster. | Mostly names and art; the detailed concept sheet is lost. |
-| Are engine colors cosmetic? | Prevents duplicated or misleading content work. | Eleven liveries exist without supporting logic. |
-| What does currency represent and how should it scale? | Needed for meaningful balance. | Only starting money, bounty, and upgrade formulas survive. |
+| What are the intended roles of each unit and spider? | Needed before implementing the roster. | **Partially resolved for 8 cars** — [Infowiki unit cards](infowiki-cards.md) gives cost/range/weight/bio for Steam Engine, Gunner, Passenger Coach, Brake Van, Coal Cannon, Ballast Blaster, Chaingunner (implemented as Minigun), and the unimplemented Tender. Cards 008–011 and the full spider roster are still undocumented. |
+| Should the shipped car costs, ranges, and weights be reconciled toward the infowiki cards? | The two currently disagree by roughly 3–10× on nearly every number, and use different units for range (grid tiles vs. world-unit radius) and weight (capacity budget vs. threshold-with-penalty). | See [Divergence from the current build](infowiki-cards.md#divergence-from-the-current-build) for the specific gaps, including the Brake Van's undocumented accel/brake bonus and the entirely unimplemented Tender. |
+| Are engine colors cosmetic? | Prevents duplicated or misleading content work. | Eleven liveries exist without supporting logic; the infowiki Steam Engine card separately claims 25 random paint jobs, not tied to the eleven named liveries. |
+| What does currency represent and how should it scale? | Needed for meaningful balance. | **Partially resolved** — the [Passenger Coach card](infowiki-cards.md#003--passenger-coach) names it "Delta"; the shipped UI still shows a bare `$` amount. Scaling still needs the reconciliation above. |
 
 ## Art, audio, and identity
 

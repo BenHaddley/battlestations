@@ -45,6 +45,9 @@ func configure_difficulty(hit_points: int) -> void:
 	health.configure_hit_points(hit_points, false)
 	health_dots.initialize_hit_points(hit_points)
 
+func configure_bounty(value: int) -> void:
+	health.set_bounty(value)
+
 func _on_health_stage_changed(_previous_dots: int, current_dots: int) -> void:
 	if current_dots <= 0:
 		return

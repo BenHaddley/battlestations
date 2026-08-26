@@ -6,7 +6,7 @@ class_name Station
 signal health_changed(current: int, max_health: int)
 signal defeated
 
-@export var max_health: int = 20
+@export var max_health: int = 28
 
 var current_health: int
 var resting_position: Vector2

@@ -20,6 +20,9 @@ func configure_hit_points(value: int, notify: bool = true) -> void:
 	if notify:
 		hit_points_changed.emit(hit_points, max_hit_points)
 
+func set_bounty(value: int) -> void:
+	currency_worth = value
+
 func take_damage(dmg: int) -> void:
 	hit_points -= dmg
 	hit_points_changed.emit(maxi(hit_points, 0), max_hit_points)
