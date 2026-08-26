@@ -14,18 +14,18 @@ signal remove_requested(screen_position: Vector2)
 @onready var feedback_label: Label = $LeftPanel/Margin/VBox/FeedbackLabel
 @onready var remove_button: Button = $LeftPanel/Margin/VBox/RemoveButton
 
-@onready var gunner_button: Button = $LeftPanel/Margin/VBox/ShopList/GunnerRow
-@onready var slomo_button: Button = $LeftPanel/Margin/VBox/ShopList/SlomoRow
-@onready var minigun_button: Button = $LeftPanel/Margin/VBox/ShopList/MinigunRow
-@onready var ballast_button: Button = $LeftPanel/Margin/VBox/ShopList/BallastRow
-@onready var passenger_button: Button = $LeftPanel/Margin/VBox/ShopList/PassengerRow
-@onready var coal_cannon_button: Button = $LeftPanel/Margin/VBox/ShopList/CoalCannonRow
-@onready var brake_van_button: Button = $LeftPanel/Margin/VBox/ShopList/BrakeVanRow
-@onready var chaingun_button: Button = $LeftPanel/Margin/VBox/ShopList/ChaingunRow
-@onready var tender_button: Button = $LeftPanel/Margin/VBox/ShopList/TenderRow
+@onready var gunner_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/GunnerRow
+@onready var slomo_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow
+@onready var minigun_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/MinigunRow
+@onready var ballast_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/BallastRow
+@onready var passenger_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/PassengerRow
+@onready var coal_cannon_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/CoalCannonRow
+@onready var brake_van_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/BrakeVanRow
+@onready var chaingun_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow
+@onready var tender_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/TenderRow
 
-@onready var speed_button: Button = $RightPanel/Margin/VBox/ControlsRow/SpeedButton
-@onready var pause_button: Button = $RightPanel/Margin/VBox/ControlsRow/PauseButton
+@onready var speed_button: Button = $RightPanel/Margin/VBox/ControlsPanel/Margin/ControlsRow/SpeedButton
+@onready var pause_button: Button = $RightPanel/Margin/VBox/ControlsPanel/Margin/ControlsRow/PauseButton
 
 @onready var schedule_panel: PanelContainer = $RightPanel/Margin/VBox/SchedulePanel
 @onready var phase_dots: Control = $RightPanel/Margin/VBox/SchedulePanel/Margin/VBox/PhaseDots
@@ -41,6 +41,7 @@ signal remove_requested(screen_position: Vector2)
 
 @export var normal_style: StyleBox
 @export var selected_style: StyleBox
+@export var unaffordable_style: StyleBox
 
 const TOWER_BUTTONS := ["gunner_button", "slomo_button", "minigun_button", "ballast_button", "passenger_button", "coal_cannon_button", "brake_van_button", "chaingun_button", "tender_button"]
 
@@ -65,6 +66,9 @@ var _hp_frame_75: Texture2D
 var _hp_frame_50: Texture2D
 var _hp_frame_25: Texture2D
 var _hp_frame_0: Texture2D
+var _hovered_removable: Node2D = null
+
+const HOVER_TINT := Color(1.0, 0.42, 0.34, 1.0)
 
 func configure(enemy_spawner: EnemySpawner, defended_station: Station, active_trains: Array[Node2D]) -> void:
 	spawner = enemy_spawner
@@ -107,12 +111,14 @@ func _set_price_text(button: Button, cost: int) -> void:
 	if label:
 		label.text = "%d" % cost
 
-func _input(event: InputEvent) -> void:
+## Unhandled rather than plain _input — a click the REMOVE button itself
+## already consumed (e.g. pressing it again to cancel) must not also count
+## as a "click a car" attempt.
+func _unhandled_input(event: InputEvent) -> void:
 	if removing_mode:
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			remove_requested.emit(event.position)
-			removing_mode = false
-			remove_button.text = "X     REMOVE     X"
+			_exit_remove_mode()
 		return
 	if dragging_tower < 0:
 		return
@@ -131,6 +137,9 @@ func _process(_delta: float) -> void:
 
 	if station:
 		_refresh_hp_rail()
+
+	if removing_mode:
+		_refresh_remove_hover()
 
 	if spawner:
 		phase_status.text = PhaseManager.status_text()
@@ -199,14 +208,54 @@ func _on_advance_pressed() -> void:
 ## would immediately also count as the "click a car" click.
 func _toggle_remove_mode() -> void:
 	if removing_mode:
-		removing_mode = false
-		remove_button.text = "X     REMOVE     X"
+		_exit_remove_mode()
 	else:
-		remove_button.text = "X  CLICK A CAR  X"
+		remove_button.text = "CLICK A CAR"
+		remove_button.modulate = Color(1.3, 0.55, 0.5, 1)
 		call_deferred("_arm_remove_mode")
 
 func _arm_remove_mode() -> void:
 	removing_mode = true
+	Input.set_default_cursor_shape(Input.CURSOR_CROSS)
+
+func _exit_remove_mode() -> void:
+	removing_mode = false
+	remove_button.text = "REMOVE UNIT"
+	remove_button.modulate = Color.WHITE
+	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+	_set_hovered_removable(null)
+
+## Tints whichever attached car is nearest the cursor (within its train's own
+## attachment radius) so the player can see exactly what a click will remove
+## before committing to it.
+func _refresh_remove_hover() -> void:
+	var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * get_viewport().get_mouse_position()
+	var nearest: Node2D = null
+	var nearest_distance := INF
+	for train in trains:
+		if not is_instance_valid(train):
+			continue
+		var radius: float = train.get("attachment_radius")
+		var followers: Array = train.get("followers")
+		if followers == null:
+			continue
+		for car in followers:
+			if not is_instance_valid(car):
+				continue
+			var distance: float = car.global_position.distance_to(world_position)
+			if distance <= radius and distance < nearest_distance:
+				nearest_distance = distance
+				nearest = car
+	_set_hovered_removable(nearest)
+
+func _set_hovered_removable(car: Node2D) -> void:
+	if _hovered_removable == car:
+		return
+	if is_instance_valid(_hovered_removable):
+		_hovered_removable.modulate = Color.WHITE
+	_hovered_removable = car
+	if is_instance_valid(_hovered_removable):
+		_hovered_removable.modulate = HOVER_TINT
 
 func _toggle_speed() -> void:
 	Engine.time_scale = 2.0 if Engine.time_scale < 1.5 else 1.0
@@ -258,4 +307,10 @@ func _style_tower_button(button: Button, index: int) -> void:
 	if index >= BuildManager.towers.size() or not normal_style or not selected_style:
 		return
 	var is_selected: bool = BuildManager.selected_tower == index
-	button.add_theme_stylebox_override("normal", selected_style if is_selected else normal_style)
+	if is_selected:
+		button.add_theme_stylebox_override("normal", selected_style)
+	elif LevelManager.currency < BuildManager.towers[index].cost:
+		button.add_theme_stylebox_override("normal", unaffordable_style if unaffordable_style else normal_style)
+	else:
+		button.add_theme_stylebox_override("normal", normal_style)
+	button.modulate = Color(1, 1, 1, 1) if (is_selected or LevelManager.currency >= BuildManager.towers[index].cost) else Color(1, 1, 1, 0.72)

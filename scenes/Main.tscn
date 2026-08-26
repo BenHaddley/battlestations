@@ -23,8 +23,8 @@
 [ext_resource type="Script" path="res://scripts/gem_icon.gd" id="44"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/CHAINGUN BASE.png" id="46"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/TENDER.png" id="47"]
-[ext_resource type="Texture2D" path="res://assets/sprites/ui/speed up.png" id="48"]
-[ext_resource type="Texture2D" path="res://assets/sprites/ui/pause.png" id="49"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/controls/fast_forward_mint.png" id="48"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/controls/pause_mint.png" id="49"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/hp/hp_variants.png" id="50"]
 [ext_resource type="Script" path="res://scripts/phase_dots.gd" id="52"]
 [ext_resource type="Script" path="res://scripts/battlefield_tiles.gd" id="53"]
@@ -112,13 +112,25 @@ border_width_left = 4
 border_width_top = 4
 border_width_right = 4
 border_width_bottom = 4
-border_color = Color(0.18, 0.62, 0.46, 1)
+border_color = Color(0.1, 0.78, 0.74, 1)
 corner_radius_top_left = 3
 corner_radius_top_right = 7
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 7
-shadow_color = Color(0.18, 0.62, 0.46, 0.35)
-shadow_size = 4
+shadow_color = Color(0.1, 0.78, 0.74, 0.4)
+shadow_size = 5
+
+[sub_resource type="StyleBoxFlat" id="ShopRowUnaffordable"]
+bg_color = Color(0.72, 0.68, 0.6, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.08, 0.06, 0.04, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 7
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 7
 
 [sub_resource type="StyleBoxFlat" id="PricePill"]
 bg_color = Color(0.66, 0.85, 0.72, 1)
@@ -205,7 +217,7 @@ shadow_size = 3
 script = ExtResource("6")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(0.52, 0.52)
+zoom = Vector2(0.66, 0.66)
 
 [node name="MusicPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("17")
@@ -255,6 +267,7 @@ theme_override_fonts/font = ExtResource("29")
 script = ExtResource("5")
 normal_style = SubResource("ShopRowNormal")
 selected_style = SubResource("ShopRowSelected")
+unaffordable_style = SubResource("ShopRowUnaffordable")
 
 [node name="LeftPanel" type="PanelContainer" parent="CanvasLayer/Menu"]
 layout_mode = 0
@@ -306,12 +319,18 @@ theme_override_font_sizes/font_size = 16
 text = "UNITS"
 horizontal_alignment = 1
 
-[node name="ShopList" type="VBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
 layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ShopList" type="VBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="GunnerRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList"]
-custom_minimum_size = Vector2(0, 48)
+[node name="GunnerRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList"]
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("ShopRowNormal")
@@ -319,53 +338,63 @@ theme_override_styles/hover = SubResource("ShopRowSelected")
 tooltip_text = "Gunner — $50 — reliable single-target damage"
 script = ExtResource("32")
 
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/GunnerRow"]
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/GunnerRow"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 4.0
-offset_right = -6.0
-offset_bottom = -4.0
+offset_left = 7.0
+offset_top = 5.0
+offset_right = -7.0
+offset_bottom = -5.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/GunnerRow/HBox"]
-custom_minimum_size = Vector2(40, 40)
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/GunnerRow/HBox"]
+custom_minimum_size = Vector2(58, 58)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("15")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/GunnerRow/HBox"]
+[node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/GunnerRow/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
+theme_override_colors/font_color = Color(0.1, 0.07, 0.045, 1)
+theme_override_font_sizes/font_size = 15
+text = "GUNNER"
+vertical_alignment = 1
+autowrap_mode = 2
 
-[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/GunnerRow/HBox"]
+[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/GunnerRow/HBox"]
+custom_minimum_size = Vector2(6, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/GunnerRow/HBox"]
 custom_minimum_size = Vector2(66, 30)
 layout_mode = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("PricePill")
 
-[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/GunnerRow/HBox/PricePill"]
+[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/GunnerRow/HBox/PricePill"]
 layout_mode = 2
 alignment = 1
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/GunnerRow/HBox/PricePill/PriceHBox"]
+[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/GunnerRow/HBox/PricePill/PriceHBox"]
 custom_minimum_size = Vector2(14, 14)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 script = ExtResource("44")
 
-[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/GunnerRow/HBox/PricePill/PriceHBox"]
+[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/GunnerRow/HBox/PricePill/PriceHBox"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.05, 0.05, 0.035, 1)
@@ -373,8 +402,8 @@ theme_override_font_sizes/font_size = 16
 text = "50"
 vertical_alignment = 1
 
-[node name="SlomoRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList"]
-custom_minimum_size = Vector2(0, 48)
+[node name="SlomoRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList"]
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("ShopRowNormal")
@@ -382,53 +411,63 @@ theme_override_styles/hover = SubResource("ShopRowSelected")
 tooltip_text = "Slomo — $75 — area slow pulse, no damage"
 script = ExtResource("32")
 
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/SlomoRow"]
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 4.0
-offset_right = -6.0
-offset_bottom = -4.0
+offset_left = 7.0
+offset_top = 5.0
+offset_right = -7.0
+offset_bottom = -5.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/SlomoRow/HBox"]
-custom_minimum_size = Vector2(40, 40)
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow/HBox"]
+custom_minimum_size = Vector2(58, 58)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("16")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/SlomoRow/HBox"]
+[node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
+theme_override_colors/font_color = Color(0.1, 0.07, 0.045, 1)
+theme_override_font_sizes/font_size = 15
+text = "SLOMO"
+vertical_alignment = 1
+autowrap_mode = 2
 
-[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/SlomoRow/HBox"]
+[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow/HBox"]
+custom_minimum_size = Vector2(6, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow/HBox"]
 custom_minimum_size = Vector2(66, 30)
 layout_mode = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("PricePill")
 
-[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/SlomoRow/HBox/PricePill"]
+[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow/HBox/PricePill"]
 layout_mode = 2
 alignment = 1
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/SlomoRow/HBox/PricePill/PriceHBox"]
+[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow/HBox/PricePill/PriceHBox"]
 custom_minimum_size = Vector2(14, 14)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 script = ExtResource("44")
 
-[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/SlomoRow/HBox/PricePill/PriceHBox"]
+[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow/HBox/PricePill/PriceHBox"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.05, 0.05, 0.035, 1)
@@ -436,8 +475,8 @@ theme_override_font_sizes/font_size = 16
 text = "75"
 vertical_alignment = 1
 
-[node name="MinigunRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList"]
-custom_minimum_size = Vector2(0, 48)
+[node name="MinigunRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList"]
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("ShopRowNormal")
@@ -445,53 +484,63 @@ theme_override_styles/hover = SubResource("ShopRowSelected")
 tooltip_text = "Minigun — $125 — 5-shot burst"
 script = ExtResource("32")
 
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/MinigunRow"]
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/MinigunRow"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 4.0
-offset_right = -6.0
-offset_bottom = -4.0
+offset_left = 7.0
+offset_top = 5.0
+offset_right = -7.0
+offset_bottom = -5.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/MinigunRow/HBox"]
-custom_minimum_size = Vector2(40, 40)
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/MinigunRow/HBox"]
+custom_minimum_size = Vector2(58, 58)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("28")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/MinigunRow/HBox"]
+[node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/MinigunRow/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
+theme_override_colors/font_color = Color(0.1, 0.07, 0.045, 1)
+theme_override_font_sizes/font_size = 15
+text = "MINIGUN"
+vertical_alignment = 1
+autowrap_mode = 2
 
-[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/MinigunRow/HBox"]
+[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/MinigunRow/HBox"]
+custom_minimum_size = Vector2(6, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/MinigunRow/HBox"]
 custom_minimum_size = Vector2(66, 30)
 layout_mode = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("PricePill")
 
-[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/MinigunRow/HBox/PricePill"]
+[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/MinigunRow/HBox/PricePill"]
 layout_mode = 2
 alignment = 1
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/MinigunRow/HBox/PricePill/PriceHBox"]
+[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/MinigunRow/HBox/PricePill/PriceHBox"]
 custom_minimum_size = Vector2(14, 14)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 script = ExtResource("44")
 
-[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/MinigunRow/HBox/PricePill/PriceHBox"]
+[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/MinigunRow/HBox/PricePill/PriceHBox"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.05, 0.05, 0.035, 1)
@@ -499,8 +548,8 @@ theme_override_font_sizes/font_size = 16
 text = "125"
 vertical_alignment = 1
 
-[node name="BallastRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList"]
-custom_minimum_size = Vector2(0, 48)
+[node name="BallastRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList"]
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("ShopRowNormal")
@@ -508,53 +557,63 @@ theme_override_styles/hover = SubResource("ShopRowSelected")
 tooltip_text = "Ballast Blaster — $100 — short-range blast, hits everyone in range"
 script = ExtResource("32")
 
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/BallastRow"]
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BallastRow"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 4.0
-offset_right = -6.0
-offset_bottom = -4.0
+offset_left = 7.0
+offset_top = 5.0
+offset_right = -7.0
+offset_bottom = -5.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/BallastRow/HBox"]
-custom_minimum_size = Vector2(40, 40)
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BallastRow/HBox"]
+custom_minimum_size = Vector2(58, 58)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("26")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/BallastRow/HBox"]
+[node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BallastRow/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
+theme_override_colors/font_color = Color(0.1, 0.07, 0.045, 1)
+theme_override_font_sizes/font_size = 15
+text = "BALLAST"
+vertical_alignment = 1
+autowrap_mode = 2
 
-[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/BallastRow/HBox"]
+[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BallastRow/HBox"]
+custom_minimum_size = Vector2(6, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BallastRow/HBox"]
 custom_minimum_size = Vector2(66, 30)
 layout_mode = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("PricePill")
 
-[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/BallastRow/HBox/PricePill"]
+[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BallastRow/HBox/PricePill"]
 layout_mode = 2
 alignment = 1
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/BallastRow/HBox/PricePill/PriceHBox"]
+[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BallastRow/HBox/PricePill/PriceHBox"]
 custom_minimum_size = Vector2(14, 14)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 script = ExtResource("44")
 
-[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/BallastRow/HBox/PricePill/PriceHBox"]
+[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BallastRow/HBox/PricePill/PriceHBox"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.05, 0.05, 0.035, 1)
@@ -562,8 +621,8 @@ theme_override_font_sizes/font_size = 16
 text = "100"
 vertical_alignment = 1
 
-[node name="PassengerRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList"]
-custom_minimum_size = Vector2(0, 48)
+[node name="PassengerRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList"]
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("ShopRowNormal")
@@ -571,53 +630,63 @@ theme_override_styles/hover = SubResource("ShopRowSelected")
 tooltip_text = "Passenger Coach — $90 — pays $50 every 10s while coupled"
 script = ExtResource("32")
 
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/PassengerRow"]
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/PassengerRow"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 4.0
-offset_right = -6.0
-offset_bottom = -4.0
+offset_left = 7.0
+offset_top = 5.0
+offset_right = -7.0
+offset_bottom = -5.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/PassengerRow/HBox"]
-custom_minimum_size = Vector2(40, 40)
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/PassengerRow/HBox"]
+custom_minimum_size = Vector2(58, 58)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("27")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/PassengerRow/HBox"]
+[node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/PassengerRow/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
+theme_override_colors/font_color = Color(0.1, 0.07, 0.045, 1)
+theme_override_font_sizes/font_size = 15
+text = "PASSENGER"
+vertical_alignment = 1
+autowrap_mode = 2
 
-[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/PassengerRow/HBox"]
+[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/PassengerRow/HBox"]
+custom_minimum_size = Vector2(6, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/PassengerRow/HBox"]
 custom_minimum_size = Vector2(66, 30)
 layout_mode = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("PricePill")
 
-[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/PassengerRow/HBox/PricePill"]
+[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/PassengerRow/HBox/PricePill"]
 layout_mode = 2
 alignment = 1
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/PassengerRow/HBox/PricePill/PriceHBox"]
+[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/PassengerRow/HBox/PricePill/PriceHBox"]
 custom_minimum_size = Vector2(14, 14)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 script = ExtResource("44")
 
-[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/PassengerRow/HBox/PricePill/PriceHBox"]
+[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/PassengerRow/HBox/PricePill/PriceHBox"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.05, 0.05, 0.035, 1)
@@ -625,8 +694,8 @@ theme_override_font_sizes/font_size = 16
 text = "90"
 vertical_alignment = 1
 
-[node name="CoalCannonRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList"]
-custom_minimum_size = Vector2(0, 48)
+[node name="CoalCannonRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList"]
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("ShopRowNormal")
@@ -634,53 +703,63 @@ theme_override_styles/hover = SubResource("ShopRowSelected")
 tooltip_text = "Coal Cannon — $150 — slow splash shot, 3 direct / 1 nearby"
 script = ExtResource("32")
 
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/CoalCannonRow"]
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/CoalCannonRow"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 4.0
-offset_right = -6.0
-offset_bottom = -4.0
+offset_left = 7.0
+offset_top = 5.0
+offset_right = -7.0
+offset_bottom = -5.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/CoalCannonRow/HBox"]
-custom_minimum_size = Vector2(40, 40)
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/CoalCannonRow/HBox"]
+custom_minimum_size = Vector2(58, 58)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("25")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/CoalCannonRow/HBox"]
+[node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/CoalCannonRow/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
+theme_override_colors/font_color = Color(0.1, 0.07, 0.045, 1)
+theme_override_font_sizes/font_size = 15
+text = "COAL CANNON"
+vertical_alignment = 1
+autowrap_mode = 2
 
-[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/CoalCannonRow/HBox"]
+[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/CoalCannonRow/HBox"]
+custom_minimum_size = Vector2(6, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/CoalCannonRow/HBox"]
 custom_minimum_size = Vector2(66, 30)
 layout_mode = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("PricePill")
 
-[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/CoalCannonRow/HBox/PricePill"]
+[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/CoalCannonRow/HBox/PricePill"]
 layout_mode = 2
 alignment = 1
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/CoalCannonRow/HBox/PricePill/PriceHBox"]
+[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/CoalCannonRow/HBox/PricePill/PriceHBox"]
 custom_minimum_size = Vector2(14, 14)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 script = ExtResource("44")
 
-[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/CoalCannonRow/HBox/PricePill/PriceHBox"]
+[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/CoalCannonRow/HBox/PricePill/PriceHBox"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.05, 0.05, 0.035, 1)
@@ -688,8 +767,8 @@ theme_override_font_sizes/font_size = 16
 text = "150"
 vertical_alignment = 1
 
-[node name="BrakeVanRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList"]
-custom_minimum_size = Vector2(0, 48)
+[node name="BrakeVanRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList"]
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("ShopRowNormal")
@@ -697,53 +776,63 @@ theme_override_styles/hover = SubResource("ShopRowSelected")
 tooltip_text = "Brake Van — $60 — caps the train, +20% attack speed to the rest"
 script = ExtResource("32")
 
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/BrakeVanRow"]
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BrakeVanRow"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 4.0
-offset_right = -6.0
-offset_bottom = -4.0
+offset_left = 7.0
+offset_top = 5.0
+offset_right = -7.0
+offset_bottom = -5.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/BrakeVanRow/HBox"]
-custom_minimum_size = Vector2(40, 40)
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BrakeVanRow/HBox"]
+custom_minimum_size = Vector2(58, 58)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("30")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/BrakeVanRow/HBox"]
+[node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BrakeVanRow/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
+theme_override_colors/font_color = Color(0.1, 0.07, 0.045, 1)
+theme_override_font_sizes/font_size = 15
+text = "BRAKE VAN"
+vertical_alignment = 1
+autowrap_mode = 2
 
-[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/BrakeVanRow/HBox"]
+[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BrakeVanRow/HBox"]
+custom_minimum_size = Vector2(6, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BrakeVanRow/HBox"]
 custom_minimum_size = Vector2(66, 30)
 layout_mode = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("PricePill")
 
-[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/BrakeVanRow/HBox/PricePill"]
+[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BrakeVanRow/HBox/PricePill"]
 layout_mode = 2
 alignment = 1
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/BrakeVanRow/HBox/PricePill/PriceHBox"]
+[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BrakeVanRow/HBox/PricePill/PriceHBox"]
 custom_minimum_size = Vector2(14, 14)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 script = ExtResource("44")
 
-[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/BrakeVanRow/HBox/PricePill/PriceHBox"]
+[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BrakeVanRow/HBox/PricePill/PriceHBox"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.05, 0.05, 0.035, 1)
@@ -751,8 +840,8 @@ theme_override_font_sizes/font_size = 16
 text = "60"
 vertical_alignment = 1
 
-[node name="ChaingunRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList"]
-custom_minimum_size = Vector2(0, 48)
+[node name="ChaingunRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList"]
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("ShopRowNormal")
@@ -760,53 +849,63 @@ theme_override_styles/hover = SubResource("ShopRowSelected")
 tooltip_text = "Chaingun — $110 — rapid continuous fire"
 script = ExtResource("32")
 
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/ChaingunRow"]
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 4.0
-offset_right = -6.0
-offset_bottom = -4.0
+offset_left = 7.0
+offset_top = 5.0
+offset_right = -7.0
+offset_bottom = -5.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/ChaingunRow/HBox"]
-custom_minimum_size = Vector2(40, 40)
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow/HBox"]
+custom_minimum_size = Vector2(58, 58)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("46")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/ChaingunRow/HBox"]
+[node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
+theme_override_colors/font_color = Color(0.1, 0.07, 0.045, 1)
+theme_override_font_sizes/font_size = 15
+text = "CHAINGUN"
+vertical_alignment = 1
+autowrap_mode = 2
 
-[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/ChaingunRow/HBox"]
+[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow/HBox"]
+custom_minimum_size = Vector2(6, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow/HBox"]
 custom_minimum_size = Vector2(66, 30)
 layout_mode = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("PricePill")
 
-[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/ChaingunRow/HBox/PricePill"]
+[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow/HBox/PricePill"]
 layout_mode = 2
 alignment = 1
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/ChaingunRow/HBox/PricePill/PriceHBox"]
+[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow/HBox/PricePill/PriceHBox"]
 custom_minimum_size = Vector2(14, 14)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 script = ExtResource("44")
 
-[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/ChaingunRow/HBox/PricePill/PriceHBox"]
+[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow/HBox/PricePill/PriceHBox"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.05, 0.05, 0.035, 1)
@@ -814,8 +913,8 @@ theme_override_font_sizes/font_size = 16
 text = "110"
 vertical_alignment = 1
 
-[node name="TenderRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList"]
-custom_minimum_size = Vector2(0, 48)
+[node name="TenderRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList"]
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("ShopRowNormal")
@@ -823,53 +922,63 @@ theme_override_styles/hover = SubResource("ShopRowSelected")
 tooltip_text = "Tender — $70 — no weapon, extends capacity before the train slows"
 script = ExtResource("32")
 
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/TenderRow"]
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/TenderRow"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 4.0
-offset_right = -6.0
-offset_bottom = -4.0
+offset_left = 7.0
+offset_top = 5.0
+offset_right = -7.0
+offset_bottom = -5.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/TenderRow/HBox"]
-custom_minimum_size = Vector2(40, 40)
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/TenderRow/HBox"]
+custom_minimum_size = Vector2(58, 58)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("47")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/TenderRow/HBox"]
+[node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/TenderRow/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
+theme_override_colors/font_color = Color(0.1, 0.07, 0.045, 1)
+theme_override_font_sizes/font_size = 15
+text = "TENDER"
+vertical_alignment = 1
+autowrap_mode = 2
 
-[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/TenderRow/HBox"]
+[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/TenderRow/HBox"]
+custom_minimum_size = Vector2(6, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/TenderRow/HBox"]
 custom_minimum_size = Vector2(66, 30)
 layout_mode = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("PricePill")
 
-[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/TenderRow/HBox/PricePill"]
+[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/TenderRow/HBox/PricePill"]
 layout_mode = 2
 alignment = 1
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/TenderRow/HBox/PricePill/PriceHBox"]
+[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/TenderRow/HBox/PricePill/PriceHBox"]
 custom_minimum_size = Vector2(14, 14)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 script = ExtResource("44")
 
-[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopList/TenderRow/HBox/PricePill/PriceHBox"]
+[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/TenderRow/HBox/PricePill/PriceHBox"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.05, 0.05, 0.035, 1)
@@ -885,26 +994,22 @@ text = ""
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-
 [node name="RemoveButton" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(1, 0.94, 0.88, 1)
 theme_override_colors/font_hover_color = Color(1, 0.86, 0.4, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 15
 theme_override_styles/normal = SubResource("RemoveStrip")
 theme_override_styles/hover = SubResource("RemoveStrip")
-text = "X     REMOVE     X"
+text = "REMOVE UNIT"
 
 [node name="HpRail" type="PanelContainer" parent="CanvasLayer/Menu"]
 layout_mode = 0
-offset_left = 964.0
+offset_left = 954.0
 offset_top = 10.0
-offset_right = 1006.0
+offset_right = 1014.0
 offset_bottom = 700.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("HpRailBg")
@@ -942,7 +1047,7 @@ script = ExtResource("56")
 
 [node name="RightPanel" type="PanelContainer" parent="CanvasLayer/Menu"]
 layout_mode = 0
-offset_left = 1016.0
+offset_left = 1024.0
 offset_top = 10.0
 offset_right = 1270.0
 offset_bottom = 710.0
@@ -960,20 +1065,31 @@ theme_override_constants/margin_bottom = 10
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="ControlsRow" type="HBoxContainer" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+[node name="ControlsPanel" type="PanelContainer" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("CreamPanel")
+
+[node name="Margin" type="MarginContainer" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/ControlsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="ControlsRow" type="HBoxContainer" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/ControlsPanel/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="SpeedButton" type="Button" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/ControlsRow"]
-custom_minimum_size = Vector2(90, 44)
+[node name="SpeedButton" type="Button" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/ControlsPanel/Margin/ControlsRow"]
+custom_minimum_size = Vector2(90, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("SpeedButtonArt")
 theme_override_styles/hover = SubResource("SpeedButtonArt")
 tooltip_text = "Run at double speed"
 
-[node name="PauseButton" type="Button" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/ControlsRow"]
-custom_minimum_size = Vector2(90, 44)
+[node name="PauseButton" type="Button" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/ControlsPanel/Margin/ControlsRow"]
+custom_minimum_size = Vector2(90, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/normal = SubResource("PauseButtonArt")
@@ -1054,31 +1170,31 @@ horizontal_alignment = 1
 layout_mode = 2
 
 [node name="TaskHealth" type="CheckBox" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/TodoPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 mouse_filter = 2
 disabled = true
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 16
 theme_override_colors/font_color = Color(0.14, 0.09, 0.055, 1)
 theme_override_colors/font_disabled_color = Color(0.14, 0.09, 0.055, 1)
 text = "Keep HP above 50%"
 
 [node name="TaskNoLeaks" type="CheckBox" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/TodoPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 mouse_filter = 2
 disabled = true
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 16
 theme_override_colors/font_color = Color(0.14, 0.09, 0.055, 1)
 theme_override_colors/font_disabled_color = Color(0.14, 0.09, 0.055, 1)
 text = "No leaks this wave"
 
 [node name="TaskTrain" type="CheckBox" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/TodoPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 mouse_filter = 2
 disabled = true
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 16
 theme_override_colors/font_color = Color(0.14, 0.09, 0.055, 1)
 theme_override_colors/font_disabled_color = Color(0.14, 0.09, 0.055, 1)
 text = "Build a three-car train"
