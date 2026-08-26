@@ -2,7 +2,7 @@ extends Node
 ## Autoload. Owns the rail path and the currency wallet — Godot equivalent
 ## of Unity's LevelManager.main singleton.
 
-@export var starting_currency: int = 100
+@export var starting_currency: int = 230
 
 var path: Array[Node2D] = []
 var currency: int = 0

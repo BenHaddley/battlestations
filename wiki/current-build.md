@@ -62,12 +62,20 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 
 ### Current visual language
 
-- Rails are inset from the courtyard edge, enlarged, shadowed, and use curved pieces.
-- The engine emits smoke; enlarged cars are spaced by physical length and linked by couplers.
-- Spider lanes have quiet entrance markers and a danger line separate from the railway.
-- Spiders animate and flash on hits; weapons, kills, bounty rewards, Slomo pulses, and
-  station damage all have immediate visual feedback.
-- The warm charcoal/brass HUD shows the live engine/car count and a selected-car preview.
+- Crooked illustrated wooden cabinets frame a camera-enlarged courtyard, with the
+  environmental painting deliberately secondary to the tabletop play area.
+- The left cabinet is a saturated cyan/yellow two-column card rack. Gunner and Slomo
+  are functional; six illustrated cards visibly preview the future roster but remain disabled.
+- The right cabinet is limited to illustrated playback controls, a conductor tutorial,
+  route progress, and a large paper `CHALLENGES` area.
+- Each generated route makes four or five connected passes through the courtyard,
+  using narrow straight and curved pieces to create a dense railway puzzle.
+- The engine emits smoke; chunky cars receive varied comic-book colors, stay aligned
+  to the route, and are spaced by physical length with visible couplers.
+- Spiders animate and flash on hits. Gunfire, kills, bounty rewards, station damage,
+  and Slomo's rough hand-drawn arrow burst all provide immediate feedback.
+- A recovered crayon-style display font, thick outlines, warm burgundy, bright cyan,
+  and paper yellow unify the interface with the supplied illustrated reference.
 
 ## Active scenes
 
@@ -83,7 +91,8 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 
 - The first shop can attach Gunner and Slomo cars with image previews, but has no
   refunds, upgrade information, consist-length limit, or car reordering.
-- There is no victory, restart, pause, or speed-control flow.
+- There is no victory or restart flow. Playback controls are present, while the
+  wider run-state flow remains prototype-level.
 - Upgrade methods exist, but no upgrade panel is wired in `Turret.tscn`.
 - Wave number and remaining spiders are displayed, but there is no countdown.
 - Only one generic enemy is spawnable; most art has no gameplay scene.

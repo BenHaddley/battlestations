@@ -13,13 +13,14 @@ signal train_drop_requested(tower_index: int, screen_position: Vector2)
 @onready var wave_label: Label = $LeftPanel/Margin/VBox/WaveLabel
 @onready var spiders_label: Label = $LeftPanel/Margin/VBox/SpidersLabel
 @onready var train_label: Label = $LeftPanel/Margin/VBox/TrainLabel
-@onready var gunner_button: Button = $LeftPanel/Margin/VBox/GunnerButton
-@onready var slomo_button: Button = $LeftPanel/Margin/VBox/SlomoButton
+@onready var gunner_button: Button = $LeftPanel/Margin/VBox/ShopGrid/GunnerButton
+@onready var slomo_button: Button = $LeftPanel/Margin/VBox/ShopGrid/SlomoButton
 @onready var next_wave_button: Button = $LeftPanel/Margin/VBox/NextWaveButton
 @onready var speed_button: Button = $RightPanel/Margin/VBox/TransportControls/SpeedButton
 @onready var pause_button: Button = $RightPanel/Margin/VBox/TransportControls/PauseButton
 @onready var station_bar: ProgressBar = $StationBar
 @onready var station_bar_label: Label = $StationBar/Label
+@onready var wave_progress: ProgressBar = $RightPanel/Margin/VBox/WaveProgress
 
 @onready var name_label: Label = $RightPanel/Margin/VBox/NameLabel
 @onready var cost_label: Label = $RightPanel/Margin/VBox/CostLabel
@@ -35,11 +36,15 @@ var convoy: Node2D
 var station_lost: bool = false
 var dragging_tower: int = -1
 var drag_preview: TextureRect
+var current_wave_total: int = 1
 
 func configure(enemy_spawner: EnemySpawner, defended_station: Station, active_convoy: Node2D) -> void:
 	spawner = enemy_spawner
 	station = defended_station
 	convoy = active_convoy
+	spawner.wave_started.connect(func(_wave: int) -> void:
+		current_wave_total = max(1, spawner.enemies_remaining())
+	)
 	station.defeated.connect(func() -> void: station_lost = true)
 
 func _ready() -> void:
@@ -78,6 +83,8 @@ func _process(_delta: float) -> void:
 	if spawner:
 		wave_label.text = "Wave  %d" % spawner.current_wave
 		spiders_label.text = "🕷 %d remaining" % spawner.enemies_remaining()
+		wave_progress.max_value = current_wave_total
+		wave_progress.value = current_wave_total - spawner.enemies_remaining()
 		if station_lost:
 			next_wave_button.disabled = true
 			next_wave_button.text = "STATION LOST"

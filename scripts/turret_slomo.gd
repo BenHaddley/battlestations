@@ -29,6 +29,9 @@ func _freeze_enemies() -> void:
 	for body in targeting_area.get_overlapping_bodies():
 		if body.has_method("apply_slow"):
 			body.apply_slow(freeze_time)
+	var arrows: Node2D = preload("res://scripts/comic_arrow_burst.gd").new()
+	get_tree().current_scene.add_child(arrows)
+	arrows.play(global_position)
 	var pulse := Sprite2D.new()
 	pulse.texture = preload("res://assets/sprites/effects/Puff.png")
 	pulse.global_position = global_position

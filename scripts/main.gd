@@ -52,5 +52,20 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> voi
 
 	var train: Node2D = tower.scene.instantiate()
 	trains.add_child(train)
+	_apply_car_palette(train, convoy.car_count())
 	convoy.attach_car(train)
 	menu.show_placement_feedback("%s connected to the engine." % tower.tower_name, true)
+
+func _apply_car_palette(car: Node2D, palette_index: int) -> void:
+	var palette := [
+		Color(1.0, 0.48, 0.42),
+		Color(0.45, 0.68, 1.0),
+		Color(1.0, 0.82, 0.28),
+		Color(0.72, 0.48, 1.0),
+		Color(0.48, 0.9, 0.58),
+	]
+	var sprite: Sprite2D = car.get_node_or_null("Base")
+	if sprite == null:
+		sprite = car.get_node_or_null("Sprite2D")
+	if sprite:
+		sprite.modulate = Color.WHITE.lerp(palette[palette_index % palette.size()], 0.38)

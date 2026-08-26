@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3]
+[gd_scene load_steps=38 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/board/THE_BOARD.png" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
@@ -21,6 +21,13 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/speed up.png" id="20"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/pause.png" id="21"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/gifmaker_me_4.png" id="22"]
+[ext_resource type="Texture2D" path="res://assets/sprites/engines/Steam Engine Blue.png" id="23"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/OIL TANKER.png" id="24"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/COAL CANNON BASE.png" id="25"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/Ballast Blaster.png" id="26"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/Passenger Coach.png" id="27"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/Minigun Base.png" id="28"]
+[ext_resource type="FontFile" path="res://assets/fonts/DkCoolCrayon.ttf" id="29"]
 
 [sub_resource type="StyleBoxTexture" id="LeftPanelArt"]
 texture = ExtResource("18")
@@ -37,6 +44,20 @@ texture = ExtResource("21")
 [sub_resource type="AtlasTexture" id="TutorialFrame"]
 atlas = ExtResource("22")
 region = Rect2(0, 0, 950, 530)
+
+[sub_resource type="StyleBoxFlat" id="WaveTrackBackground"]
+bg_color = Color(0.12, 0.075, 0.045, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.02, 0.02, 0.015, 1)
+
+[sub_resource type="StyleBoxFlat" id="WaveTrackFill"]
+bg_color = Color(0.84, 0.18, 0.12, 1)
+border_width_top = 2
+border_width_bottom = 2
+border_color = Color(1, 0.78, 0.16, 1)
 
 [sub_resource type="StyleBoxFlat" id="HudPanel"]
 bg_color = Color(0.25, 0.15, 0.09, 0.98)
@@ -154,7 +175,7 @@ corner_radius_bottom_left = 10
 script = ExtResource("6")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(0.375, 0.375)
+zoom = Vector2(0.45, 0.45)
 
 [node name="MusicPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("17")
@@ -203,6 +224,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme_override_fonts/font = ExtResource("29")
 script = ExtResource("5")
 normal_style = SubResource("ButtonNormal")
 selected_style = SubResource("ButtonSelected")
@@ -288,19 +310,14 @@ theme_override_colors/font_color = Color(1, 0.86, 0.56, 1)
 theme_override_font_sizes/font_size = 18
 text = "ATTACH CARS"
 
-[node name="GunnerButton" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 48)
+[node name="ShopGrid" type="GridContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
 layout_mode = 2
-mouse_default_cursor_shape = 2
-theme_override_font_sizes/font_size = 16
-theme_override_colors/font_color = Color(0.04, 0.07, 0.06, 1)
-theme_override_styles/normal = SubResource("ButtonNormal")
-theme_override_styles/hover = SubResource("ButtonHover")
-theme_override_styles/disabled = SubResource("ButtonDisabled")
-text = "Drag Gunner  $50"
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+columns = 2
 
-[node name="SlomoButton" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 48)
+[node name="GunnerButton" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
+custom_minimum_size = Vector2(82, 78)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 16
@@ -308,7 +325,190 @@ theme_override_colors/font_color = Color(0.04, 0.07, 0.06, 1)
 theme_override_styles/normal = SubResource("ButtonNormal")
 theme_override_styles/hover = SubResource("ButtonHover")
 theme_override_styles/disabled = SubResource("ButtonDisabled")
-text = "Drag Slomo  $75"
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/GunnerButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 2.0
+offset_right = -4.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("15")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/GunnerButton"]
+layout_mode = 1
+anchors_preset = 12
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.05, 0.05, 0.035, 1)
+theme_override_font_sizes/font_size = 12
+text = "GUNNER  $50"
+horizontal_alignment = 1
+
+[node name="SlomoButton" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
+custom_minimum_size = Vector2(82, 78)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.04, 0.07, 0.06, 1)
+theme_override_styles/normal = SubResource("ButtonNormal")
+theme_override_styles/hover = SubResource("ButtonHover")
+theme_override_styles/disabled = SubResource("ButtonDisabled")
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/SlomoButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 2.0
+offset_right = -4.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("16")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/SlomoButton"]
+layout_mode = 1
+anchors_preset = 12
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.05, 0.05, 0.035, 1)
+theme_override_font_sizes/font_size = 12
+text = "SLOMO  $75"
+horizontal_alignment = 1
+
+[node name="FutureBlue" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
+custom_minimum_size = Vector2(82, 72)
+layout_mode = 2
+disabled = true
+theme_override_styles/disabled = SubResource("ButtonNormal")
+tooltip_text = "Future engine car"
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureBlue"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("23")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FutureOil" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
+custom_minimum_size = Vector2(82, 72)
+layout_mode = 2
+disabled = true
+theme_override_styles/disabled = SubResource("ButtonNormal")
+tooltip_text = "Future oil car"
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureOil"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("24")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FutureCoal" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
+custom_minimum_size = Vector2(82, 72)
+layout_mode = 2
+disabled = true
+theme_override_styles/disabled = SubResource("ButtonNormal")
+tooltip_text = "Future coal cannon"
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureCoal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("25")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FutureBallast" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
+custom_minimum_size = Vector2(82, 72)
+layout_mode = 2
+disabled = true
+theme_override_styles/disabled = SubResource("ButtonNormal")
+tooltip_text = "Future ballast car"
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureBallast"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("26")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FuturePassenger" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
+custom_minimum_size = Vector2(82, 68)
+layout_mode = 2
+disabled = true
+theme_override_styles/disabled = SubResource("ButtonNormal")
+tooltip_text = "Future passenger car"
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FuturePassenger"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("27")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FutureMinigun" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
+custom_minimum_size = Vector2(82, 68)
+layout_mode = 2
+disabled = true
+theme_override_styles/disabled = SubResource("ButtonNormal")
+tooltip_text = "Future minigun car"
+
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureMinigun"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("28")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 4)
@@ -372,25 +572,45 @@ texture = SubResource("TutorialFrame")
 expand_mode = 1
 stretch_mode = 6
 
+[node name="WaveProgressLabel" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12, 0.075, 0.045, 1)
+theme_override_font_sizes/font_size = 13
+text = "WAVE ROUTE  1 — 6"
+horizontal_alignment = 1
+
+[node name="WaveProgress" type="ProgressBar" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/background = SubResource("WaveTrackBackground")
+theme_override_styles/fill = SubResource("WaveTrackFill")
+value = 0.0
+show_percentage = false
+
 [node name="Header" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.86, 0.56, 1)
 theme_override_font_sizes/font_size = 18
 text = "SELECTED"
 
 [node name="NameLabel" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.11, 0.07, 0.045, 1)
 theme_override_font_sizes/font_size = 24
 text = "Gunner"
 
 [node name="CostLabel" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.18, 0.11, 0.07, 1)
 theme_override_font_sizes/font_size = 16
 text = "$50"
 
 [node name="CarPreview" type="TextureRect" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+visible = false
 custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 texture = ExtResource("15")
@@ -398,9 +618,11 @@ expand_mode = 3
 stretch_mode = 5
 
 [node name="Rule" type="HSeparator" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+visible = false
 layout_mode = 2
 
 [node name="SummaryLabel" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.14, 0.09, 0.055, 1)
 theme_override_font_sizes/font_size = 15
@@ -408,6 +630,7 @@ text = "Reliable single-target damage."
 autowrap_mode = 2
 
 [node name="HintLabel" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.24, 0.15, 0.09, 1)
 theme_override_font_sizes/font_size = 13
@@ -420,8 +643,9 @@ layout_mode = 2
 [node name="ChallengesHeader" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.86, 0.56, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 28
 text = "CHALLENGES"
+horizontal_alignment = 1
 
 [node name="ChallengeOne" type="CheckBox" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
 layout_mode = 2

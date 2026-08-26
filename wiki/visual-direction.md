@@ -13,6 +13,8 @@ not a conventional dark game dashboard.
 - Station health is a prominent green/red bar beneath the battlefield.
 - Text is short, handwritten or sign-painted in spirit, with pictures carrying most
   of the shop and tutorial communication.
+- Avoid clean dashboard cards, realistic materials, or large explanatory copy; the
+  screen should read first as a dense hand-inked board game.
 
 ## Battlefield language
 
@@ -23,6 +25,18 @@ not a conventional dark game dashboard.
 - Cars remain aligned to track direction, retain readable coupling gaps, and follow
   corners without overlap.
 - Spider lanes are communicated lightly; they must not look like additional rails.
+- Combat feedback should use intentionally imperfect inked arrows, flashes, smoke,
+  and symbols rather than polished web-style effects.
+
+## Current screen implementation
+
+- The central board is camera-cropped closer and receives the majority of the width.
+- Procedural tracks use four or five horizontal sweeps per playthrough.
+- The shop presents eight illustrated cards in two columns, with unavailable roster
+  concepts clearly disabled.
+- Attached cars are palette-varied to keep longer trains readable at a glance.
+- The right panel contains playback, tutorial art, wave-route progress, and the
+  challenge sheet; selected-unit details no longer compete with those elements.
 
 ## Implementation boundary
 

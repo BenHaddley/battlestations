@@ -8,8 +8,8 @@ class_name TrackRenderer
 @export var tile_scale: float = 0.105
 @export var path_step: float = 90.0
 @export var track_bounds: Rect2 = Rect2(-330.0, -270.0, 660.0, 810.0)
-@export_range(3, 4) var minimum_sweeps: int = 3
-@export_range(3, 4) var maximum_sweeps: int = 4
+@export_range(4, 5) var minimum_sweeps: int = 4
+@export_range(4, 5) var maximum_sweeps: int = 5
 
 var path_points: PackedVector2Array = PackedVector2Array()
 
