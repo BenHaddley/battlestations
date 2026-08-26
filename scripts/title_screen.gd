@@ -1,6 +1,8 @@
 extends Control
 ## Functional shell over the authored 16:9 title-screen illustration.
 
+const StartGameDialogueScript := preload("res://scripts/start_game_dialogue.gd")
+
 @onready var start_button: Button = $StartButton
 @onready var press_start_button: Button = $PressStartButton
 @onready var challenges_button: Button = $ChallengesButton
@@ -16,6 +18,7 @@ extends Control
 @onready var new_game_button: Button = $StartChoiceModal/Margin/VBox/NewGameButton
 
 var starting := false
+var start_dialogue: Control
 
 func _ready() -> void:
 	Engine.time_scale = 1.0
@@ -29,14 +32,21 @@ func _ready() -> void:
 	$Modal/Margin/VBox/BackButton.pressed.connect(func() -> void: modal.hide())
 	continue_button.pressed.connect(_on_continue_pressed)
 	new_game_button.pressed.connect(_on_new_game_pressed)
+	start_dialogue = StartGameDialogueScript.new()
+	add_child(start_dialogue)
+	start_dialogue.continue_selected.connect(_on_continue_pressed)
+	start_dialogue.restart_selected.connect(_on_new_game_pressed)
+	start_dialogue.closed.connect(start_button.grab_focus)
 	start_button.grab_focus()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_accept") and not modal.visible and not start_choice_modal.visible:
+	if event.is_action_pressed("ui_accept") and not modal.visible and not start_choice_modal.visible and not start_dialogue.visible:
 		_on_start_pressed()
 	elif event.is_action_pressed("ui_cancel"):
 		if modal.visible:
 			modal.hide()
+		elif start_dialogue.visible:
+			start_dialogue.close()
 		elif start_choice_modal.visible:
 			start_choice_modal.hide()
 		else:
@@ -48,17 +58,13 @@ func _play_music_looped() -> void:
 		stream.loop = true
 	music_player.play()
 
-## Only offers the continue/new-game choice when there's an actual saved
-## run to continue — a first-time player just starts straight in, same as
-## before this existed.
+## Start always opens the character-led choice. With no meaningful save the
+## Continue option is visibly unavailable and Daisy points the player to New Game.
 func _on_start_pressed() -> void:
 	if starting:
 		return
-	if CampaignManager.has_saved_progress():
-		start_choice_modal.show()
-		continue_button.grab_focus()
-	else:
-		_on_new_game_pressed()
+	start_choice_modal.hide()
+	start_dialogue.open(CampaignManager.has_saved_progress())
 
 func _on_continue_pressed() -> void:
 	start_choice_modal.hide()
