@@ -16,6 +16,7 @@ var tutorial_active := false
 var first_wave_seen := false
 var first_payout_seen := false
 var final_wave_hyped := false
+var pause_state_before_sequence := false
 
 func _ready() -> void:
 	layer = 250
@@ -113,13 +114,14 @@ func _enqueue(entries: Array[Dictionary]) -> void:
 		return
 	queue.append_array(entries)
 	if current.is_empty():
+		pause_state_before_sequence = PhaseManager.paused
 		_show_next()
 
 func _show_next() -> void:
 	if queue.is_empty():
 		current = {}
 		overlay.visible = false
-		PhaseManager.paused = false
+		PhaseManager.paused = pause_state_before_sequence
 		return
 	current = queue.pop_front()
 	var waits := not String(current.get("wait_for", "")).is_empty()
@@ -141,7 +143,7 @@ func _skip_all() -> void:
 	queue.clear()
 	current = {}
 	overlay.visible = false
-	PhaseManager.paused = false
+	PhaseManager.paused = pause_state_before_sequence
 	if tutorial_active:
 		_mark_tutorial_completed()
 	tutorial_active = false
