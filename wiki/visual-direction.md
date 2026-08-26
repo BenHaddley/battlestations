@@ -32,8 +32,9 @@ not a conventional dark game dashboard.
 
 - The central board is camera-cropped closer and receives the majority of the width.
 - Procedural tracks use five horizontal sweeps per playthrough.
-- The shop presents eight illustrated cards in two columns, with unavailable roster
-  concepts clearly disabled.
+- The shop presents ten equal cards in a tightly packed 2×5 tray, mixing large
+  illustrated pieces with three crooked handwritten concept cards. Run-status text
+  is kept off this component tray; `REMOVE` and the blue points strip own its base.
 - Attached cars are palette-varied to keep longer trains readable at a glance.
 - The right panel contains playback, tutorial art, wave-route progress, and the
   challenge sheet; selected-unit details no longer compete with those elements.

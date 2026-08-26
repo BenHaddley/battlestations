@@ -85,6 +85,15 @@ func set_drag_active(active: bool) -> void:
 func car_count() -> int:
 	return followers.size()
 
+func detach_last_car() -> bool:
+	if followers.is_empty():
+		return false
+	var car: Node2D = followers.pop_back()
+	if is_instance_valid(car):
+		car.queue_free()
+	queue_redraw()
+	return true
+
 func _draw() -> void:
 	var previous := Vector2.ZERO
 	for car in followers:

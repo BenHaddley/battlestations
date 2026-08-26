@@ -24,6 +24,7 @@ func _ready() -> void:
 	menu.train_drag_started.connect(convoy.set_drag_active.bind(true))
 	menu.train_drag_ended.connect(convoy.set_drag_active.bind(false))
 	menu.train_drop_requested.connect(_on_train_drop_requested)
+	spawner.wave_cleared.connect(_on_wave_cleared)
 	_seed_tabletop()
 
 ## Open on a game already in motion. The illustrated reference reads as a
@@ -40,6 +41,10 @@ func _seed_tabletop() -> void:
 		_apply_car_palette(train, index)
 		convoy.attach_car(train)
 	get_tree().create_timer(0.65).timeout.connect(spawner.start_next_wave)
+
+func _on_wave_cleared(_wave_number: int) -> void:
+	if not menu.station_lost:
+		get_tree().create_timer(2.5).timeout.connect(spawner.start_next_wave)
 
 ## MP3 streams don't loop by default — the loop flag lives on the stream
 ## resource itself, so it has to be set before play() rather than as a

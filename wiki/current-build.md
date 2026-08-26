@@ -64,9 +64,11 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 
 - Crooked illustrated wooden cabinets frame a camera-enlarged courtyard, with the
   environmental painting deliberately secondary to the tabletop play area.
-- The left cabinet is a saturated cyan/yellow two-column card rack with deliberately
-  uneven borders, crooked pieces, and two handwritten joke cards. Gunner and Slomo
-  are functional; six cards visibly preview the future roster but remain disabled.
+- The left cabinet is a saturated cyan/yellow 2×5 card tray with deliberately
+  uneven borders, crooked pieces, and three handwritten joke cards. Gunner and Slomo
+  are functional; eight cards visibly preview the future roster but remain disabled.
+  A burgundy `REMOVE` strip detaches the tail car, above a deliberately exaggerated
+  blue points readout.
 - The right cabinet is limited to illustrated playback controls, a conductor tutorial,
   route progress, and a large paper `CHALLENGES` area.
 - Each generated route makes five connected passes through the courtyard,
@@ -95,8 +97,8 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 
 - The first shop can attach Gunner and Slomo cars with image previews, but has no
   refunds, upgrade information, consist-length limit, or car reordering.
-- There is no victory or restart flow. Playback controls are present, while the
-  wider run-state flow remains prototype-level.
+- There is no victory or restart flow. Playback controls are present and waves now
+  advance automatically, while the wider run-state flow remains prototype-level.
 - Upgrade methods exist, but no upgrade panel is wired in `Turret.tscn`.
 - Wave number and remaining spiders are displayed, but there is no countdown.
 - Only one generic enemy is spawnable; most art has no gameplay scene.

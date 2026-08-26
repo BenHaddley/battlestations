@@ -16,6 +16,7 @@ signal train_drop_requested(tower_index: int, screen_position: Vector2)
 @onready var gunner_button: Button = $LeftPanel/Margin/VBox/ShopGrid/GunnerButton
 @onready var slomo_button: Button = $LeftPanel/Margin/VBox/ShopGrid/SlomoButton
 @onready var next_wave_button: Button = $LeftPanel/Margin/VBox/NextWaveButton
+@onready var remove_button: Button = $LeftPanel/Margin/VBox/RemoveButton
 @onready var speed_button: Button = $RightPanel/Margin/VBox/TransportControls/SpeedButton
 @onready var pause_button: Button = $RightPanel/Margin/VBox/TransportControls/PauseButton
 @onready var station_bar: ProgressBar = $StationBar
@@ -53,6 +54,7 @@ func _ready() -> void:
 	gunner_button.gui_input.connect(_on_tower_gui_input.bind(0))
 	slomo_button.gui_input.connect(_on_tower_gui_input.bind(1))
 	next_wave_button.pressed.connect(_on_next_wave_pressed)
+	remove_button.pressed.connect(_remove_tail_car)
 	speed_button.pressed.connect(_toggle_speed)
 	pause_button.pressed.connect(_toggle_pause)
 	_create_drag_preview()
@@ -97,6 +99,12 @@ func _process(_delta: float) -> void:
 func _on_next_wave_pressed() -> void:
 	if spawner:
 		spawner.start_next_wave()
+
+func _remove_tail_car() -> void:
+	if convoy and convoy.has_method("detach_last_car") and convoy.detach_last_car():
+		show_placement_feedback("Tail car returned to the tray.", true)
+	else:
+		show_placement_feedback("The engine cannot be removed.", false)
 
 func _toggle_speed() -> void:
 	Engine.time_scale = 2.0 if Engine.time_scale < 1.5 else 1.0
