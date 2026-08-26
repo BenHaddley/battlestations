@@ -26,6 +26,11 @@ class_name TrainConvoy
 
 @onready var engine: Sprite2D = $Engine
 
+## Turret art occupies a 1500px square at 0.085 scale (127.5 world units).
+## Engine liveries exist as both 750px and 1500px sources, so derive their
+## scale from the texture instead of inheriting the old 750px-only value.
+const ENGINE_TOKEN_SIZE := 127.5
+
 var path: PackedVector2Array
 var path_index: int = 0
 var path_step: int = 1
@@ -41,6 +46,11 @@ func set_engine_livery(texture: Texture2D) -> void:
 	if texture:
 		engine.texture = texture
 		engine.modulate = Color.WHITE
+		var source_size := texture.get_size()
+		var source_extent := maxf(source_size.x, source_size.y)
+		if source_extent > 0.0:
+			var normalized_scale := ENGINE_TOKEN_SIZE / source_extent
+			engine.scale = Vector2(normalized_scale, normalized_scale)
 
 func configure_path(track_path: PackedVector2Array) -> void:
 	path = track_path.duplicate()
