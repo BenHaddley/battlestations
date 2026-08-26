@@ -1,4 +1,4 @@
-[gd_scene load_steps=40 format=3]
+[gd_scene load_steps=42 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/board/THE_BOARD.png" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
@@ -30,6 +30,8 @@
 [ext_resource type="FontFile" path="res://assets/fonts/ArchitectsDaughter-Regular.ttf" id="29"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/BRAKE VAN.png" id="30"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/OIL TANKER 2.png" id="31"]
+[ext_resource type="Script" path="res://scripts/comic_card.gd" id="32"]
+[ext_resource type="Script" path="res://scripts/rough_underline.gd" id="33"]
 
 [sub_resource type="StyleBoxTexture" id="LeftPanelArt"]
 texture = ExtResource("18")
@@ -188,6 +190,8 @@ corner_radius_top_left = 2
 corner_radius_top_right = 5
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 4
+shadow_color = Color(0.04, 0.02, 0.015, 0.7)
+shadow_size = 3
 
 [sub_resource type="StyleBoxFlat" id="PointsStrip"]
 bg_color = Color(0.67, 0.86, 1, 1)
@@ -231,7 +235,7 @@ smoke_texture = ExtResource("14")
 
 [node name="Engine" type="Sprite2D" parent="Trains/TrainConvoy"]
 texture = ExtResource("12")
-scale = Vector2(0.15, 0.15)
+scale = Vector2(0.17, 0.17)
 z_index = 21
 
 [node name="EnemySpawner" type="Node2D" parent="."]
@@ -304,6 +308,7 @@ theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 27
 text = "100"
 horizontal_alignment = 1
+rotation = -0.022
 
 [node name="HeaderSpacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 22)
@@ -348,7 +353,7 @@ theme_override_constants/v_separation = 4
 columns = 2
 
 [node name="GunnerButton" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
-custom_minimum_size = Vector2(140, 78)
+custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 16
@@ -356,16 +361,17 @@ theme_override_colors/font_color = Color(0.04, 0.07, 0.06, 1)
 theme_override_styles/normal = SubResource("ButtonNormal")
 theme_override_styles/hover = SubResource("ButtonHover")
 theme_override_styles/disabled = SubResource("ButtonDisabled")
+script = ExtResource("32")
 
 [node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/GunnerButton"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 4.0
-offset_top = 2.0
-offset_right = -4.0
-offset_bottom = -18.0
+offset_left = -7.0
+offset_top = -8.0
+offset_right = 7.0
+offset_bottom = 5.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -390,7 +396,7 @@ text = "GUNNER  $50"
 horizontal_alignment = 1
 
 [node name="SlomoButton" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
-custom_minimum_size = Vector2(140, 78)
+custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 16
@@ -398,16 +404,17 @@ theme_override_colors/font_color = Color(0.04, 0.07, 0.06, 1)
 theme_override_styles/normal = SubResource("ButtonNormal")
 theme_override_styles/hover = SubResource("ButtonHover")
 theme_override_styles/disabled = SubResource("ButtonDisabled")
+script = ExtResource("32")
 
 [node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/SlomoButton"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 4.0
-offset_top = 2.0
-offset_right = -4.0
-offset_bottom = -18.0
+offset_left = -6.0
+offset_top = -7.0
+offset_right = 8.0
+offset_bottom = 7.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -432,17 +439,22 @@ text = "SLOMO  $75"
 horizontal_alignment = 1
 
 [node name="FutureBlue" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
-custom_minimum_size = Vector2(140, 78)
+custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
 disabled = true
 theme_override_styles/disabled = SubResource("ButtonNormal")
 tooltip_text = "Future engine car"
+script = ExtResource("32")
 
 [node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureBlue"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -9.0
+offset_top = -8.0
+offset_right = 9.0
+offset_bottom = 7.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -452,17 +464,22 @@ stretch_mode = 5
 rotation = -0.09
 
 [node name="FutureOil" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
-custom_minimum_size = Vector2(140, 78)
+custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
 disabled = true
 theme_override_styles/disabled = SubResource("ButtonNormal")
 tooltip_text = "Future oil car"
+script = ExtResource("32")
 
 [node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureOil"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -8.0
+offset_top = -7.0
+offset_right = 8.0
+offset_bottom = 8.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -472,17 +489,22 @@ stretch_mode = 5
 rotation = 0.08
 
 [node name="FutureCoal" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
-custom_minimum_size = Vector2(140, 78)
+custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
 disabled = true
 theme_override_styles/disabled = SubResource("ButtonNormal")
 tooltip_text = "Future coal cannon"
+script = ExtResource("32")
 
 [node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureCoal"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -7.0
+offset_top = -9.0
+offset_right = 8.0
+offset_bottom = 7.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -492,17 +514,22 @@ stretch_mode = 5
 rotation = 0.055
 
 [node name="FutureBallast" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
-custom_minimum_size = Vector2(140, 78)
+custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
 disabled = true
 theme_override_styles/disabled = SubResource("ButtonNormal")
 tooltip_text = "Future ballast car"
+script = ExtResource("32")
 
 [node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureBallast"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -9.0
+offset_top = -7.0
+offset_right = 7.0
+offset_bottom = 9.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -512,11 +539,12 @@ stretch_mode = 5
 rotation = -0.07
 
 [node name="FuturePassenger" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
-custom_minimum_size = Vector2(140, 78)
+custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
 disabled = true
 theme_override_styles/disabled = SubResource("ButtonNormal")
 tooltip_text = "Future passenger car"
+script = ExtResource("32")
 
 [node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FuturePassenger"]
 visible = false
@@ -552,11 +580,12 @@ vertical_alignment = 1
 rotation = -0.07
 
 [node name="FutureMinigun" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
-custom_minimum_size = Vector2(140, 78)
+custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
 disabled = true
 theme_override_styles/disabled = SubResource("ButtonNormal")
 tooltip_text = "Future minigun car"
+script = ExtResource("32")
 
 [node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureMinigun"]
 visible = false
@@ -592,17 +621,22 @@ vertical_alignment = 1
 rotation = 0.065
 
 [node name="FutureBrake" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
-custom_minimum_size = Vector2(140, 78)
+custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
 disabled = true
 theme_override_styles/disabled = SubResource("ButtonNormal")
 tooltip_text = "Future brake van"
+script = ExtResource("32")
 
 [node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureBrake"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -9.0
+offset_top = -9.0
+offset_right = 9.0
+offset_bottom = 8.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -612,11 +646,12 @@ stretch_mode = 5
 rotation = -0.08
 
 [node name="FutureMail" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
-custom_minimum_size = Vector2(140, 78)
+custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
 disabled = true
 theme_override_styles/disabled = SubResource("ButtonNormal")
 tooltip_text = "Future express mail car"
+script = ExtResource("32")
 
 [node name="MailGhost" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureMail"]
 layout_mode = 1
@@ -668,15 +703,15 @@ theme_override_styles/disabled = SubResource("WaveButtonDisabled")
 text = "NEXT WAVE"
 
 [node name="RemoveButton" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(1, 0.94, 0.88, 1)
 theme_override_colors/font_hover_color = Color(1, 0.86, 0.4, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("RemoveStrip")
 theme_override_styles/hover = SubResource("RemoveStrip")
-text = "×    REMOVE    ×"
+text = "X     REMOVE     X"
 rotation = -0.012
 
 [node name="PointsPanel" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
@@ -820,18 +855,17 @@ layout_mode = 2
 [node name="ChallengesHeader" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.08, 0.055, 0.035, 1)
-theme_override_font_sizes/font_size = 36
+theme_override_colors/font_outline_color = Color(0.08, 0.045, 0.025, 0.45)
+theme_override_constants/outline_size = 1
+theme_override_font_sizes/font_size = 38
 text = "CHALLENGES"
 horizontal_alignment = 1
 rotation = -0.035
 
 [node name="ChallengeScribble" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 18)
+custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.14, 0.07, 0.04, 1)
-theme_override_font_sizes/font_size = 22
-text = "~~~~~~~~~~~"
-horizontal_alignment = 1
+script = ExtResource("33")
 rotation = 0.025
 
 [node name="ChallengeOne" type="CheckBox" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]

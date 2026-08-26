@@ -102,6 +102,9 @@ func _shoot() -> void:
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = firing_point.global_position
 	bullet.set_target(target)
+	var tracer := preload("res://scripts/comic_tracer.gd").new()
+	get_tree().current_scene.add_child(tracer)
+	tracer.configure(firing_point.global_position, target.global_position)
 	var flash := Sprite2D.new()
 	flash.texture = preload("res://assets/sprites/effects/hit effect.png")
 	flash.global_position = firing_point.global_position

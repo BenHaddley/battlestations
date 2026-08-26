@@ -69,6 +69,8 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
   are functional; eight cards visibly preview the future roster but remain disabled.
   A burgundy `REMOVE` strip detaches the tail car, above a deliberately exaggerated
   blue points readout.
+- Each tray slot carries stable paper flecks, dry-brush streaks, an imperfect ink
+  keyline, and oversized artwork that pushes beyond its yellow well.
 - The right cabinet is limited to illustrated playback controls, a conductor tutorial,
   route progress, and a large paper `CHALLENGES` area.
 - Each generated route makes five connected passes through the courtyard,
@@ -76,7 +78,8 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 - The engine emits smoke; chunky cars receive varied comic-book colors, stay aligned
   to the route, and are spaced by physical length with visible couplers.
 - Spiders animate and flash on hits. Gunfire, kills, bounty rewards, station damage,
-  and Slomo's rough hand-drawn arrow burst all provide immediate feedback.
+  crooked white gun tracers, and Slomo's rough hand-drawn arrow burst all provide
+  immediate feedback.
 - Architects Daughter handwriting, thick outlines, warm burgundy, bright cyan,
   and paper yellow unify the interface with the supplied illustrated reference.
 - The opening composition seeds three free starter cars and automatically begins wave

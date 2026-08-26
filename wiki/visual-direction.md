@@ -27,6 +27,8 @@ not a conventional dark game dashboard.
 - Spider lanes are communicated lightly; they must not look like additional rails.
 - Combat feedback should use intentionally imperfect inked arrows, flashes, smoke,
   and symbols rather than polished web-style effects.
+- Flat color fields should carry restrained paper flecks and paint streaks; functional
+  controls may be crooked, but their hit targets and gameplay behavior stay stable.
 
 ## Current screen implementation
 
