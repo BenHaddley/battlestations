@@ -22,6 +22,9 @@ var starting := false
 var start_dialogue: Control
 
 func _ready() -> void:
+	if _is_artist_grid_build():
+		get_tree().change_scene_to_file("res://scenes/ArtistGridView.tscn")
+		return
 	Engine.time_scale = 1.0
 	get_tree().paused = false
 	_play_music_looped()
@@ -39,6 +42,15 @@ func _ready() -> void:
 	start_dialogue.restart_selected.connect(_on_new_game_pressed)
 	start_dialogue.closed.connect(start_button.grab_focus)
 	start_button.grab_focus()
+
+## Pages publishes the same tested game pack beneath /test. Detecting the URL
+## here keeps the production title screen untouched while giving artists a
+## stable, shareable registration sheet built from the live grid constants.
+func _is_artist_grid_build() -> bool:
+	if not OS.has_feature("web"):
+		return "--artist-grid" in OS.get_cmdline_user_args()
+	var location = JavaScriptBridge.eval("window.location.pathname + window.location.search")
+	return String(location).contains("/test") or String(location).contains("artist-grid")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_accept") and not modal.visible and not start_choice_modal.visible and not start_dialogue.visible:

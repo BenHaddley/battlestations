@@ -52,6 +52,11 @@ jobs:
           sed -i "s#\"focusCanvas\"#\"mainPack\":\"${BUILD_PACK}\",\"focusCanvas\"#" export/web/index.html
           grep -q "${BUILD_PACK}" export/web/index.html
 
+      - name: Publish artist grid test build
+        run: |
+          cp -a export/web export/test-build
+          mv export/test-build export/web/test
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
