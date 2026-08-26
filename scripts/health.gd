@@ -14,6 +14,12 @@ var max_hit_points: int
 func _ready() -> void:
 	max_hit_points = hit_points
 
+func configure_hit_points(value: int, notify: bool = true) -> void:
+	hit_points = maxi(value, 1)
+	max_hit_points = hit_points
+	if notify:
+		hit_points_changed.emit(hit_points, max_hit_points)
+
 func take_damage(dmg: int) -> void:
 	hit_points -= dmg
 	hit_points_changed.emit(maxi(hit_points, 0), max_hit_points)

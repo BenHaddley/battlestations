@@ -50,7 +50,7 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 | `UIManager` | Prevents board clicks passing through UI |
 | `GameEvents` | Global `enemy_destroyed` signal used for wave accounting |
 | `Main` | Validates convoy drops, purchases cars, and attaches them to the engine |
-| `EnemySpawner` | Wave timing, scaling, spawning, and alive count |
+| `EnemySpawner` | Wave timing, alive count, and 5→15 HP dotted-spider progression |
 | `EnemyMovement` + `Health` | 25-second lane traversal, staged dot transformations, slowing, damage, death, and bounty |
 | `TowerData` | Train shop data, scene, description, price, and drag icon |
 | `TrackRenderer` | Generates a connected courtyard railway with straight and curved tiles; highlights valid drop targets |

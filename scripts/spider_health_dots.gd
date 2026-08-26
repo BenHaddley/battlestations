@@ -21,6 +21,12 @@ var visible_dots: int = 6
 
 signal stage_changed(previous_dots: int, current_dots: int)
 
+func initialize_hit_points(current: int) -> void:
+	# Spawn directly in the wave's intended form. This avoids playing a false
+	# six-dot-to-one-dot damage transformation as a wave-one spider appears.
+	visible_dots = _dots_for(current)
+	queue_redraw()
+
 func set_hit_points(current: int, _max_hit_points: int) -> void:
 	var next_dots := _dots_for(current)
 	if next_dots != visible_dots:

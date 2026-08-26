@@ -41,6 +41,10 @@ func configure_lane(destination_y: float, journey_duration_seconds: float = 25.0
 		base_speed = absf(leak_y - global_position.y) / journey_duration_seconds
 	lane_configured = true
 
+func configure_difficulty(hit_points: int) -> void:
+	health.configure_hit_points(hit_points, false)
+	health_dots.initialize_hit_points(hit_points)
+
 func _on_health_stage_changed(_previous_dots: int, current_dots: int) -> void:
 	if current_dots <= 0:
 		return

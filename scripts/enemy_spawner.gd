@@ -75,8 +75,16 @@ func _spawn_enemy() -> void:
 	get_tree().current_scene.add_child(enemy)
 	var lane_x: float = lane_x_positions[randi() % lane_x_positions.size()]
 	enemy.global_position = Vector2(lane_x, spawn_y)
+	if enemy.has_method("configure_difficulty"):
+		enemy.configure_difficulty(_hit_points_for_wave())
 	if enemy.has_method("configure_lane"):
 		enemy.configure_lane(leak_y, journey_duration_seconds)
+
+func _hit_points_for_wave() -> int:
+	# The visual roster is also the difficulty ladder: wave one starts with
+	# the forgiving one-dot form, then adds exactly one two-hit stage per wave.
+	# Wave six and later use the full six-dot, 15-hit spider.
+	return mini(5 + maxi(current_wave - 1, 0) * 2, 15)
 
 func _enemies_per_wave() -> int:
 	return roundi(base_enemies * pow(current_wave, difficulty_scaling_factor))

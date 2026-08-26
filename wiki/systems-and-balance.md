@@ -85,10 +85,11 @@ The active generic spider has 15 HP and a bounty of 50. Its unslowed speed is de
 from the configured lane length so it takes 25 seconds to travel from spawn to leak,
 and therefore remains stable when a larger board changes those coordinates.
 
-Spider durability is shown as staged red body dots: 15–14 HP has six dots, then one
-dot disappears after each pair of hits at 13, 11, 9, 7, and 5 HP. The final one-dot
-form takes five more one-damage hits to kill. Each stage change has a short squash and
-paper-puff transformation beat.
+Spider durability is also the wave difficulty ladder. Wave 1 starts with the one-dot,
+5 HP form; waves 2–6 introduce 7, 9, 11, 13, and 15 HP forms respectively. Wave 6+
+uses the full six-dot spider. During combat one dot disappears after each pair of
+one-damage hits until the final one-dot form, which takes five hits to kill. Each
+stage change has a short squash and paper-puff transformation beat.
 It uses one 1500×1500 source frame at a normalized visual scale rather than the
 combined 3000×1500 sheet. Each spawn is assigned uniformly to one of seven fixed
 columns and travels straight from the top to the bottom of the courtyard, following
