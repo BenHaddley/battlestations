@@ -82,6 +82,7 @@ func _ready() -> void:
 		button.pressed.connect(_select_tower.bind(index))
 		button.gui_input.connect(_on_tower_gui_input.bind(index))
 		_set_price_text(button, BuildManager.towers[index].cost if index < BuildManager.towers.size() else 0)
+		button.visible = CampaignManager.is_tower_unlocked(index)
 	remove_button.pressed.connect(_toggle_remove_mode)
 	speed_button.pressed.connect(_toggle_speed)
 	pause_button.pressed.connect(_toggle_pause)
@@ -216,6 +217,9 @@ func _process(_delta: float) -> void:
 		if station_lost:
 			advance_button.disabled = true
 			advance_button.text = "STATION LOST"
+		elif PhaseManager.paused:
+			advance_button.disabled = true
+			advance_button.text = "LEVEL COMPLETE"
 		elif is_battle:
 			advance_button.disabled = true
 			advance_button.text = "IN PROGRESS"
@@ -259,7 +263,7 @@ func _schedule_style(is_battle: bool) -> StyleBox:
 	return style
 
 func _on_advance_pressed() -> void:
-	if spawner and spawner.can_start_next_wave():
+	if spawner and not PhaseManager.paused and spawner.can_start_next_wave():
 		spawner.start_next_wave()
 
 ## Arms remove mode rather than removing on this same click — the button

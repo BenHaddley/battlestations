@@ -13,6 +13,10 @@ enum Phase { STATION, BATTLE }
 var phase: Phase = Phase.STATION
 var phase_timer: float = station_duration
 var rail_building_enabled: bool = true
+## Set by CampaignManager while the level-complete overlay is up, so the
+## station clock can't auto-start a wave the player hasn't seen the newly
+## unlocked roster for yet. Also checked by Menu's SKIP WAIT handler.
+var paused: bool = false
 
 var _spawner: EnemySpawner
 
@@ -21,8 +25,17 @@ func configure(spawner: EnemySpawner) -> void:
 	_spawner.wave_started.connect(_on_wave_started)
 	_spawner.wave_cleared.connect(_on_wave_cleared)
 
+## Restores a clean STATION state. Scene reload resets everything scene-owned
+## for free, but this autoload's state survives — call this before the new
+## scene's _ready() chain runs (see CampaignManager.reset_for_current_level).
+func reset() -> void:
+	phase = Phase.STATION
+	phase_timer = station_duration
+	rail_building_enabled = true
+	paused = false
+
 func _process(delta: float) -> void:
-	if phase != Phase.STATION or _spawner == null:
+	if paused or phase != Phase.STATION or _spawner == null:
 		return
 	phase_timer = maxf(0.0, phase_timer - delta)
 	if phase_timer <= 0.0 and _spawner.can_start_next_wave():

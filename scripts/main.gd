@@ -51,9 +51,14 @@ const ENGINE_LIVERIES: Array[Texture2D] = [
 
 var _car_palette_cursor := 0
 var upgrade_panel: UnitUpgradePanel
+var level_complete_overlay: LevelCompleteOverlay
 
 func _ready() -> void:
 	get_tree().root.physics_object_picking = true
+	var level: LevelData = CampaignManager.current_level()
+	if level:
+		LevelManager.reset_currency(level.starting_currency)
+		spawner.wave_target = level.wave_count
 	_generate_and_spawn_trains()
 	menu.configure(spawner, $Station, convoys)
 	for convoy in convoys:
@@ -65,6 +70,10 @@ func _ready() -> void:
 	upgrade_panel = UnitUpgradePanel.new()
 	$CanvasLayer.add_child(upgrade_panel)
 	upgrade_panel.sell_requested.connect(_on_upgrade_sell_requested)
+	level_complete_overlay = LevelCompleteOverlay.new()
+	$CanvasLayer.add_child(level_complete_overlay)
+	level_complete_overlay.continue_pressed.connect(CampaignManager.advance_to_next_level)
+	CampaignManager.level_completed.connect(level_complete_overlay.show_for)
 
 ## Regenerates the railway until it passes validation (every lane reachable,
 ## every route internally connected, at least two usable routes) or the
@@ -153,6 +162,8 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> voi
 
 func _unhandled_input(event: InputEvent) -> void:
 	if upgrade_panel == null or upgrade_panel.visible or menu.dragging_tower >= 0 or menu.removing_mode:
+		return
+	if level_complete_overlay != null and level_complete_overlay.visible:
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * event.position

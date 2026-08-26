@@ -26,6 +26,9 @@ signal wave_cleared(wave_number: int)
 @export var early_bounty: int = 120 ## Paid per kill through wave 3, so players can freely experiment.
 @export var wave_bonus_base: int = 75 ## Flat currency awarded on top of the per-wave scaling bonus below.
 @export var wave_bonus_per_wave: int = 30
+## Set by Main from CampaignManager's current level. 0 means endless — no
+## level-complete trigger, waves just keep climbing as before.
+@export var wave_target: int = 0
 
 var current_wave: int = 0
 var time_since_last_spawn: float = 0.0
@@ -75,6 +78,8 @@ func _end_wave() -> void:
 	is_spawning = false
 	LevelManager.increase_currency(wave_bonus_base + wave_bonus_per_wave * current_wave)
 	wave_cleared.emit(current_wave)
+	if wave_target > 0 and current_wave >= wave_target:
+		CampaignManager.complete_current_level()
 
 func _spawn_enemy() -> void:
 	if enemy_prefabs.is_empty() or lane_x_positions.is_empty():

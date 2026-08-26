@@ -1,4 +1,4 @@
-[gd_scene load_steps=47 format=3]
+[gd_scene load_steps=50 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/board/THE_BOARD.png" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
@@ -34,6 +34,7 @@
 [ext_resource type="Script" path="res://scripts/hand_drawn_frame.gd" id="61"]
 [ext_resource type="Script" path="res://scripts/hp_gauge.gd" id="62"]
 [ext_resource type="Script" path="res://scripts/fast_forward_icon.gd" id="63"]
+[ext_resource type="PackedScene" path="res://scenes/TutorialDirector.tscn" id="67"]
 [ext_resource type="Script" path="res://scripts/pause_icon.gd" id="64"]
 
 [sub_resource type="StyleBoxFlat" id="ControlButtonMint"]
@@ -1259,3 +1260,5 @@ script = ExtResource("61")
 [node name="Frame" type="Control" parent="CanvasLayer/Menu/RightPanel"]
 layout_mode = 2
 script = ExtResource("61")
+
+[node name="TutorialDirector" parent="." instance=ExtResource("67")]

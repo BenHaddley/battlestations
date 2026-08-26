@@ -13,6 +13,14 @@ var currency: int = 0
 func _ready() -> void:
 	currency = starting_currency
 
+## CampaignManager calls this between levels — autoload state survives a
+## scene reload, so the wallet needs an explicit reset to the new level's
+## starting_currency rather than relying on _ready() (which only fires once
+## per game process).
+func reset_currency(amount: int) -> void:
+	starting_currency = amount
+	currency = amount
+
 func increase_currency(amount: int) -> void:
 	currency += amount
 

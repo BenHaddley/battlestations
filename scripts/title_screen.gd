@@ -47,6 +47,7 @@ func _start_game() -> void:
 	start_button.disabled = true
 	press_start_button.disabled = true
 	music_player.stop()
+	CampaignManager.restart_campaign()
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
 
 func _show_challenges() -> void:
