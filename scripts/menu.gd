@@ -36,7 +36,7 @@ signal remove_requested(screen_position: Vector2)
 @onready var phase_instruction: Label = $RightPanel/Margin/VBox/SchedulePanel/Margin/VBox/PhaseInstruction
 @onready var advance_button: Button = $RightPanel/Margin/VBox/SchedulePanel/Margin/VBox/AdvanceButton
 
-@onready var hp_fill: TextureRect = $HpRail/Margin/VBox/HpFill
+@onready var hp_fill: HpGauge = $HpRail/Margin/VBox/HpFill
 
 @onready var task_health: CheckBox = $RightPanel/Margin/VBox/TodoPanel/Margin/VBox/TaskHealth
 @onready var task_no_leaks: CheckBox = $RightPanel/Margin/VBox/TodoPanel/Margin/VBox/TaskNoLeaks
@@ -51,10 +51,6 @@ const TOWER_BUTTONS := ["gunner_button", "slomo_button", "minigun_button", "ball
 const SCHEDULE_STATION_COLOR := Color(0.32, 0.58, 0.86, 1)
 const SCHEDULE_BATTLE_COLOR := Color(0.72, 0.16, 0.1, 1)
 
-const HP_SHEET := preload("res://assets/sprites/ui/hp/hp_variants.png")
-const HP_FRAME_WIDTH := 39.2
-const HP_FRAME_HEIGHT := 140.0
-
 const PORTRAIT_STATION := preload("res://assets/sprites/ui/portrait/portrait_station.png")
 const PORTRAIT_BATTLE := preload("res://assets/sprites/ui/portrait/portrait_battle.png")
 
@@ -67,11 +63,6 @@ var drag_preview: TextureRect
 var removing_mode: bool = false
 
 var _wave_start_health: int = -1
-var _hp_frame_100: Texture2D
-var _hp_frame_75: Texture2D
-var _hp_frame_50: Texture2D
-var _hp_frame_25: Texture2D
-var _hp_frame_0: Texture2D
 var _hovered_removable: Node2D = null
 
 const HOVER_TINT := Color(1.0, 0.42, 0.34, 1.0)
@@ -87,12 +78,6 @@ func configure(enemy_spawner: EnemySpawner, defended_station: Station, active_tr
 	PhaseManager.configure(spawner)
 
 func _ready() -> void:
-	_hp_frame_100 = _hp_atlas(0)
-	_hp_frame_75 = _hp_atlas(1)
-	_hp_frame_50 = _hp_atlas(2)
-	_hp_frame_25 = _hp_atlas(3)
-	_hp_frame_0 = _hp_atlas(4)
-	hp_fill.texture = _hp_frame_100
 	for index in range(TOWER_BUTTONS.size()):
 		var button: Button = get(TOWER_BUTTONS[index])
 		button.pressed.connect(_select_tower.bind(index))
@@ -105,12 +90,6 @@ func _ready() -> void:
 	PhaseManager.phase_changed.connect(_on_phase_changed)
 	_create_drag_preview()
 	_on_phase_changed(PhaseManager.phase_label().to_lower())
-
-func _hp_atlas(frame_index: int) -> AtlasTexture:
-	var atlas := AtlasTexture.new()
-	atlas.atlas = HP_SHEET
-	atlas.region = Rect2(frame_index * HP_FRAME_WIDTH, 0, HP_FRAME_WIDTH, HP_FRAME_HEIGHT)
-	return atlas
 
 func _set_price_text(button: Button, cost: int) -> void:
 	var label: Label = button.find_child("PriceLabel", true, false)
@@ -168,16 +147,7 @@ func _process(_delta: float) -> void:
 
 func _refresh_hp_rail() -> void:
 	var fraction: float = float(station.current_health) / float(maxi(station.max_health, 1))
-	if fraction >= 0.9:
-		hp_fill.texture = _hp_frame_100
-	elif fraction >= 0.6:
-		hp_fill.texture = _hp_frame_75
-	elif fraction >= 0.35:
-		hp_fill.texture = _hp_frame_50
-	elif fraction > 0.0:
-		hp_fill.texture = _hp_frame_25
-	else:
-		hp_fill.texture = _hp_frame_0
+	hp_fill.set_fraction(fraction)
 
 func _refresh_objectives() -> void:
 	task_health.button_pressed = station and station.current_health >= station.max_health * 0.5

@@ -35,6 +35,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/portrait/portrait_station.png" id="59"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/portrait/portrait_battle.png" id="60"]
 [ext_resource type="Script" path="res://scripts/hand_drawn_frame.gd" id="61"]
+[ext_resource type="Script" path="res://scripts/hp_gauge.gd" id="62"]
 
 [sub_resource type="StyleBoxTexture" id="SpeedButtonArt"]
 texture = ExtResource("48")
@@ -289,7 +290,7 @@ unaffordable_style = SubResource("ShopRowUnaffordable")
 layout_mode = 0
 offset_left = 318.0
 offset_top = 4.0
-offset_right = 946.0
+offset_right = 934.0
 offset_bottom = 716.0
 mouse_filter = 2
 script = ExtResource("58")
@@ -1077,41 +1078,41 @@ script = ExtResource("61")
 
 [node name="HpRail" type="PanelContainer" parent="CanvasLayer/Menu"]
 layout_mode = 0
-offset_left = 946.0
-offset_top = 10.0
-offset_right = 1002.0
-offset_bottom = 700.0
+offset_left = 934.0
+offset_top = 22.0
+offset_right = 1010.0
+offset_bottom = 698.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("HpRailBg")
 
 [node name="Margin" type="MarginContainer" parent="CanvasLayer/Menu/HpRail"]
 layout_mode = 2
-theme_override_constants/margin_left = 4
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 4
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_left = 7
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_right = 7
+theme_override_constants/margin_bottom = 7
 
 [node name="VBox" type="VBoxContainer" parent="CanvasLayer/Menu/HpRail/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 5
 
 [node name="HpLabel" type="Label" parent="CanvasLayer/Menu/HpRail/Margin/VBox"]
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.9, 0.62, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 20
 text = "HP"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="HpFill" type="TextureRect" parent="CanvasLayer/Menu/HpRail/Margin/VBox"]
+[node name="HpFill" type="Control" parent="CanvasLayer/Menu/HpRail/Margin/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
-texture = SubResource("HpFrame100")
-expand_mode = 1
-stretch_mode = 0
+script = ExtResource("62")
 
 [node name="HeartIcon" type="Control" parent="CanvasLayer/Menu/HpRail/Margin/VBox"]
-custom_minimum_size = Vector2(0, 22)
+custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 script = ExtResource("56")
 
@@ -1124,7 +1125,7 @@ accent_width = 2.0
 
 [node name="RightPanel" type="PanelContainer" parent="CanvasLayer/Menu"]
 layout_mode = 0
-offset_left = 1010.0
+offset_left = 1018.0
 offset_top = 10.0
 offset_right = 1270.0
 offset_bottom = 710.0
