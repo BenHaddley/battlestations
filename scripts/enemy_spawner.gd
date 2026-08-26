@@ -87,11 +87,15 @@ func _spawn_enemy() -> void:
 	var prefab: PackedScene = enemy_prefabs[randi() % enemy_prefabs.size()]
 	var enemy: Node2D = prefab.instantiate()
 	get_tree().current_scene.add_child(enemy)
+	var campaign_level := int(CampaignManager.get("current_level_index"))
+	var profile := EnemyRoster.pick(campaign_level)
+	if enemy.has_method("configure_archetype"):
+		enemy.configure_archetype(profile, current_wave, campaign_level)
 	var lane_x: float = lane_x_positions[randi() % lane_x_positions.size()]
 	enemy.global_position = Vector2(lane_x, spawn_y)
-	if enemy.has_method("configure_difficulty"):
+	if enemy.has_method("configure_difficulty") and String(profile.get("id", "generic")) == "generic":
 		enemy.configure_difficulty(_hit_points_for_wave())
-	if enemy.has_method("configure_bounty") and current_wave <= 3:
+	if enemy.has_method("configure_bounty") and current_wave <= 3 and String(profile.get("id", "generic")) == "generic":
 		enemy.configure_bounty(early_bounty)
 	if enemy.has_method("configure_lane"):
 		enemy.configure_lane(leak_y, _journey_duration_for_wave())
