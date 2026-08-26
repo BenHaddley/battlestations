@@ -51,6 +51,7 @@ const SCHEDULE_BATTLE_COLOR := Color(0.72, 0.16, 0.1, 1)
 
 const PORTRAIT_STATION := preload("res://assets/sprites/ui/portrait/portrait_station.png")
 const PORTRAIT_BATTLE := preload("res://assets/sprites/ui/portrait/portrait_battle.png")
+const StationProgressPanelScene := preload("res://scenes/ui/StationProgressPanel.tscn")
 
 var spawner: EnemySpawner
 var station: Station
@@ -61,7 +62,9 @@ var drag_preview: TextureRect
 var removing_mode: bool = false
 
 var _wave_start_health: int = -1
+var _wave_start_enemy_count: int = 0
 var _hovered_removable: Node2D = null
+var station_progress_panel: StationProgressPanel
 
 const HOVER_TINT := Color(1.0, 0.42, 0.34, 1.0)
 
@@ -71,11 +74,13 @@ func configure(enemy_spawner: EnemySpawner, defended_station: Station, active_tr
 	trains = active_trains
 	spawner.wave_started.connect(func(_wave: int) -> void:
 		_wave_start_health = station.current_health if station else -1
+		_wave_start_enemy_count = spawner.enemies_remaining()
 	)
 	station.defeated.connect(func() -> void: station_lost = true)
 	PhaseManager.configure(spawner)
 
 func _ready() -> void:
+	_install_station_progress_panel()
 	_style_train_yard()
 	for index in range(TOWER_BUTTONS.size()):
 		var button: Button = get(TOWER_BUTTONS[index])
@@ -86,10 +91,18 @@ func _ready() -> void:
 	remove_button.pressed.connect(_toggle_remove_mode)
 	speed_button.pressed.connect(_toggle_speed)
 	pause_button.pressed.connect(_toggle_pause)
-	advance_button.pressed.connect(_on_advance_pressed)
+	station_progress_panel.skip_wait_pressed.connect(_on_advance_pressed)
 	PhaseManager.phase_changed.connect(_on_phase_changed)
 	_create_drag_preview()
 	_on_phase_changed(PhaseManager.phase_label().to_lower())
+
+func _install_station_progress_panel() -> void:
+	$RightPanel/Margin/VBox/SchedulePanel/Margin.visible = false
+	$RightPanel/Margin/VBox/SchedulePanel/Frame.visible = false
+	schedule_panel.custom_minimum_size.y = 205.0
+	station_progress_panel = StationProgressPanelScene.instantiate()
+	station_progress_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	schedule_panel.add_child(station_progress_panel)
 
 ## The infowiki roster is presented as a compact tray of physical train pieces.
 ## Keeping this styling here also means adding a documented TowerData entry only
@@ -210,22 +223,26 @@ func _process(_delta: float) -> void:
 		_refresh_remove_hover()
 
 	if spawner:
-		phase_status.text = PhaseManager.status_text()
+		var live_status := PhaseManager.status_text()
 		var is_battle: bool = PhaseManager.phase == PhaseManager.Phase.BATTLE
-		var display_index: int = spawner.current_wave if is_battle else spawner.current_wave + 1
-		phase_dots.refresh(display_index, is_battle)
+		var total_waves := spawner.wave_target if spawner.wave_target > 0 else 7
+		var journey_progress := float(spawner.current_wave) / float(total_waves)
+		if is_battle:
+			var wave_fraction := 0.0
+			if _wave_start_enemy_count > 0:
+				wave_fraction = 1.0 - float(spawner.enemies_remaining()) / float(_wave_start_enemy_count)
+			journey_progress = (float(spawner.current_wave - 1) + wave_fraction) / float(total_waves)
+		# One node is the departure point, followed by one checkpoint per wave.
+		station_progress_panel.set_progress_fraction(journey_progress, total_waves + 1)
+		station_progress_panel.set_phase("BATTLE" if is_battle else "STATION", live_status, "DEFEND • FIRE • SURVIVE" if is_battle else "PREPARE • BUY • COUPLE")
 		if station_lost:
-			advance_button.disabled = true
-			advance_button.text = "STATION LOST"
+			station_progress_panel.set_button_state("STATION LOST", true)
 		elif PhaseManager.paused:
-			advance_button.disabled = true
-			advance_button.text = "LEVEL COMPLETE"
+			station_progress_panel.set_button_state("LEVEL COMPLETE", true)
 		elif is_battle:
-			advance_button.disabled = true
-			advance_button.text = "IN PROGRESS"
+			station_progress_panel.set_button_state("IN PROGRESS", true)
 		else:
-			advance_button.disabled = false
-			advance_button.text = "SKIP WAIT"
+			station_progress_panel.set_button_state("SKIP WAIT", false)
 		_refresh_objectives()
 
 func _refresh_hp_rail() -> void:
@@ -243,9 +260,8 @@ func _refresh_objectives() -> void:
 
 func _on_phase_changed(phase_name: String) -> void:
 	var is_battle: bool = phase_name == "battle"
-	phase_label.text = "BATTLE" if is_battle else "STATION"
-	phase_instruction.text = "DEFEND • FIRE • SURVIVE" if is_battle else "PREPARE • BUY • COUPLE"
-	schedule_panel.add_theme_stylebox_override("panel", _schedule_style(is_battle))
+	if station_progress_panel:
+		station_progress_panel.set_phase("BATTLE" if is_battle else "STATION", PhaseManager.status_text(), "DEFEND • FIRE • SURVIVE" if is_battle else "PREPARE • BUY • COUPLE")
 	portrait.texture = PORTRAIT_BATTLE if is_battle else PORTRAIT_STATION
 
 func _schedule_style(is_battle: bool) -> StyleBox:
