@@ -1,4 +1,4 @@
-[gd_scene load_steps=48 format=3]
+[gd_scene load_steps=50 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/board/THE_BOARD.png" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
@@ -31,6 +31,8 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/board/tile_sample_light.png" id="54"]
 [ext_resource type="Texture2D" path="res://assets/sprites/board/tile_sample_dark.png" id="55"]
 [ext_resource type="Script" path="res://scripts/heart_icon.gd" id="56"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/tutorial_gif/frame_00.png" id="57"]
+[ext_resource type="Script" path="res://scripts/board_frame.gd" id="58"]
 
 [sub_resource type="StyleBoxTexture" id="SpeedButtonArt"]
 texture = ExtResource("48")
@@ -59,11 +61,11 @@ atlas = ExtResource("50")
 region = Rect2(156.8, 0, 39.2, 140)
 
 [sub_resource type="StyleBoxFlat" id="CreamPanel"]
-bg_color = Color(0.93, 0.87, 0.72, 1)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
+bg_color = Color(0.88, 0.75, 0.57, 1)
+border_width_left = 7
+border_width_top = 6
+border_width_right = 7
+border_width_bottom = 8
 border_color = Color(0.1, 0.07, 0.045, 1)
 corner_radius_top_left = 6
 corner_radius_top_right = 10
@@ -83,23 +85,23 @@ corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="CurrencyChip"]
-bg_color = Color(0.96, 0.9, 0.76, 1)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(0.62, 0.16, 0.1, 1)
+bg_color = Color(0.94, 0.82, 0.58, 1)
+border_width_left = 5
+border_width_top = 4
+border_width_right = 6
+border_width_bottom = 5
+border_color = Color(0.48, 0.12, 0.07, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 8
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="ShopRowNormal"]
-bg_color = Color(0.95, 0.9, 0.76, 1)
-border_width_left = 3
+bg_color = Color(0.95, 0.84, 0.62, 1)
+border_width_left = 4
 border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
+border_width_right = 5
+border_width_bottom = 4
 border_color = Color(0.08, 0.06, 0.04, 1)
 corner_radius_top_left = 3
 corner_radius_top_right = 7
@@ -133,7 +135,7 @@ corner_radius_bottom_right = 3
 corner_radius_bottom_left = 7
 
 [sub_resource type="StyleBoxFlat" id="PricePill"]
-bg_color = Color(0.66, 0.85, 0.72, 1)
+bg_color = Color(0.56, 0.76, 0.63, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -269,11 +271,20 @@ normal_style = SubResource("ShopRowNormal")
 selected_style = SubResource("ShopRowSelected")
 unaffordable_style = SubResource("ShopRowUnaffordable")
 
+[node name="BoardFrame" type="Control" parent="CanvasLayer/Menu"]
+layout_mode = 0
+offset_left = 318.0
+offset_top = 4.0
+offset_right = 946.0
+offset_bottom = 716.0
+mouse_filter = 2
+script = ExtResource("58")
+
 [node name="LeftPanel" type="PanelContainer" parent="CanvasLayer/Menu"]
 layout_mode = 0
 offset_left = 10.0
 offset_top = 10.0
-offset_right = 300.0
+offset_right = 318.0
 offset_bottom = 710.0
 mouse_filter = 1
 theme_override_styles/panel = SubResource("CreamPanel")
@@ -290,7 +301,7 @@ layout_mode = 2
 theme_override_constants/separation = 6
 
 [node name="CurrencyRow" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 58)
 layout_mode = 2
 theme_override_styles/panel = SubResource("CurrencyChip")
 
@@ -308,7 +319,7 @@ script = ExtResource("44")
 [node name="CurrencyLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/CurrencyRow/HBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.08, 0.06, 0.04, 1)
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 34
 text = "300"
 vertical_alignment = 1
 
@@ -316,7 +327,7 @@ vertical_alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0.14, 0.09, 0.055, 1)
 theme_override_font_sizes/font_size = 16
-text = "UNITS"
+text = "TRAIN YARD"
 horizontal_alignment = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
@@ -995,21 +1006,21 @@ horizontal_alignment = 1
 autowrap_mode = 2
 
 [node name="RemoveButton" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 32)
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(1, 0.94, 0.88, 1)
 theme_override_colors/font_hover_color = Color(1, 0.86, 0.4, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("RemoveStrip")
 theme_override_styles/hover = SubResource("RemoveStrip")
 text = "REMOVE UNIT"
 
 [node name="HpRail" type="PanelContainer" parent="CanvasLayer/Menu"]
 layout_mode = 0
-offset_left = 954.0
+offset_left = 946.0
 offset_top = 10.0
-offset_right = 1014.0
+offset_right = 1002.0
 offset_bottom = 700.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("HpRailBg")
@@ -1047,7 +1058,7 @@ script = ExtResource("56")
 
 [node name="RightPanel" type="PanelContainer" parent="CanvasLayer/Menu"]
 layout_mode = 0
-offset_left = 1024.0
+offset_left = 1010.0
 offset_top = 10.0
 offset_right = 1270.0
 offset_bottom = 710.0
@@ -1063,7 +1074,7 @@ theme_override_constants/margin_bottom = 10
 
 [node name="VBox" type="VBoxContainer" parent="CanvasLayer/Menu/RightPanel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
 [node name="ControlsPanel" type="PanelContainer" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
 layout_mode = 2
@@ -1096,8 +1107,20 @@ theme_override_styles/normal = SubResource("PauseButtonArt")
 theme_override_styles/hover = SubResource("PauseButtonArt")
 tooltip_text = "Pause"
 
+[node name="PortraitPanel" type="PanelContainer" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 128)
+layout_mode = 2
+theme_override_styles/panel = SubResource("CreamPanel")
+
+[node name="Portrait" type="TextureRect" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/PortraitPanel"]
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("57")
+expand_mode = 1
+stretch_mode = 6
+
 [node name="SchedulePanel" type="PanelContainer" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 160)
+custom_minimum_size = Vector2(0, 148)
 layout_mode = 2
 theme_override_styles/panel = SubResource("ScheduleStation")
 
@@ -1143,7 +1166,7 @@ theme_override_styles/disabled = SubResource("WaveButtonDisabled")
 text = "SKIP WAIT"
 
 [node name="TodoPanel" type="PanelContainer" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 220)
+custom_minimum_size = Vector2(0, 230)
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("CreamPanel")
