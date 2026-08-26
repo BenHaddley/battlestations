@@ -7,8 +7,8 @@
 [resource]
 script = ExtResource("1")
 tower_name = "Passenger Coach"
-cost = 90
+cost = 50
 scene = ExtResource("2")
-summary = "No weapon — pays out $50 every 10 seconds while coupled."
+summary = "No weapon — your main form of Delta generation while coupled."
 icon = ExtResource("3")
-weight = 1.0
+weight = 125.0

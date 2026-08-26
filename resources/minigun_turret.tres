@@ -6,8 +6,9 @@
 
 [resource]
 script = ExtResource("1")
-tower_name = "Minigun"
-cost = 125
+tower_name = "Chaingunner Car"
+cost = 275
 scene = ExtResource("2")
-summary = "Five-shot spread burst; three-second cooldown."
+summary = "Bursts of 7 pellets every 4 seconds; spread means some shots miss, but it can hit multiple spiders."
 icon = ExtResource("3")
+weight = 200.0

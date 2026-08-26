@@ -22,7 +22,7 @@ func set_convoy_transform(world_position: Vector2, direction: Vector2) -> void:
 
 func _show_income_popup() -> void:
 	var label := Label.new()
-	label.text = "+$%d" % income_amount
+	label.text = "+Δ%d" % income_amount
 	label.add_theme_color_override("font_color", Color(1.0, 0.84, 0.32, 1.0))
 	label.add_theme_font_size_override("font_size", 20)
 	label.global_position = global_position + Vector2(-24.0, -50.0)

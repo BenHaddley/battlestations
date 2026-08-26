@@ -18,20 +18,36 @@ var convoys: Array[Node2D] = []
 @export_range(0, 6) var starting_cars: int = 1
 @export_range(1, 8) var max_generation_attempts: int = 6
 
-## Authored liveries are drawn without replacement each run, so two engines
-## on the board can never share a color.
+## The infowiki's Steam Engine card (#001): "can be spawned in one of 25
+## unique paint jobs at random" — these are exactly those 25 liveries,
+## drawn without replacement each run so two engines on the board can never
+## share a color.
 const ENGINE_LIVERIES: Array[Texture2D] = [
-	preload("res://assets/sprites/engines/Steam Engine Black.png"),
-	preload("res://assets/sprites/engines/Steam Engine Blue.png"),
-	preload("res://assets/sprites/engines/Steam Engine Dark Green.png"),
-	preload("res://assets/sprites/engines/Steam Engine Lime.png"),
-	preload("res://assets/sprites/engines/Steam Engine Marine.png"),
-	preload("res://assets/sprites/engines/Steam Engine Maroon.png"),
-	preload("res://assets/sprites/engines/Steam Engine Orange.png"),
-	preload("res://assets/sprites/engines/Steam Engine Pink.png"),
-	preload("res://assets/sprites/engines/Steam Engine Red.png"),
-	preload("res://assets/sprites/engines/Steam Engine White.png"),
-	preload("res://assets/sprites/engines/Steam Engine Yellow.png"),
+	preload("res://assets/sprites/engines/Steam Engine 1.png"),
+	preload("res://assets/sprites/engines/Steam Engine 2.png"),
+	preload("res://assets/sprites/engines/Steam Engine 3.png"),
+	preload("res://assets/sprites/engines/Steam Engine 4.png"),
+	preload("res://assets/sprites/engines/Steam Engine 5.png"),
+	preload("res://assets/sprites/engines/Steam Engine 6.png"),
+	preload("res://assets/sprites/engines/Steam Engine 7.png"),
+	preload("res://assets/sprites/engines/Steam Engine 8.png"),
+	preload("res://assets/sprites/engines/Steam Engine 9.png"),
+	preload("res://assets/sprites/engines/Steam Engine 10.png"),
+	preload("res://assets/sprites/engines/Steam Engine 11.png"),
+	preload("res://assets/sprites/engines/Steam Engine 12.png"),
+	preload("res://assets/sprites/engines/Steam Engine 13.png"),
+	preload("res://assets/sprites/engines/Steam Engine 14.png"),
+	preload("res://assets/sprites/engines/Steam Engine 15.png"),
+	preload("res://assets/sprites/engines/Steam Engine 16.png"),
+	preload("res://assets/sprites/engines/Steam Engine 17.png"),
+	preload("res://assets/sprites/engines/Steam Engine 18.png"),
+	preload("res://assets/sprites/engines/Steam Engine 19.png"),
+	preload("res://assets/sprites/engines/Steam Engine 20.png"),
+	preload("res://assets/sprites/engines/Steam Engine 21.png"),
+	preload("res://assets/sprites/engines/Steam Engine 22.png"),
+	preload("res://assets/sprites/engines/Steam Engine 23.png"),
+	preload("res://assets/sprites/engines/Steam Engine 24.png"),
+	preload("res://assets/sprites/engines/Steam Engine 25.png"),
 ]
 
 var _car_palette_cursor := 0
@@ -163,12 +179,12 @@ func _find_attachable_convoy(world_position: Vector2) -> Node2D:
 			best = convoy
 	return best
 
-const UNTINTED_CARS := ["Minigun", "Ballast", "CoalCannon", "BrakeVan", "PassengerCoach", "Chaingun", "Tender"]
+const UNTINTED_CARS := ["Minigun", "Ballast", "CoalCannon", "BrakeVan", "PassengerCoach", "Tender"]
 
 func _apply_car_palette(car: Node2D, palette_index: int) -> void:
 	# These cars have strong authored identities of their own, so keep
-	# their supplied colors intact — only the two plain gunner/slomo
-	# chassis get tinted per purchase.
+	# their supplied colors intact — only the plain Gunner Car chassis
+	# gets tinted per purchase.
 	for excluded in UNTINTED_CARS:
 		if car.name.contains(excluded):
 			return

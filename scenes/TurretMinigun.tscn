@@ -6,13 +6,14 @@
 [ext_resource type="PackedScene" path="res://scenes/MinigunBullet.tscn" id="4"]
 
 [sub_resource type="CircleShape2D" id="RangeShape"]
-radius = 330.0
+radius = 315.0
 
 [node name="TurretMinigun" type="Node2D"]
 script = ExtResource("1")
 bullet_scene = ExtResource("4")
-targeting_range = 330.0
-bps = 0.333333
+targeting_range = 315.0
+bps = 0.25
+weight = 200.0
 z_index = 20
 
 [node name="Base" type="Sprite2D" parent="."]

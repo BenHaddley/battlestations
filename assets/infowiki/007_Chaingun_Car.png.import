@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bhdy1apnll52"
-path="res://.godot/imported/004_Brake_Van.png-8e8dbe9dfdbbdf3f7f515daaf2c67fdd.ctex"
+uid="uid://dytslkmn24j87"
+path="res://.godot/imported/007_Chaingun_Car.png-1b983be3325d3c52433dffab5f59fc01.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/audio/infowiki/004_Brake_Van.png"
-dest_files=["res://.godot/imported/004_Brake_Van.png-8e8dbe9dfdbbdf3f7f515daaf2c67fdd.ctex"]
+source_file="res://assets/infowiki/007_Chaingun_Car.png"
+dest_files=["res://.godot/imported/007_Chaingun_Car.png-1b983be3325d3c52433dffab5f59fc01.ctex"]
 
 [params]
 

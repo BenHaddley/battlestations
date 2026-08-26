@@ -1,8 +1,11 @@
 extends Node
 ## Autoload. Owns the rail path and the currency wallet — Godot equivalent
-## of Unity's LevelManager.main singleton.
+## of Unity's LevelManager.main singleton. Currency is Delta, per the
+## infowiki's Passenger Coach card (#003) — the first card to actually name it.
 
-@export var starting_currency: int = 300
+## Scaled up alongside the infowiki's car costs (roughly 3x the old tens-scale
+## prices), so a run still opens able to afford 2-3 basic cars.
+@export var starting_currency: int = 450
 
 var path: Array[Node2D] = []
 var currency: int = 0

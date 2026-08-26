@@ -23,8 +23,6 @@
 [ext_resource type="Script" path="res://scripts/gem_icon.gd" id="44"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/CHAINGUN BASE.png" id="46"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/TENDER.png" id="47"]
-[ext_resource type="Texture2D" path="res://assets/sprites/ui/controls/fast_forward_mint.png" id="48"]
-[ext_resource type="Texture2D" path="res://assets/sprites/ui/controls/pause_mint.png" id="49"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/hp/hp_variants.png" id="50"]
 [ext_resource type="Script" path="res://scripts/phase_dots.gd" id="52"]
 [ext_resource type="Script" path="res://scripts/battlefield_tiles.gd" id="53"]
@@ -36,12 +34,32 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/portrait/portrait_battle.png" id="60"]
 [ext_resource type="Script" path="res://scripts/hand_drawn_frame.gd" id="61"]
 [ext_resource type="Script" path="res://scripts/hp_gauge.gd" id="62"]
+[ext_resource type="Script" path="res://scripts/fast_forward_icon.gd" id="63"]
+[ext_resource type="Script" path="res://scripts/pause_icon.gd" id="64"]
 
-[sub_resource type="StyleBoxTexture" id="SpeedButtonArt"]
-texture = ExtResource("48")
+[sub_resource type="StyleBoxFlat" id="ControlButtonMint"]
+bg_color = Color(0.6, 0.82, 0.72, 1)
+border_width_left = 4
+border_width_top = 3
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.08, 0.06, 0.04, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 8
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxTexture" id="PauseButtonArt"]
-texture = ExtResource("49")
+[sub_resource type="StyleBoxFlat" id="ControlButtonMintHover"]
+bg_color = Color(0.68, 0.9, 0.8, 1)
+border_width_left = 4
+border_width_top = 3
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.08, 0.06, 0.04, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 8
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 8
 
 [sub_resource type="AtlasTexture" id="HpFrame100"]
 atlas = ExtResource("50")
@@ -364,7 +382,7 @@ layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("ShopRowNormal")
 theme_override_styles/hover = SubResource("ShopRowSelected")
-tooltip_text = "Gunner — $50 — reliable single-target damage"
+tooltip_text = "Fires pellets at Spiders within its range at a consistent rate.\n\nThis is your most basic attacking unit in the game, and a very reliable way of stopping the spider onslaught."
 script = ExtResource("32")
 
 [node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/GunnerRow"]
@@ -392,6 +410,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/GunnerRow/HBox"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
@@ -404,6 +423,7 @@ vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/GunnerRow/HBox"]
+size_flags_horizontal = 3
 custom_minimum_size = Vector2(6, 0)
 layout_mode = 2
 mouse_filter = 2
@@ -435,90 +455,13 @@ theme_override_font_sizes/font_size = 18
 text = "50"
 vertical_alignment = 1
 
-[node name="SlomoRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList"]
-custom_minimum_size = Vector2(0, 82)
-layout_mode = 2
-mouse_default_cursor_shape = 2
-theme_override_styles/normal = SubResource("ShopRowNormal")
-theme_override_styles/hover = SubResource("ShopRowSelected")
-tooltip_text = "Slomo — $75 — area slow pulse, no damage"
-script = ExtResource("32")
-
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 4.0
-offset_right = -6.0
-offset_bottom = -4.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_constants/separation = 8
-
-[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow/HBox"]
-custom_minimum_size = Vector2(76, 76)
-layout_mode = 2
-mouse_filter = 2
-rotation = 0.03
-pivot_offset = Vector2(38, 38)
-texture = ExtResource("16")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow/HBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.1, 0.07, 0.045, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.07, 0.045, 0.3)
-theme_override_constants/outline_size = 1
-theme_override_font_sizes/font_size = 17
-text = "SLOMO"
-vertical_alignment = 1
-autowrap_mode = 2
-
-[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow/HBox"]
-custom_minimum_size = Vector2(6, 0)
-layout_mode = 2
-mouse_filter = 2
-
-[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow/HBox"]
-custom_minimum_size = Vector2(74, 36)
-layout_mode = 2
-mouse_filter = 2
-theme_override_styles/panel = SubResource("PricePill")
-
-[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow/HBox/PricePill"]
-layout_mode = 2
-alignment = 1
-mouse_filter = 2
-theme_override_constants/separation = 4
-
-[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow/HBox/PricePill/PriceHBox"]
-custom_minimum_size = Vector2(17, 17)
-layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-script = ExtResource("44")
-
-[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow/HBox/PricePill/PriceHBox"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.05, 0.05, 0.035, 1)
-theme_override_font_sizes/font_size = 18
-text = "75"
-vertical_alignment = 1
-
 [node name="MinigunRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList"]
 custom_minimum_size = Vector2(0, 82)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("ShopRowNormal")
 theme_override_styles/hover = SubResource("ShopRowSelected")
-tooltip_text = "Minigun — $125 — 5-shot burst"
+tooltip_text = "Shoots large bursts of of 7 Pellets, with a cooldown of 4 seconds between each burst.\n\nDue to this, the Spread of the Burst means that the accuracy is all but slightly reduced, meaning that not every shot will hit its mark.\n\nHowever, this means that there is a potential to hit multiple spiders, rather than a single target."
 script = ExtResource("32")
 
 [node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/MinigunRow"]
@@ -546,6 +489,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/MinigunRow/HBox"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
@@ -553,11 +497,12 @@ theme_override_colors/font_color = Color(0.1, 0.07, 0.045, 1)
 theme_override_colors/font_outline_color = Color(0.1, 0.07, 0.045, 0.3)
 theme_override_constants/outline_size = 1
 theme_override_font_sizes/font_size = 17
-text = "MINIGUN"
+text = "CHAINGUNNER"
 vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/MinigunRow/HBox"]
+size_flags_horizontal = 3
 custom_minimum_size = Vector2(6, 0)
 layout_mode = 2
 mouse_filter = 2
@@ -595,7 +540,7 @@ layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("ShopRowNormal")
 theme_override_styles/hover = SubResource("ShopRowSelected")
-tooltip_text = "Ballast Blaster — $100 — short-range blast, hits everyone in range"
+tooltip_text = "Fires a shotgun Blast of Ballast at any spiders within it's short radius. The Radius of the blast is 3 tiles wide.\n\nA Very good Burst option for spiders getting too close to the station for comfort."
 script = ExtResource("32")
 
 [node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BallastRow"]
@@ -623,6 +568,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BallastRow/HBox"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
@@ -635,6 +581,7 @@ vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BallastRow/HBox"]
+size_flags_horizontal = 3
 custom_minimum_size = Vector2(6, 0)
 layout_mode = 2
 mouse_filter = 2
@@ -672,7 +619,7 @@ layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("ShopRowNormal")
 theme_override_styles/hover = SubResource("ShopRowSelected")
-tooltip_text = "Passenger Coach — $90 — pays $50 every 10s while coupled"
+tooltip_text = "Your main form of currency generation. Spawns the in-game currency 'Delta'.\n\nWithout this unit, Building a hearty Defense will likely be difficult if you are only relying on the consistent, but weak passive income you are given during each leve."
 script = ExtResource("32")
 
 [node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/PassengerRow"]
@@ -700,6 +647,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/PassengerRow/HBox"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
@@ -712,6 +660,7 @@ vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/PassengerRow/HBox"]
+size_flags_horizontal = 3
 custom_minimum_size = Vector2(6, 0)
 layout_mode = 2
 mouse_filter = 2
@@ -749,7 +698,7 @@ layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("ShopRowNormal")
 theme_override_styles/hover = SubResource("ShopRowSelected")
-tooltip_text = "Coal Cannon — $150 — slow splash shot, 3 direct / 1 nearby"
+tooltip_text = "Fires a powerful cannonball at a slow rate. Blasts Spiders within its range for high damage.\n\nThe Coal dust shot out from the impact deals minimal Damage to spiders in a 3x3 area surrounding the impact area."
 script = ExtResource("32")
 
 [node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/CoalCannonRow"]
@@ -777,6 +726,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/CoalCannonRow/HBox"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
@@ -789,6 +739,7 @@ vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/CoalCannonRow/HBox"]
+size_flags_horizontal = 3
 custom_minimum_size = Vector2(6, 0)
 layout_mode = 2
 mouse_filter = 2
@@ -826,7 +777,7 @@ layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("ShopRowNormal")
 theme_override_styles/hover = SubResource("ShopRowSelected")
-tooltip_text = "Brake Van — $60 — caps the train, +20% attack speed to the rest"
+tooltip_text = "Caps off the Train it is hooked up to, meaning no other cars can be added to the train once you attach a Brake Van to it.\n\nHowever, capping off the train with the Brake Van grants all attacking units in the Train an signifigant increase in attack power.\n\nAlso slightly decreases the time it takes to start moving and to come to a stop."
 script = ExtResource("32")
 
 [node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BrakeVanRow"]
@@ -854,6 +805,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BrakeVanRow/HBox"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
@@ -866,6 +818,7 @@ vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/BrakeVanRow/HBox"]
+size_flags_horizontal = 3
 custom_minimum_size = Vector2(6, 0)
 layout_mode = 2
 mouse_filter = 2
@@ -897,90 +850,13 @@ theme_override_font_sizes/font_size = 18
 text = "60"
 vertical_alignment = 1
 
-[node name="ChaingunRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList"]
-custom_minimum_size = Vector2(0, 82)
-layout_mode = 2
-mouse_default_cursor_shape = 2
-theme_override_styles/normal = SubResource("ShopRowNormal")
-theme_override_styles/hover = SubResource("ShopRowSelected")
-tooltip_text = "Chaingun — $110 — rapid continuous fire"
-script = ExtResource("32")
-
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = 4.0
-offset_right = -6.0
-offset_bottom = -4.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_constants/separation = 8
-
-[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow/HBox"]
-custom_minimum_size = Vector2(76, 76)
-layout_mode = 2
-mouse_filter = 2
-rotation = 0.025
-pivot_offset = Vector2(38, 38)
-texture = ExtResource("46")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow/HBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.1, 0.07, 0.045, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.07, 0.045, 0.3)
-theme_override_constants/outline_size = 1
-theme_override_font_sizes/font_size = 17
-text = "CHAINGUN"
-vertical_alignment = 1
-autowrap_mode = 2
-
-[node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow/HBox"]
-custom_minimum_size = Vector2(6, 0)
-layout_mode = 2
-mouse_filter = 2
-
-[node name="PricePill" type="PanelContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow/HBox"]
-custom_minimum_size = Vector2(74, 36)
-layout_mode = 2
-mouse_filter = 2
-theme_override_styles/panel = SubResource("PricePill")
-
-[node name="PriceHBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow/HBox/PricePill"]
-layout_mode = 2
-alignment = 1
-mouse_filter = 2
-theme_override_constants/separation = 4
-
-[node name="PriceIcon" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow/HBox/PricePill/PriceHBox"]
-custom_minimum_size = Vector2(17, 17)
-layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-script = ExtResource("44")
-
-[node name="PriceLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow/HBox/PricePill/PriceHBox"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.05, 0.05, 0.035, 1)
-theme_override_font_sizes/font_size = 18
-text = "110"
-vertical_alignment = 1
-
 [node name="TenderRow" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList"]
 custom_minimum_size = Vector2(0, 82)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_styles/normal = SubResource("ShopRowNormal")
 theme_override_styles/hover = SubResource("ShopRowSelected")
-tooltip_text = "Tender — $70 — no weapon, extends capacity before the train slows"
+tooltip_text = "This Car is meant to be palce directly behind a Steam Engine in a Train. If done,\nIt will increase the Max Pull Capacity will be increased by 500 Units.\n\nIf not placed directly behind the engine, this effect will not be activated. The Tender will also match the color of the Steam Engines Paint Job for consistencies sake."
 script = ExtResource("32")
 
 [node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/TenderRow"]
@@ -1008,6 +884,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/TenderRow/HBox"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
@@ -1020,6 +897,7 @@ vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ScrollContainer/ShopList/TenderRow/HBox"]
+size_flags_horizontal = 3
 custom_minimum_size = Vector2(6, 0)
 layout_mode = 2
 mouse_filter = 2
@@ -1162,17 +1040,45 @@ theme_override_constants/separation = 6
 custom_minimum_size = Vector2(90, 48)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_styles/normal = SubResource("SpeedButtonArt")
-theme_override_styles/hover = SubResource("SpeedButtonArt")
+theme_override_styles/normal = SubResource("ControlButtonMint")
+theme_override_styles/hover = SubResource("ControlButtonMintHover")
 tooltip_text = "Run at double speed"
+
+[node name="Icon" type="Control" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/ControlsPanel/Margin/ControlsRow/SpeedButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 6.0
+offset_right = -8.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("63")
 
 [node name="PauseButton" type="Button" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/ControlsPanel/Margin/ControlsRow"]
 custom_minimum_size = Vector2(90, 48)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_styles/normal = SubResource("PauseButtonArt")
-theme_override_styles/hover = SubResource("PauseButtonArt")
+theme_override_styles/normal = SubResource("ControlButtonMint")
+theme_override_styles/hover = SubResource("ControlButtonMintHover")
 tooltip_text = "Pause"
+
+[node name="Icon" type="Control" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/ControlsPanel/Margin/ControlsRow/PauseButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 6.0
+offset_right = -8.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("64")
 
 [node name="Frame" type="Control" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/ControlsPanel"]
 layout_mode = 2

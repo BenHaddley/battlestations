@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ccridlpytvw0i"
-path="res://.godot/imported/002_Gunner_Car.png-dd59925703ad6ea293160d23e8bb0ace.ctex"
+uid="uid://2nml4w1wfen6"
+path="res://.godot/imported/003_Passenger_Coach.png-df03cbe1dab21a0e3785600fed7a08a6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/audio/infowiki/002_Gunner_Car.png"
-dest_files=["res://.godot/imported/002_Gunner_Car.png-dd59925703ad6ea293160d23e8bb0ace.ctex"]
+source_file="res://assets/infowiki/003_Passenger_Coach.png"
+dest_files=["res://.godot/imported/003_Passenger_Coach.png-df03cbe1dab21a0e3785600fed7a08a6.ctex"]
 
 [params]
 

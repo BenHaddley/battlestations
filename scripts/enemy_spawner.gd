@@ -21,9 +21,11 @@ signal wave_cleared(wave_number: int)
 @export var difficulty_scaling_factor: float = 1.15
 @export var spawn_rate_scaling_factor: float = 0.75
 @export var enemies_per_second_cap: float = 15.0
-@export var early_bounty: int = 40 ## Paid per kill through wave 3, so players can freely experiment.
-@export var wave_bonus_base: int = 25 ## Flat currency awarded on top of the per-wave scaling bonus below.
-@export var wave_bonus_per_wave: int = 10
+## Scaled up alongside the infowiki's car costs so early-wave payouts still
+## feel proportionate to what things actually cost now.
+@export var early_bounty: int = 120 ## Paid per kill through wave 3, so players can freely experiment.
+@export var wave_bonus_base: int = 75 ## Flat currency awarded on top of the per-wave scaling bonus below.
+@export var wave_bonus_per_wave: int = 30
 
 var current_wave: int = 0
 var time_since_last_spawn: float = 0.0

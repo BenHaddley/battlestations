@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c11k0oehejwt0"
-path="res://.godot/imported/006_Ballast_Blaster.png-7063c8a9040399e5090ab357c16176df.ctex"
+uid="uid://c3uye7il15de"
+path="res://.godot/imported/012_Tender.png-bfad3eea8821ea616c87315a3b988f3e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/audio/infowiki/006_Ballast_Blaster.png"
-dest_files=["res://.godot/imported/006_Ballast_Blaster.png-7063c8a9040399e5090ab357c16176df.ctex"]
+source_file="res://assets/infowiki/012_Tender.png"
+dest_files=["res://.godot/imported/012_Tender.png-bfad3eea8821ea616c87315a3b988f3e.ctex"]
 
 [params]
 

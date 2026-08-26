@@ -6,8 +6,9 @@
 
 [resource]
 script = ExtResource("1")
-tower_name = "Gunner"
-cost = 50
+tower_name = "Gunner Car"
+cost = 150
 scene = ExtResource("2")
-summary = "Reliable single-target damage."
+summary = "Fires pellets at spiders within range at a consistent rate."
 icon = ExtResource("3")
+weight = 150.0

@@ -4,15 +4,17 @@ extends Node
 ## Autoload scripts have no scene to wire exports in from the Inspector, so
 ## the starter roster is preloaded here directly. Extend this array as more
 ## TowerData resources are added under resources/.
+## Every entry here has a corresponding card in the recovered infowiki
+## (assets/infowiki/, transcribed in wiki/infowiki-cards.md) — Slomo and the
+## earlier standalone Chaingun car had no card and were removed; Minigun's
+## card names it "Chaingunner Car," so that's what ships under.
 @export var towers: Array[TowerData] = [
 	preload("res://resources/basic_turret.tres"),
-	preload("res://resources/slomo_turret.tres"),
 	preload("res://resources/minigun_turret.tres"),
 	preload("res://resources/ballast_turret.tres"),
 	preload("res://resources/passenger_coach.tres"),
 	preload("res://resources/coal_cannon_turret.tres"),
 	preload("res://resources/brake_van.tres"),
-	preload("res://resources/chaingun_turret.tres"),
 	preload("res://resources/tender_car.tres"),
 ]
 

@@ -10,12 +10,12 @@ repository identifies an author; treat this as **Documented** per the
 [confidence labels](README.md#confidence-labels) — a surviving design artifact, not
 verified first-hand design intent.
 
-**This is the authoritative unit design source, and it disagrees with the current
-implementation on nearly every number.** See
-[Divergence from the current build](#divergence-from-the-current-build) below before
-using anything on this page as a bug report against the code. The roadmap and
-[Open questions](open-questions.md) are where a reconciliation decision belongs, not
-this page.
+**This is the authoritative unit design source.** The reconciliation this page used
+to flag as an open question has been resolved — the shipped build now adopts these
+cards' costs, weights, and (converted) ranges wholesale; see
+[Divergence from the current build](#divergence-from-the-current-build) below for how
+each gap was actually closed, and [Open questions](open-questions.md) for the decision
+record.
 
 ## Card contents
 
@@ -83,11 +83,13 @@ pass as the numeric rebalance, since it touches most of the HUD.
 >
 > Also slightly decreases the time it takes to start moving and to come to a stop.
 
-Two effects on the card, only one implemented. The current build grants a flat +20%
+Both effects are now implemented. The current build grants a flat +20%
 **attack speed** to every other car — plausibly what "increase in attack power" means,
 but the card doesn't actually say "speed," so treat that mapping as an assumption, not
 a confirmed match. The acceleration/braking-time reduction described in the third
-paragraph has no equivalent in `train_convoy.gd` at all.
+paragraph is implemented as a 15% cut to `accel_time`/`coast_stop_time` (`brake_time_multiplier`
+on `brake_van.gd`) — the card doesn't give an exact percentage either, so treat that
+number the same way.
 
 ### #005 — Coal Cannon
 
@@ -127,9 +129,12 @@ paragraph has no equivalent in `train_convoy.gd` at all.
 > However, this means that there is a potential to hit multiple spiders, rather than a
 > single target.
 
-Card name is "Chaingunner Car," not "Minigun" — the current implementation
-(`TurretMinigun`/`turret_minigun.gd`) is almost certainly this card under an earlier
-working name, not a separate, unimplemented seventh weapon.
+Card name is "Chaingunner Car," not "Minigun" — the shipped `TurretMinigun`/
+`turret_minigun.gd` scene/script now carries this card's stats and burst count (7
+pellets, 4-second cooldown) and shows as "Chaingunner Car" in the shop, but kept its
+implementation filenames since those are just this scene's earlier working name, not
+part of the card's spec. The standalone "Chaingun" car built before this card was
+transcribed turned out to be redundant with it and was removed.
 
 ### #012 — Tender
 
@@ -144,33 +149,46 @@ working name, not a separate, unimplemented seventh weapon.
 > Tender will also match the color of the Steam Engines Paint Job for consistencies
 > sake.
 
-Entirely unimplemented — there's no `Tender` scene, script, or `TowerData` resource in
-the current build, and no equivalent of "specific coupling position matters" logic
-anywhere in `train_convoy.gd` (cars only care about their index, not adjacency to a
-particular other car).
+Implemented, including the coupling-position requirement: `TrainConvoy.effective_capacity()`
+checks whether `followers[0]` is a Tender (`is_tender == true`) before granting the
++500 bonus, so a Tender anywhere else in the train is just another 50-weight car with
+no effect — matching the card's second paragraph. The "matches the Steam Engine's
+paint job" cosmetic detail is not implemented; the Tender keeps its own art regardless
+of which of the 25 engine liveries it's coupled to.
 
-## Divergence from the current build
+## Divergence from the current build (resolved)
 
-Every number on these cards is roughly 3–10× the corresponding value shipped today,
-and the two use different units entirely for range and weight:
+This used to document a roughly 3–10× gap between these cards and the shipped
+numbers, in different units entirely for range and weight. It's been closed by
+adopting the infowiki numbers wholesale rather than raiding them selectively:
 
-- **Range** is grid-based (`NxN`, presumably board tiles) on the cards; the shipped
-  turrets use a continuous world-unit radius (Gunner 360, Coal Cannon 340, Ballast
-  Blaster 190). No conversion factor between the two is established anywhere.
-- **Weight** on the cards describes a "carry capacity" budget in the hundreds (Steam
-  Engine carries 1000, Gunner costs 150 of it). The shipped weight system uses a flat
-  5.0-unit threshold with most cars at 1.0 and Coal Cannon at 2.0 — a different scale
-  and a different shape of constraint (threshold-with-penalty vs. hard capacity).
-- **Cost** is 3× to 5× higher per card on the infowiki (Gunner 150 vs. shipped 50;
-  Brake Van 250 vs. shipped 60), and starting currency would need to scale with it.
-- The Brake Van's acceleration/braking bonus and the entire Tender car are missing
-  from the implementation.
-- The currency is unnamed in the UI; the cards call it Delta.
+- **Range**: the cards' grid-based `NxN` notation is converted to the shipped
+  continuous world-unit radius as `radius = (N / 2) * path_step`, with
+  `path_step = 90` (`TrackRenderer`'s tile size). 7×7 → 315, 5×5 → 225, 3×3 → 135.
+  This conversion factor isn't stated anywhere on the cards themselves — it's a
+  judgment call made during reconciliation, not a recovered fact, so treat it as
+  Proposed rather than Documented if it's ever revisited.
+- **Weight**: `TrainConvoy` now enforces the cards' "Carry Capacity" model as a hard
+  cap rather than the old soft speed-penalty threshold — `carry_capacity` defaults to
+  1000 (from the Steam Engine card), a Tender coupled directly behind the engine adds
+  the card's +500 bonus, and `attach_car()` simply refuses (`return false`) a car that
+  would push the train over capacity. Every car's `weight` export was changed to its
+  card's literal number (Gunner 150, Ballast Blaster 200, Coal Cannon 225, Chaingunner
+  Car 200, Passenger Coach 125, Tender 50, Brake Van 0).
+- **Cost**: every `TowerData.cost` now matches its card exactly. Starting currency
+  (300 → 450) and the early-wave bounty/wave-bonus formulas (`enemy_spawner.gd`) were
+  scaled up roughly 3× alongside it, since the cards' costs run 3–5× higher than the
+  values they replaced and the early-game pacing work from earlier in the project
+  assumed the old scale.
+- The Brake Van's acceleration/braking bonus and the Tender are both implemented now
+  (see their card sections above).
+- The currency is named **Delta** (`Δ`) throughout the HUD — currency label, shop
+  price pills, kill-bounty popups, and Passenger Coach income popups.
+- The roster was also trimmed to exactly the cards documented here: Slomo (no card in
+  the folder) and an earlier standalone Chaingun car (redundant with the Chaingunner
+  Car card, which this page already identified as Minigun's earlier name) were both
+  removed rather than reconciled, since neither has infowiki backing.
 
-None of this is a defect in [Placeable cars](systems-and-balance.md#placeable-cars) —
-that page documents what actually ships today, deliberately kept separate from
-proposed or historical design values per this wiki's own rule (see
-[Provenance](systems-and-balance.md#provenance)). Reconciling the two — adopting the
-infowiki numbers wholesale, treating them as a different design pass to raid
-selectively, or leaving them as reference lore — is an open decision; see
-[Open questions](open-questions.md).
+[Placeable cars](systems-and-balance.md#placeable-cars) still documents what actually
+ships — update it alongside this page rather than treating this page as the numbers
+of record, per this wiki's own [Provenance](systems-and-balance.md#provenance) rule.

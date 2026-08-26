@@ -7,7 +7,8 @@
 [resource]
 script = ExtResource("1")
 tower_name = "Ballast Blaster"
-cost = 100
+cost = 200
 scene = ExtResource("2")
-summary = "Short-range blast that hits every spider nearby."
+summary = "Shotgun blast of ballast — 3-tile-wide radius, good for spiders getting close."
 icon = ExtResource("3")
+weight = 200.0

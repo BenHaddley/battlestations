@@ -15,13 +15,11 @@ signal remove_requested(screen_position: Vector2)
 @onready var remove_button: Button = $LeftPanel/Margin/VBox/RemoveButton
 
 @onready var gunner_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/GunnerRow
-@onready var slomo_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/SlomoRow
-@onready var minigun_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/MinigunRow
+@onready var chaingunner_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/MinigunRow
 @onready var ballast_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/BallastRow
 @onready var passenger_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/PassengerRow
 @onready var coal_cannon_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/CoalCannonRow
 @onready var brake_van_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/BrakeVanRow
-@onready var chaingun_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/ChaingunRow
 @onready var tender_button: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList/TenderRow
 
 @onready var speed_button: Button = $RightPanel/Margin/VBox/ControlsPanel/Margin/ControlsRow/SpeedButton
@@ -46,7 +44,7 @@ signal remove_requested(screen_position: Vector2)
 @export var selected_style: StyleBox
 @export var unaffordable_style: StyleBox
 
-const TOWER_BUTTONS := ["gunner_button", "slomo_button", "minigun_button", "ballast_button", "passenger_button", "coal_cannon_button", "brake_van_button", "chaingun_button", "tender_button"]
+const TOWER_BUTTONS := ["gunner_button", "chaingunner_button", "ballast_button", "passenger_button", "coal_cannon_button", "brake_van_button", "tender_button"]
 
 const SCHEDULE_STATION_COLOR := Color(0.32, 0.58, 0.86, 1)
 const SCHEDULE_BATTLE_COLOR := Color(0.72, 0.16, 0.1, 1)
@@ -119,7 +117,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 func _process(_delta: float) -> void:
-	currency_label.text = "%d" % LevelManager.currency
+	currency_label.text = "Δ%d" % LevelManager.currency
 	for index in range(TOWER_BUTTONS.size()):
 		_style_tower_button(get(TOWER_BUTTONS[index]), index)
 

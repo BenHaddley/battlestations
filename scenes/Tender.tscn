@@ -5,7 +5,7 @@
 
 [node name="Tender" type="Node2D"]
 script = ExtResource("1")
-weight = -2.0
+weight = 50.0
 z_index = 20
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

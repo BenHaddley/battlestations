@@ -7,62 +7,68 @@ not claims of final balance.
 
 ## Economy
 
+The currency is named **Delta** (`Δ`) throughout the HUD, per the
+[Passenger Coach infowiki card](infowiki-cards.md#003--passenger-coach).
+
 | Parameter | Default |
 |---|---:|
-| Starting currency | 300 |
-| Generic spider bounty | 25 |
+| Starting currency | 450 |
+| Generic spider bounty | 75 |
+| Early-wave bounty (waves 1–3) | 120 |
 
-Dropping a shop car on a valid rail spends its `TowerData.cost`. Invalid or
-off-track drops spend nothing. There is no upgrade system — cars are bought once at a
-fixed cost and either sit in the train or get removed via the REMOVE button; see
+Dropping a shop car on a valid rail spends its `TowerData.cost`, but only after
+`TrainConvoy.attach_car()` also confirms the target train has capacity — see
+[Train weight and momentum](#train-weight-and-momentum). Invalid, off-track, or
+over-capacity drops spend nothing. There is no upgrade system — cars are bought once
+at a fixed cost and either sit in the train or get removed via the REMOVE button; see
 [Removing cars](#removing-cars) below. Currency's only sinks are car purchases; its
-only sources are spider bounties and Passenger Coach income.
+only sources are spider bounties, wave-completion bonuses, and Passenger Coach income.
 
 ## Placeable cars
 
-An authoritative design source for these seven cars' intended cost, range, weight, and
-role exists at [Infowiki unit cards](infowiki-cards.md) — it disagrees with nearly
-every number below and describes an eighth car (Tender) that isn't implemented at all.
-This section documents what actually ships; that page documents what was designed.
+[Infowiki unit cards](infowiki-cards.md) is the authoritative design source for these
+cars' cost, range, weight, and role — the numbers below are adopted from it wholesale,
+not shipped independently. The roster is deliberately exactly the cards documented
+there: Slomo (no card in the recovered folder) and an earlier standalone Chaingun car
+(redundant with the Chaingunner Car card below) were both removed rather than kept
+alongside it.
 
-Seven cars can be dragged from the shop onto a train. Each has a `TowerData` resource
+Six cars can be dragged from the shop onto a train. Each has a `TowerData` resource
 (`resources/*.tres`) carrying its cost, a one-line shop summary, and a `weight` — see
-[Train weight and momentum](#train-weight-and-momentum) for what weight does. Five are
+[Train weight and momentum](#train-weight-and-momentum) for what weight does. Four are
 combat cars (they extend `scripts/turret.gd` or reimplement its targeting loop);
-Passenger Coach and Brake Van are non-combat utility cars.
+Passenger Coach, Brake Van, and Tender are non-combat utility cars.
 
 | Car | Cost | Weight | Rate of fire | Range | Damage |
 |---|---:|---:|---:|---:|---|
-| Gunner | 50 | 1.0 | 0.45/s (≈2.2s) | 360 | 1 direct, single target |
-| Slomo | 75 | 1.0 | 0.25/s (4s pulse) | 360 | none — slows instead |
-| Minigun | 125 | 1.0 | 0.33/s (3s), 5-shot burst | 330 | 1 per pellet (5/burst) |
-| Ballast Blaster | 100 | 1.0 | 0.45/s (≈2.2s) | 190 | 2 to every target in range |
-| Coal Cannon | 150 | 2.0 | 0.22/s (≈4.5s) | 340 | 3 direct + 1 splash |
-| Passenger Coach | 90 | 1.0 | — | — | none — generates income |
-| Brake Van | 60 | 0.0 | — | — | none — caps train, buffs it |
+| Gunner Car | 150 | 150 | 0.45/s (≈2.2s) | 315 | 1 direct, single target |
+| Chaingunner Car | 275 | 200 | 0.25/s (4s), 7-shot burst | 315 | 1 per pellet (7/burst) |
+| Ballast Blaster | 200 | 200 | 0.45/s (≈2.2s) | 135 | 2 to every target in range |
+| Coal Cannon | 300 | 225 | 0.22/s (≈4.5s) | 225 | 3 direct + 1 splash |
+| Passenger Coach | 50 | 125 | — | — | none — generates Delta |
+| Brake Van | 250 | 0 | — | — | none — caps train, buffs it |
+| Tender | 50 | 50 | — | — | none — +500 capacity behind the engine |
 
-All five combat cars fire a homing projectile that flies at a fixed speed toward its
-locked target's current position each frame (Gunner 900 u/s, Minigun 1050 u/s, Coal
-Cannon's cannonball 480 u/s); Ballast Blaster instead hits everyone already inside its
-own short range directly, with no travelling projectile.
+Range is the infowiki cards' `NxN` grid notation converted to the shipped world-unit
+radius as `radius = (N / 2) * path_step` (`path_step = 90`) — this conversion factor
+isn't stated on the cards themselves, so treat it as a judgment call, not a recovered
+fact. All four combat cars fire a homing projectile that flies at a fixed speed toward
+its locked target's current position each frame (Gunner Car 900 u/s, Chaingunner Car
+1050 u/s, Coal Cannon's cannonball 480 u/s); Ballast Blaster instead hits everyone
+already inside its own short range directly, with no travelling projectile.
 
-**Gunner** (`scripts/turret.gd`, `scenes/Turret.tscn`) — the baseline single-target
+**Gunner Car** (`scripts/turret.gd`, `scenes/Turret.tscn`) — the baseline single-target
 car every other combat car's turret behavior is built on: acquire the nearest enemy
 overlapping its `TargetingArea`, rotate to face it, fire on a timer.
 
-**Slomo** (`scripts/turret_slomo.gd`) — deals no damage. Every 4 seconds it pulses its
-360-unit range and calls `apply_slow()` on every enemy caught inside, halving that
-enemy's speed for 1 second. A second pulse while already slowed only extends the
-expiry timestamp rather than restarting a separate timer, so overlapping Slomo cars
-can't stack multiplicatively.
-
-**Minigun** (`scripts/turret_minigun.gd`, extends Turret) — overrides `_shoot()` to
-fire a 5-bullet spread (`BURST_SIZE = 5`) in one burst every 3 seconds instead of the
+**Chaingunner Car** (`scripts/turret_minigun.gd`, extends Turret — filenames kept as
+Minigun, its earlier working name, per its infowiki card) — overrides `_shoot()` to
+fire a 7-bullet spread (`BURST_SIZE = 7`) in one burst every 4 seconds instead of the
 base single-shot timer, each bullet dealing the normal 1 damage.
 
 **Ballast Blaster** (`scripts/turret_ballast.gd`, extends Turret) — overrides
 `_shoot()` entirely: instead of spawning a projectile, it deals a flat
-`BLAST_DAMAGE = 2` to every body currently inside its 190-unit `TargetingArea`, with a
+`BLAST_DAMAGE = 2` to every body currently inside its 135-unit `TargetingArea`, with a
 five-chunk ballast-debris visual spray toward the original target. Effectively a
 short-range shotgun that hits a cluster rather than one target.
 
@@ -75,50 +81,53 @@ each of them.
 **Passenger Coach** (`scripts/passenger_coach.gd`) — no weapon and no targeting. While
 attached and visible, it accumulates delta time and calls
 `LevelManager.increase_currency(50)` every `income_interval = 10` seconds, with a
-floating `+$50` popup on each payout.
+floating `+Δ50` popup on each payout.
 
 **Brake Van** (`scripts/brake_van.gd`) — no weapon. `weight = 0.0`, so it never counts
-toward its train's weight total. The moment one is attached, `TrainConvoy.attach_car()`
+toward its train's carry capacity. The moment one is attached, `TrainConvoy.attach_car()`
 sets that train's `capped` flag, which makes both `can_attach_at()` and the drop
-handler refuse any further car for that train, and applies `attack_speed_bonus = 1.2`
+handler refuse any further car for that train; applies `attack_speed_bonus = 1.2`
 to every other car currently on it by writing directly to each car's
-`attack_speed_multiplier` (read by `Turret`/`TurretSlomo`'s fire-rate check as
-`bps * attack_speed_multiplier`). Removing the Brake Van clears the cap and resets
-every other car's multiplier back to 1.0.
+`attack_speed_multiplier` (read by `Turret`'s fire-rate check as
+`bps * attack_speed_multiplier`); and cuts `accel_time`/`coast_stop_time` to 85% of
+normal (`brake_time_multiplier`) for as long as it's attached. Removing the Brake Van
+clears the cap and resets every other car's multiplier and the train's accel/coast
+time back to normal.
+
+**Tender** (`scripts/tender.gd`) — no weapon. Adds its own 50 weight like any other
+car, but `TrainConvoy.effective_capacity()` also checks whether it's specifically
+`followers[0]` — coupled directly behind the engine — and only then grants its card's
++500 capacity bonus. A Tender anywhere else in the train has no special effect.
 
 ## Train weight and momentum
 
 Every train is one `TrainConvoy` instance (`scripts/train_convoy.gd`) with its own
 engine and its own attached cars — see [Multiple trains](#multiple-trains) below for
-how many exist. A train's total weight is the sum of every attached car's `weight`
-(Brake Van excluded by its own 0.0 weight, everything else defaults to 1.0 unless
-overridden — only Coal Cannon does, at 2.0).
+how many exist. Weight follows the infowiki Steam Engine card's (#001) **Carry
+Capacity** model — a hard budget, not the soft speed-penalty threshold this section
+used to describe. A train's total weight is the sum of every attached car's `weight`
+(all matching their infowiki cards now — see [Placeable cars](#placeable-cars)).
 
 | Parameter | Default |
 |---|---:|
 | Max speed | 95 world units/second |
-| Weight threshold | 5.0 |
+| Carry capacity | 1000 |
+| Tender capacity bonus (directly behind the engine only) | +500 |
 | Base acceleration time (0 → max) | 2.0 seconds |
 | Base coast-to-stop time | 5.0 seconds |
+| Brake Van accel/coast-time multiplier | ×0.85 |
 | Car spacing | 170 world units |
 | Attachment radius | 115 world units |
 
-Speed above the threshold is reduced 25% per weight-unit over, floored at 10% of max
-so a train never fully stalls:
-
-```text
-over = max(0, total_weight − 5.0)
-target speed = 95 × clamp(1 − 0.25 × over, 0.1, 1.0)
-```
-
-A 7-weight train (for example: Gunner + Coal Cannon + Ballast + Slomo + Minigun, one
-Brake Van) sits at `over = 2`, target speed `95 × 0.5 = 47.5` — confirmed against the
-live build during testing. The engine doesn't snap to that target: `current_speed`
-eases toward it every frame, using the acceleration-time constant while speeding up or
-the coast-time constant while slowing down, both stretched by `+0.5s × over` — so a
-heavier train is both slower at cruise and sluggish to change speed. The engine
-follows a closed route and wraps from its final path sample back to the first,
-maintaining forward motion around the loop.
+`TrainConvoy.attach_car()` checks `total_weight() + new_car.weight` against
+`effective_capacity()` (1000, or 1500 with a Tender coupled as `followers[0]`)
+*before* appending the car, and simply returns `false` — refusing the attachment
+entirely, refunding its cost — if it would exceed capacity. There is no partial
+penalty: every train that's actually running is always at full `max_speed`, eased
+toward via `accel_time`/`coast_stop_time` (trimmed by the Brake Van multiplier while
+one is attached) rather than snapping instantly. The engine follows a closed route and
+wraps from its final path sample back to the first, maintaining forward motion around
+the loop.
 
 Cars don't have independent physics — each one samples the engine's own recent
 movement history at `car_spacing × its index` behind the front, which is what

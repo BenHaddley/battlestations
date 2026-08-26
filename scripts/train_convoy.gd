@@ -3,15 +3,19 @@ class_name TrainConvoy
 ## The always-present locomotive leads one train. Cars sample its movement
 ## history at increasing distances, producing Snake-like following at turns.
 ##
-## The Steam Engine itself: carries up to weight_threshold worth of cars at
-## full speed, loses 25% speed per weight-unit past that (floored so it
-## never fully stalls), and has real momentum — ramping up to speed over
-## accel_time, and coasting to a stop over coast_stop_time, both stretched
-## 0.5s per weight-unit past the threshold. A Brake Van caps the train (no
-## further cars can attach) and grants every other car its attack-speed bonus.
+## Weight follows the infowiki Steam Engine card (#001): a hard
+## carry_capacity budget (1000 units by default), not a soft speed penalty.
+## A car that would push the train over capacity simply can't be attached
+## (attach_car returns false) — every attached train always runs at full
+## speed. A Tender coupled directly behind the engine (followers[0]) adds
+## its card's +500 capacity bonus; anywhere else in the train it's just
+## another 50-weight car with no effect. A Brake Van caps the train (no
+## further cars can attach), grants every other car its attack-speed bonus,
+## and — per its card's third paragraph — trims accel/coast time.
 
 @export var max_speed: float = 95.0
-@export var weight_threshold: float = 5.0
+@export var carry_capacity: float = 1000.0 ## Steam Engine card: "Carry Capacity of 1000 Units of Weight."
+@export var tender_capacity_bonus: float = 500.0 ## Tender card: +500 if coupled directly behind the engine.
 @export var accel_time: float = 2.0
 @export var coast_stop_time: float = 5.0
 ## Cars render at roughly 112.5 world units. This leaves a visible coupling gap
@@ -31,6 +35,7 @@ var smoke_timer: float = 0.0
 var current_speed: float = 0.0
 var capped: bool = false
 var drag_active: bool = false
+var _brake_time_multiplier: float = 1.0
 
 func set_engine_livery(texture: Texture2D) -> void:
 	if texture:
@@ -75,12 +80,10 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _update_speed(delta: float) -> void:
-	var over := _weight_over_threshold()
-	var target := max_speed * _speed_multiplier(over)
-	var accelerating := current_speed < target
-	var duration := (accel_time if accelerating else coast_stop_time) + 0.5 * over
+	var accelerating := current_speed < max_speed
+	var duration := (accel_time if accelerating else coast_stop_time) * _brake_time_multiplier
 	var rate := max_speed / maxf(duration, 0.05)
-	current_speed = move_toward(current_speed, target, rate * delta)
+	current_speed = move_toward(current_speed, max_speed, rate * delta)
 
 func total_weight() -> float:
 	var sum := 0.0
@@ -90,14 +93,20 @@ func total_weight() -> float:
 			sum += w if w != null else 1.0
 	return sum
 
-func _weight_over_threshold() -> float:
-	return maxf(0.0, total_weight() - weight_threshold)
-
-func _speed_multiplier(over: float) -> float:
-	return clampf(1.0 - 0.25 * over, 0.1, 1.0)
+## The Tender's capacity bonus only applies when it's coupled directly
+## behind the engine (followers[0]) — anywhere else in the train it's just
+## another car, per its card's second paragraph.
+func effective_capacity() -> float:
+	if not followers.is_empty() and is_instance_valid(followers[0]) and followers[0].get("is_tender") == true:
+		return carry_capacity + tender_capacity_bonus
+	return carry_capacity
 
 func attach_car(car: Node2D) -> bool:
 	if capped:
+		return false
+	var declared_weight = car.get("weight")
+	var car_weight: float = declared_weight if declared_weight != null else 1.0
+	if total_weight() + car_weight > effective_capacity():
 		return false
 	followers.append(car)
 	# A newly purchased car waits invisibly until the engine has travelled far
@@ -128,11 +137,14 @@ func _apply_brake_buff(brake_van: Node2D) -> void:
 	for car in followers:
 		if is_instance_valid(car) and car != brake_van and car.get("attack_speed_multiplier") != null:
 			car.set("attack_speed_multiplier", bonus)
+	var time_bonus = brake_van.get("brake_time_multiplier")
+	_brake_time_multiplier = time_bonus if time_bonus != null else 0.85
 
 func _reset_attack_speed_buffs() -> void:
 	for car in followers:
 		if is_instance_valid(car) and car.get("attack_speed_multiplier") != null:
 			car.set("attack_speed_multiplier", 1.0)
+	_brake_time_multiplier = 1.0
 
 func can_attach_at(world_position: Vector2) -> bool:
 	if capped:

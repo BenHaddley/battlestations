@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://2nml4w1wfen6"
-path="res://.godot/imported/003_Passenger_Coach.png-7d8f9bba051eb3b930247860cf3c27fd.ctex"
+uid="uid://c11k0oehejwt0"
+path="res://.godot/imported/006_Ballast_Blaster.png-e9ead66f1eb9aee45b9e15ab25a8d29b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/audio/infowiki/003_Passenger_Coach.png"
-dest_files=["res://.godot/imported/003_Passenger_Coach.png-7d8f9bba051eb3b930247860cf3c27fd.ctex"]
+source_file="res://assets/infowiki/006_Ballast_Blaster.png"
+dest_files=["res://.godot/imported/006_Ballast_Blaster.png-e9ead66f1eb9aee45b9e15ab25a8d29b.ctex"]
 
 [params]
 

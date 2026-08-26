@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c3uye7il15de"
-path="res://.godot/imported/012_Tender.png-bb514073a043b7e6bf17cccbc8363e3d.ctex"
+uid="uid://c23tdnpqbkda0"
+path="res://.godot/imported/001_Steam_Engine.png-2b82d232168b1faa363d1ae7d3e9692c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/audio/infowiki/012_Tender.png"
-dest_files=["res://.godot/imported/012_Tender.png-bb514073a043b7e6bf17cccbc8363e3d.ctex"]
+source_file="res://assets/infowiki/001_Steam_Engine.png"
+dest_files=["res://.godot/imported/001_Steam_Engine.png-2b82d232168b1faa363d1ae7d3e9692c.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dytslkmn24j87"
-path="res://.godot/imported/007_Chaingun_Car.png-5a46235ad680a93d41c78cbcf6003aa5.ctex"
+uid="uid://ccridlpytvw0i"
+path="res://.godot/imported/002_Gunner_Car.png-cc8e5a8857d66302ff334f0eacadd379.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/audio/infowiki/007_Chaingun_Car.png"
-dest_files=["res://.godot/imported/007_Chaingun_Car.png-5a46235ad680a93d41c78cbcf6003aa5.ctex"]
+source_file="res://assets/infowiki/002_Gunner_Car.png"
+dest_files=["res://.godot/imported/002_Gunner_Car.png-cc8e5a8857d66302ff334f0eacadd379.ctex"]
 
 [params]
 

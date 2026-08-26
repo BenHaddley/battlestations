@@ -103,7 +103,7 @@ func play_destroyed_effect(bounty: int) -> void:
 	puff.z_index = 60
 	get_tree().current_scene.add_child(puff)
 	var reward := Label.new()
-	reward.text = "+$%d" % bounty
+	reward.text = "+Δ%d" % bounty
 	reward.global_position = global_position + Vector2(-28.0, -45.0)
 	reward.add_theme_color_override("font_color", Color(1.0, 0.84, 0.32, 1.0))
 	reward.add_theme_font_size_override("font_size", 22)

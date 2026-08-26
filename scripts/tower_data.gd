@@ -7,4 +7,7 @@ class_name TowerData
 @export var scene: PackedScene
 @export var summary: String = "" ## One line shown in the selected-defense panel.
 @export var icon: Texture2D ## Cursor preview while dragging from the shop.
-@export var weight: float = 1.0 ## Contribution to the train's total weight; the engine slows past its weight threshold.
+## Informational only — the real value used by TrainConvoy's hard carry-capacity
+## check lives on the car's own instantiated scene, not here. Kept in sync so the
+## shop UI (which reads this resource, not the scene) isn't misleading.
+@export var weight: float = 1.0

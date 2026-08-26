@@ -7,8 +7,8 @@
 [resource]
 script = ExtResource("1")
 tower_name = "Coal Cannon"
-cost = 150
+cost = 300
 scene = ExtResource("2")
-summary = "Slow, powerful splash shot: 3 direct, 1 to nearby spiders."
+summary = "Powerful cannonball at a slow rate; coal-dust splash to nearby spiders."
 icon = ExtResource("3")
-weight = 2.0
+weight = 225.0

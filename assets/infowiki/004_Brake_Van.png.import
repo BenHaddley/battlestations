@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c23tdnpqbkda0"
-path="res://.godot/imported/001_Steam_Engine.png-66bf0d44fa523a43366afc6255201605.ctex"
+uid="uid://bhdy1apnll52"
+path="res://.godot/imported/004_Brake_Van.png-e61fae6084cff9f830e4269918e4d317.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/audio/infowiki/001_Steam_Engine.png"
-dest_files=["res://.godot/imported/001_Steam_Engine.png-66bf0d44fa523a43366afc6255201605.ctex"]
+source_file="res://assets/infowiki/004_Brake_Van.png"
+dest_files=["res://.godot/imported/004_Brake_Van.png-e61fae6084cff9f830e4269918e4d317.ctex"]
 
 [params]
 
