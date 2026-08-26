@@ -1,4 +1,4 @@
-[gd_scene load_steps=42 format=3]
+[gd_scene load_steps=51 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/board/THE_BOARD.png" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
@@ -32,6 +32,16 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/units/OIL TANKER 2.png" id="31"]
 [ext_resource type="Script" path="res://scripts/comic_card.gd" id="32"]
 [ext_resource type="Script" path="res://scripts/rough_underline.gd" id="33"]
+[ext_resource type="Script" path="res://scripts/gif_player.gd" id="34"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/tutorial_gif/frame_00.png" id="35"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/tutorial_gif/frame_01.png" id="36"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/tutorial_gif/frame_02.png" id="37"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/tutorial_gif/frame_03.png" id="38"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/tutorial_gif/frame_04.png" id="39"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/tutorial_gif/frame_05.png" id="40"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/tutorial_gif/frame_06.png" id="41"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/tutorial_gif/frame_07.png" id="42"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/tutorial_gif/frame_08.png" id="43"]
 
 [sub_resource type="StyleBoxTexture" id="LeftPanelArt"]
 texture = ExtResource("18")
@@ -44,10 +54,6 @@ texture = ExtResource("20")
 
 [sub_resource type="StyleBoxTexture" id="PauseButtonArt"]
 texture = ExtResource("21")
-
-[sub_resource type="AtlasTexture" id="TutorialFrame"]
-atlas = ExtResource("22")
-region = Rect2(0, 0, 950, 530)
 
 [sub_resource type="StyleBoxFlat" id="WaveTrackBackground"]
 bg_color = Color(0.12, 0.075, 0.045, 1)
@@ -784,7 +790,9 @@ tooltip_text = "Pause"
 [node name="TutorialFrame" type="TextureRect" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 102)
 layout_mode = 2
-texture = SubResource("TutorialFrame")
+script = ExtResource("34")
+frames = Array[Texture2D]([ExtResource("35"), ExtResource("36"), ExtResource("37"), ExtResource("38"), ExtResource("39"), ExtResource("40"), ExtResource("41"), ExtResource("42"), ExtResource("43")])
+frame_duration = 0.15
 expand_mode = 1
 stretch_mode = 6
 
