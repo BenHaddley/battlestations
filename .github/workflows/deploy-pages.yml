@@ -45,6 +45,13 @@ jobs:
           mkdir -p export/web
           godot --headless --path . --export-release "Web" export/web/index.html
 
+      - name: Give the Godot pack a cache-safe build name
+        run: |
+          BUILD_PACK="index-${GITHUB_SHA}.pck"
+          mv export/web/index.pck "export/web/${BUILD_PACK}"
+          sed -i "s#\"focusCanvas\"#\"mainPack\":\"${BUILD_PACK}\",\"focusCanvas\"#" export/web/index.html
+          grep -q "${BUILD_PACK}" export/web/index.html
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
