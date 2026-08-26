@@ -30,6 +30,7 @@ var history: Array[Dictionary] = []
 var smoke_timer: float = 0.0
 var current_speed: float = 0.0
 var capped: bool = false
+var drag_active: bool = false
 
 func set_engine_livery(texture: Texture2D) -> void:
 	if texture:
@@ -144,11 +145,13 @@ func can_attach_at(world_position: Vector2) -> bool:
 	return false
 
 func set_drag_active(active: bool) -> void:
+	drag_active = active
 	var tint := Color(1.0, 0.85, 0.35, 1.0) if active else Color.WHITE
 	engine.modulate = tint
 	for car in followers:
 		if is_instance_valid(car) and car.visible:
 			car.modulate = tint
+	queue_redraw()
 
 func car_count() -> int:
 	return followers.size()
@@ -181,13 +184,24 @@ func remove_car_near(world_position: Vector2) -> bool:
 
 func _draw() -> void:
 	var previous := Vector2.ZERO
+	if drag_active and not capped:
+		_draw_attach_target(Vector2.ZERO)
 	for car in followers:
 		if not is_instance_valid(car) or not car.visible:
 			continue
 		var car_local := to_local(car.global_position)
 		draw_line(previous, car_local, Color(0.12, 0.1, 0.07, 0.9), 9.0)
 		draw_circle(previous.lerp(car_local, 0.5), 7.0, Color(0.72, 0.48, 0.18, 1.0))
+		if drag_active and not capped:
+			_draw_attach_target(car_local)
 		previous = car_local
+
+func _draw_attach_target(target: Vector2) -> void:
+	# Crooked concentric rings read as a physical placement token while still
+	# leaving the train artwork visible beneath them.
+	draw_circle(target, 54.0, Color(0.25, 0.95, 0.62, 0.14))
+	draw_arc(target, 55.0, 0.08, TAU - 0.12, 28, Color(0.08, 0.18, 0.1, 0.92), 8.0, true)
+	draw_arc(target + Vector2(2, -1), 48.0, -0.05, TAU - 0.18, 24, Color(0.38, 1.0, 0.7, 0.95), 4.0, true)
 
 func _emit_smoke() -> void:
 	if smoke_texture == null:

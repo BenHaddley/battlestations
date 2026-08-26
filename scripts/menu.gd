@@ -31,6 +31,7 @@ signal remove_requested(screen_position: Vector2)
 @onready var phase_dots: Control = $RightPanel/Margin/VBox/SchedulePanel/Margin/VBox/PhaseDots
 @onready var phase_label: Label = $RightPanel/Margin/VBox/SchedulePanel/Margin/VBox/PhaseLabel
 @onready var phase_status: Label = $RightPanel/Margin/VBox/SchedulePanel/Margin/VBox/PhaseStatus
+@onready var phase_instruction: Label = $RightPanel/Margin/VBox/SchedulePanel/Margin/VBox/PhaseInstruction
 @onready var advance_button: Button = $RightPanel/Margin/VBox/SchedulePanel/Margin/VBox/AdvanceButton
 
 @onready var hp_fill: TextureRect = $HpRail/Margin/VBox/HpFill
@@ -185,6 +186,7 @@ func _refresh_objectives() -> void:
 func _on_phase_changed(phase_name: String) -> void:
 	var is_battle: bool = phase_name == "battle"
 	phase_label.text = "BATTLE" if is_battle else "STATION"
+	phase_instruction.text = "DEFEND • FIRE • SURVIVE" if is_battle else "PREPARE • BUY • COUPLE"
 	schedule_panel.add_theme_stylebox_override("panel", _schedule_style(is_battle))
 
 func _schedule_style(is_battle: bool) -> StyleBox:
