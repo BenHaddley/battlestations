@@ -7,6 +7,8 @@ extends Node
 @export var towers: Array[TowerData] = [
 	preload("res://resources/basic_turret.tres"),
 	preload("res://resources/slomo_turret.tres"),
+	preload("res://resources/minigun_turret.tres"),
+	preload("res://resources/ballast_turret.tres"),
 ]
 
 var selected_tower: int = 0

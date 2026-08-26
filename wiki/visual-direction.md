@@ -24,6 +24,8 @@ not a conventional dark game dashboard.
   engine-led network that can cover every spider lane.
 - Cars remain aligned to track direction, retain readable coupling gaps, and follow
   corners without overlap.
+- Weapon identity should be readable from both silhouette and effect: red five-shot
+  Minigun spreads contrast with the purple/yellow Ballast car's gravel spray.
 - Spider lanes are communicated lightly; they must not look like additional rails.
 - Combat feedback should use intentionally imperfect inked arrows, flashes, smoke,
   and symbols rather than polished web-style effects.

@@ -15,6 +15,8 @@ signal train_drop_requested(tower_index: int, screen_position: Vector2)
 @onready var train_label: Label = $LeftPanel/Margin/VBox/TrainLabel
 @onready var gunner_button: Button = $LeftPanel/Margin/VBox/ShopGrid/GunnerButton
 @onready var slomo_button: Button = $LeftPanel/Margin/VBox/ShopGrid/SlomoButton
+@onready var minigun_button: Button = $LeftPanel/Margin/VBox/ShopGrid/FutureCoal
+@onready var ballast_button: Button = $LeftPanel/Margin/VBox/ShopGrid/FutureBallast
 @onready var next_wave_button: Button = $LeftPanel/Margin/VBox/NextWaveButton
 @onready var remove_button: Button = $LeftPanel/Margin/VBox/RemoveButton
 @onready var speed_button: Button = $RightPanel/Margin/VBox/TransportControls/SpeedButton
@@ -51,8 +53,12 @@ func configure(enemy_spawner: EnemySpawner, defended_station: Station, active_co
 func _ready() -> void:
 	gunner_button.pressed.connect(_select_tower.bind(0))
 	slomo_button.pressed.connect(_select_tower.bind(1))
+	minigun_button.pressed.connect(_select_tower.bind(2))
+	ballast_button.pressed.connect(_select_tower.bind(3))
 	gunner_button.gui_input.connect(_on_tower_gui_input.bind(0))
 	slomo_button.gui_input.connect(_on_tower_gui_input.bind(1))
+	minigun_button.gui_input.connect(_on_tower_gui_input.bind(2))
+	ballast_button.gui_input.connect(_on_tower_gui_input.bind(3))
 	next_wave_button.pressed.connect(_on_next_wave_pressed)
 	remove_button.pressed.connect(_remove_tail_car)
 	speed_button.pressed.connect(_toggle_speed)
@@ -75,6 +81,8 @@ func _process(_delta: float) -> void:
 	currency_label.text = "%d" % LevelManager.currency
 	_style_tower_button(gunner_button, 0)
 	_style_tower_button(slomo_button, 1)
+	_style_tower_button(minigun_button, 2)
+	_style_tower_button(ballast_button, 3)
 
 	if station:
 		health_label.text = "♥ Station  %d/%d" % [station.current_health, station.max_health]

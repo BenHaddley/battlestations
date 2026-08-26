@@ -57,6 +57,8 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 | `TrainConvoy` | Moves the default black engine and makes attached cars follow its movement history |
 | `BattlefieldOverlay` | Draws subdued spider-lane entrances, lane guides, and the station danger line |
 | `Turret` + `Bullet` | Convoy following, target acquisition, rotation, firing, homing, and damage |
+| `TurretMinigun` | Five-projectile spread burst followed by a three-second cooldown |
+| `TurretBallast` | Short-range area shotgun using the five illustrated ballast fragments |
 | `TurretSlomo` | Convoy following and periodic area slow without damage |
 | `Menu` | Run HUD, shop drag gestures, selected-train details, and wave control |
 
@@ -94,11 +96,13 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 | `Enemy.tscn` | Generic spider body with 2 HP and 50 bounty defaults |
 | `Turret.tscn` | Normalized Gunner art, 360-unit detection area, bullet scene |
 | `TurretSlomo.tscn` | Normalized white-engine art and 360-unit slow area |
+| `TurretMinigun.tscn` | Red rotating burst car, 330-unit range, five minigun bullets |
+| `TurretBallast.tscn` | Purple/yellow close-range car with a 190-unit area blast |
 | `Bullet.tscn` | Homing gunner projectile with enemy collision mask |
 
 ## Known gaps and risks
 
-- The first shop can attach Gunner and Slomo cars with image previews, but has no
+- The tray can attach Gunner, Slomo, Minigun, and Ballast Blaster cars, but has no
   refunds, upgrade information, consist-length limit, or car reordering.
 - There is no victory or restart flow. Playback controls are present and waves now
   advance automatically, while the wider run-state flow remains prototype-level.

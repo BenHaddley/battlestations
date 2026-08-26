@@ -80,6 +80,10 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> voi
 	menu.show_placement_feedback("%s connected to the engine." % tower.tower_name, true)
 
 func _apply_car_palette(car: Node2D, palette_index: int) -> void:
+	# These two cars have strong authored identities (red Minigun and
+	# purple/yellow Ballast), so keep their supplied colors intact.
+	if car.name.contains("Minigun") or car.name.contains("Ballast"):
+		return
 	var palette := [
 		Color(1.0, 0.48, 0.42),
 		Color(0.45, 0.68, 1.0),

@@ -491,9 +491,11 @@ rotation = 0.08
 [node name="FutureCoal" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
 custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
-disabled = true
-theme_override_styles/disabled = SubResource("ButtonNormal")
-tooltip_text = "Future coal cannon"
+mouse_default_cursor_shape = 2
+theme_override_styles/normal = SubResource("ButtonNormal")
+theme_override_styles/hover = SubResource("ButtonHover")
+theme_override_styles/disabled = SubResource("ButtonDisabled")
+tooltip_text = "Minigun — $125 — drag onto the train"
 script = ExtResource("32")
 
 [node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureCoal"]
@@ -508,7 +510,7 @@ offset_bottom = 7.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("25")
+texture = ExtResource("28")
 expand_mode = 1
 stretch_mode = 5
 rotation = 0.055
@@ -516,9 +518,11 @@ rotation = 0.055
 [node name="FutureBallast" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
 custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
-disabled = true
-theme_override_styles/disabled = SubResource("ButtonNormal")
-tooltip_text = "Future ballast car"
+mouse_default_cursor_shape = 2
+theme_override_styles/normal = SubResource("ButtonNormal")
+theme_override_styles/hover = SubResource("ButtonHover")
+theme_override_styles/disabled = SubResource("ButtonDisabled")
+tooltip_text = "Ballast Blaster — $100 — drag onto the train"
 script = ExtResource("32")
 
 [node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureBallast"]
