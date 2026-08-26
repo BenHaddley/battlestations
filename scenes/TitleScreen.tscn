@@ -191,3 +191,55 @@ theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("HitNormal")
 theme_override_styles/hover = SubResource("HitHover")
 text = "BACK"
+
+[node name="StartChoiceModal" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -150.0
+offset_right = 220.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("ModalPaper")
+
+[node name="Margin" type="MarginContainer" parent="StartChoiceModal"]
+layout_mode = 2
+theme_override_constants/margin_left = 26
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 22
+
+[node name="VBox" type="VBoxContainer" parent="StartChoiceModal/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="StartChoiceModal/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12, 0.075, 0.045, 1)
+theme_override_font_sizes/font_size = 32
+text = "WELCOME BACK"
+horizontal_alignment = 1
+
+[node name="ContinueButton" type="Button" parent="StartChoiceModal/Margin/VBox"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12, 0.075, 0.045, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("HitNormal")
+theme_override_styles/hover = SubResource("HitHover")
+text = "CONTINUE GAME"
+
+[node name="NewGameButton" type="Button" parent="StartChoiceModal/Margin/VBox"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.12, 0.075, 0.045, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("HitNormal")
+theme_override_styles/hover = SubResource("HitHover")
+text = "START NEW GAME"

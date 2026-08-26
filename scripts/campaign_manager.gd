@@ -10,6 +10,8 @@ extends Node
 
 signal level_completed(level: LevelData, is_finale: bool)
 
+const SAVE_PATH := "user://campaign_progress.cfg"
+
 var levels: Array[LevelData] = []
 var current_level_index: int = 0
 var campaign_complete: bool = false
@@ -68,6 +70,7 @@ func advance_to_next_level() -> void:
 	else:
 		campaign_complete = true
 	reset_for_current_level()
+	save_progress()
 	get_tree().reload_current_scene()
 
 func reset_for_current_level() -> void:
@@ -77,7 +80,41 @@ func reset_for_current_level() -> void:
 	LevelManager.reset_currency(level.starting_currency)
 	PhaseManager.reset()
 
+## Resets in-memory progress to level 1 and immediately persists it, so
+## starting a new game properly overwrites (not just ignores) any old save.
 func restart_campaign() -> void:
 	current_level_index = 0
 	campaign_complete = false
+	reset_for_current_level()
+	save_progress()
+
+## Writes current_level_index/campaign_complete to user:// — on the web
+## export this is backed by IndexedDB, so it survives closing the tab.
+func save_progress() -> void:
+	var config := ConfigFile.new()
+	config.set_value("campaign", "current_level_index", current_level_index)
+	config.set_value("campaign", "campaign_complete", campaign_complete)
+	config.save(SAVE_PATH)
+
+## True only once a save exists AND it represents real progress (past level
+## 1, or the campaign finished) — a fresh save from restart_campaign() at
+## level 0 shouldn't make the title screen offer to "continue" nothing.
+func has_saved_progress() -> bool:
+	if not FileAccess.file_exists(SAVE_PATH):
+		return false
+	var config := ConfigFile.new()
+	if config.load(SAVE_PATH) != OK:
+		return false
+	var index: int = config.get_value("campaign", "current_level_index", 0)
+	var complete: bool = config.get_value("campaign", "campaign_complete", false)
+	return index > 0 or complete
+
+## Loads saved progress into memory and resets the level-scoped autoload
+## state (wallet, phase clock) to match — call right before changing to
+## Main.tscn, same as restart_campaign().
+func continue_saved_game() -> void:
+	var config := ConfigFile.new()
+	if config.load(SAVE_PATH) == OK:
+		current_level_index = config.get_value("campaign", "current_level_index", 0)
+		campaign_complete = config.get_value("campaign", "campaign_complete", false)
 	reset_for_current_level()
