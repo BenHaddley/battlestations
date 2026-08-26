@@ -116,28 +116,29 @@ Brake Van) sits at `over = 2`, target speed `95 × 0.5 = 47.5` — confirmed aga
 live build during testing. The engine doesn't snap to that target: `current_speed`
 eases toward it every frame, using the acceleration-time constant while speeding up or
 the coast-time constant while slowing down, both stretched by `+0.5s × over` — so a
-heavier train is both slower at cruise and sluggish to change speed. The engine also
-hard-resets to 0 speed at each end-of-route reversal and has to build back up, rather
-than instantly reversing at full pace.
+heavier train is both slower at cruise and sluggish to change speed. The engine
+follows a closed route and wraps from its final path sample back to the first,
+maintaining forward motion around the loop.
 
 Cars don't have independent physics — each one samples the engine's own recent
 movement history at `car_spacing × its index` behind the front, which is what
-produces the snake-like following through turns. A newly bought car stays invisible
-and unprocessed until the engine has moved far enough to have recorded a unique tail
-position for it.
+produces the snake-like following through turns. Loop history is pre-seeded behind
+the engine, so starter and newly bought cars have distinct visible tail positions
+immediately rather than waiting for the engine to travel first.
 
 ## Multiple trains
 
 `main.gd` generates `starting_trains` (2–4, default 2) separate routes and spawns one
-`TrainConvoy` per route, each tinted a distinct engine color (white, light blue,
-orange, purple) so they're never visually ambiguous even bare. Track generation
+`TrainConvoy` per route. Each receives a randomly selected authored engine livery
+without replacement, so they're never visually ambiguous even bare. Track generation
 retries up to `max_generation_attempts` (default 6) times until it produces at least
 two usable, fully connected routes that between them cover every spider lane; a
 `push_error` makes a failed generation loudly visible in testing rather than shipping
 a broken board silently. Only the first train starts with one free car (a Gunner);
 every other train opens as a bare engine. Dropping a shop car targets whichever
 train's attachment radius is nearest the drop point and isn't capped — see
-`_find_attachable_convoy()`.
+`_find_attachable_convoy()`. Active drag motion and release are handled before UI
+controls can consume the event, making drops reliable across the full viewport.
 
 ## Removing cars
 

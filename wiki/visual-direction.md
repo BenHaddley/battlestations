@@ -35,7 +35,7 @@ not a conventional dark game dashboard.
 ## Current screen implementation
 
 - The central board is camera-cropped closer and receives the majority of the width.
-- Procedural tracks use five horizontal sweeps per playthrough.
+- Procedural tracks form dense concentric oval loops contained by the playable board.
 - The shop presents ten equal cards in a tightly packed 2×5 tray, mixing large
   illustrated pieces with three crooked handwritten concept cards. Run-status text
   is kept off this component tray; `REMOVE` and the blue points strip own its base.

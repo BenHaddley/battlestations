@@ -17,13 +17,13 @@ z_index = 20
 
 [node name="Base" type="Sprite2D" parent="."]
 texture = ExtResource("2")
-scale = Vector2(0.17, 0.17)
+scale = Vector2(0.085, 0.085)
 
 [node name="RotationPoint" type="Node2D" parent="."]
 
 [node name="Top" type="Sprite2D" parent="RotationPoint"]
 texture = ExtResource("3")
-scale = Vector2(0.17, 0.17)
+scale = Vector2(0.085, 0.085)
 
 [node name="FiringPoint" type="Marker2D" parent="RotationPoint"]
 position = Vector2(0, -42)

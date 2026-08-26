@@ -114,12 +114,7 @@ func _set_price_text(button: Button, cost: int) -> void:
 ## Unhandled rather than plain _input — a click the REMOVE button itself
 ## already consumed (e.g. pressing it again to cancel) must not also count
 ## as a "click a car" attempt.
-func _unhandled_input(event: InputEvent) -> void:
-	if removing_mode:
-		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			remove_requested.emit(event.position)
-			_exit_remove_mode()
-		return
+func _input(event: InputEvent) -> void:
 	if dragging_tower < 0:
 		return
 	if event is InputEventMouseMotion:
@@ -129,6 +124,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		dragging_tower = -1
 		drag_preview.visible = false
 		train_drag_ended.emit()
+		get_viewport().set_input_as_handled()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if removing_mode:
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			remove_requested.emit(event.position)
+			_exit_remove_mode()
+		return
 
 func _process(_delta: float) -> void:
 	currency_label.text = "%d" % LevelManager.currency

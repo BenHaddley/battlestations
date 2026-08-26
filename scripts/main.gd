@@ -18,14 +18,23 @@ var convoys: Array[Node2D] = []
 @export_range(0, 6) var starting_cars: int = 1
 @export_range(1, 8) var max_generation_attempts: int = 6
 
-## Distinct engine tints so two trains are never visually ambiguous even
-## before any cars are attached.
-const ENGINE_PALETTE := [
-	Color(1.0, 1.0, 1.0),
-	Color(0.55, 0.85, 1.0),
-	Color(1.0, 0.72, 0.42),
-	Color(0.78, 0.6, 1.0),
+## Authored liveries are drawn without replacement each run, so two engines
+## on the board can never share a color.
+const ENGINE_LIVERIES: Array[Texture2D] = [
+	preload("res://assets/sprites/engines/Steam Engine Black.png"),
+	preload("res://assets/sprites/engines/Steam Engine Blue.png"),
+	preload("res://assets/sprites/engines/Steam Engine Dark Green.png"),
+	preload("res://assets/sprites/engines/Steam Engine Lime.png"),
+	preload("res://assets/sprites/engines/Steam Engine Marine.png"),
+	preload("res://assets/sprites/engines/Steam Engine Maroon.png"),
+	preload("res://assets/sprites/engines/Steam Engine Orange.png"),
+	preload("res://assets/sprites/engines/Steam Engine Pink.png"),
+	preload("res://assets/sprites/engines/Steam Engine Red.png"),
+	preload("res://assets/sprites/engines/Steam Engine White.png"),
+	preload("res://assets/sprites/engines/Steam Engine Yellow.png"),
 ]
+
+var _car_palette_cursor := 0
 
 func _ready() -> void:
 	get_tree().root.physics_object_picking = true
@@ -62,11 +71,13 @@ func _generate_and_spawn_trains() -> void:
 	for child in trains.get_children():
 		child.queue_free()
 	convoys = []
+	var livery_indices := range(ENGINE_LIVERIES.size())
+	livery_indices.shuffle()
 	for route_index in range(routes.size()):
 		var convoy: Node2D = TrainConvoyScene.instantiate()
 		trains.add_child(convoy)
 		convoy.configure_path(routes[route_index])
-		convoy.get_node("Engine").modulate = ENGINE_PALETTE[route_index % ENGINE_PALETTE.size()]
+		convoy.set_engine_livery(ENGINE_LIVERIES[livery_indices[route_index % livery_indices.size()]])
 		convoys.append(convoy)
 
 ## The first train opens with one free basic car so a first-time player has
@@ -86,7 +97,8 @@ func _seed_tabletop() -> void:
 			continue
 		var car: Node2D = tower.scene.instantiate()
 		trains.add_child(car)
-		_apply_car_palette(car, index)
+		_apply_car_palette(car, _car_palette_cursor)
+		_car_palette_cursor += 1
 		convoy.attach_car(car)
 
 ## MP3 streams don't loop by default — the loop flag lives on the stream
@@ -119,8 +131,13 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> voi
 
 	var car: Node2D = tower.scene.instantiate()
 	trains.add_child(car)
-	_apply_car_palette(car, target_convoy.car_count())
-	target_convoy.attach_car(car)
+	_apply_car_palette(car, _car_palette_cursor)
+	_car_palette_cursor += 1
+	if not target_convoy.attach_car(car):
+		LevelManager.increase_currency(tower.cost)
+		car.queue_free()
+		menu.show_placement_feedback("That train cannot take another car.", false)
+		return
 	menu.show_placement_feedback("%s connected to the train." % tower.tower_name, true)
 
 func _on_remove_requested(screen_position: Vector2) -> void:

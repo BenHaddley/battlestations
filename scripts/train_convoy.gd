@@ -31,6 +31,11 @@ var smoke_timer: float = 0.0
 var current_speed: float = 0.0
 var capped: bool = false
 
+func set_engine_livery(texture: Texture2D) -> void:
+	if texture:
+		engine.texture = texture
+		engine.modulate = Color.WHITE
+
 func configure_path(track_path: PackedVector2Array) -> void:
 	path = track_path.duplicate()
 	if path.is_empty():
@@ -40,7 +45,7 @@ func configure_path(track_path: PackedVector2Array) -> void:
 	global_position = path[0]
 	var direction := path[1] - path[0] if path.size() > 1 else Vector2.DOWN
 	_face_engine(direction)
-	history = [{"position": global_position, "direction": direction.normalized()}]
+	_seed_loop_history()
 
 func _process(delta: float) -> void:
 	if path.size() < 2:
@@ -48,11 +53,7 @@ func _process(delta: float) -> void:
 	_update_speed(delta)
 	var remaining := current_speed * delta
 	while remaining > 0.0:
-		var target_index := path_index + path_step
-		var reversing := target_index < 0 or target_index >= path.size()
-		if reversing:
-			path_step *= -1
-			target_index = path_index + path_step
+		var target_index := (path_index + 1) % path.size()
 		var target_point := path[target_index]
 		var distance := global_position.distance_to(target_point)
 		var direction := (target_point - global_position).normalized()
@@ -61,11 +62,6 @@ func _process(delta: float) -> void:
 			global_position = target_point
 			path_index = target_index
 			remaining -= distance
-			if reversing:
-				# The engine pauses at each terminus and has to build speed
-				# back up, rather than instantly reversing at full pace.
-				current_speed = 0.0
-				remaining = 0.0
 		else:
 			global_position += direction * remaining
 			remaining = 0.0
@@ -113,6 +109,16 @@ func attach_car(car: Node2D) -> bool:
 		capped = true
 		_apply_brake_buff(car)
 	return true
+
+func _seed_loop_history() -> void:
+	history = [{"position": global_position, "direction": (path[1] - path[0]).normalized()}]
+	for offset in range(1, path.size() + 1):
+		var index := posmod(path_index - offset, path.size())
+		var next_index := (index + 1) % path.size()
+		history.append({
+			"position": path[index],
+			"direction": (path[next_index] - path[index]).normalized(),
+		})
 
 func _apply_brake_buff(brake_van: Node2D) -> void:
 	var bonus = brake_van.get("attack_speed_bonus")

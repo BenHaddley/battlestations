@@ -54,7 +54,7 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 | `EnemySpawner` | Wave timing, alive count, and a hand-tuned gentle-start difficulty/spawn-rate/HP curve |
 | `EnemyMovement` + `Health` | Wave-scaled lane traversal speed, staged dot transformations, slowing, damage, death, and bounty |
 | `TowerData` | Train shop data, scene, description, price, and drag icon |
-| `TrackRenderer` | Builds 2+ short, modular railway routes (straights, bends, U-shapes, loops) placed in separate board bands, validated for lane coverage and traversability |
+| `TrackRenderer` | Builds 2+ closed concentric oval railway loops inside the playable board, validated for lane coverage and full-loop traversability |
 | `TrainConvoy` | Reusable scene (`TrainConvoy.tscn`); each instance moves its own engine along its own route and makes its attached cars follow its movement history |
 | `BattlefieldOverlay` | Draws subdued spider-lane entrances, lane guides, and the station danger line |
 | `Turret` + `Bullet` | Convoy following, target acquisition, rotation, firing, homing, and damage — base class for Minigun, Ballast, Coal Cannon, and Chaingun |
@@ -82,16 +82,14 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 - The right cabinet holds illustrated playback controls, a conductor tutorial,
   route progress, a large paper `CHALLENGES` area with checkbox goals, and a
   burgundy gem/currency strip pinned along its bottom edge.
-- The board now carries two independent trains on two separate short routes
-  (a random module — short/long straight, L-bend, U-shape, rectangle loop, or
-  compact circuit — per route, placed in its own horizontal band) instead of
-  one long path spanning the whole courtyard. `TrackRenderer.generate_layout()`
-  retries until every spider lane is reachable and every route is internally
-  connected before Main accepts the layout.
-- Engines are tinted per train so two trains are never visually ambiguous even
-  before either has any cars attached. Dropping a purchased car attaches it to
+- The board carries two independent trains on closed concentric oval loops. Each
+  loop is validated including its closing segment, so trains circulate continuously
+  instead of reversing at route endpoints.
+- Engines use randomly selected authored liveries without replacement, so no two
+  engines on the board share a color. Dropping a purchased car attaches it to
   whichever train's engine or connected cars the drop lands near — there is no
-  separate "select a train" step.
+  separate "select a train" step. Drag release is captured at viewport level so a
+  UI control cannot swallow the drop event.
 - The engine emits smoke; chunky cars receive varied comic-book colors, stay aligned
   to their train's route, and are spaced by physical length with visible couplers.
 - Spiders animate and flash on hits. Gunfire, kills, bounty rewards, station damage,
