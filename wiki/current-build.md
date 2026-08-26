@@ -30,7 +30,8 @@ godot --headless --path . --import   # first run, or after adding assets
 godot --headless --path . --quit-after 60
 ```
 
-The configured entry scene is `scenes/Main.tscn`. A Web export preset is checked in
+The configured entry scene is `scenes/TitleScreen.tscn`; its Start controls transition
+to `scenes/Main.tscn`. A Web export preset is checked in
 (`export_presets.cfg`); build it with:
 
 ```sh
@@ -92,6 +93,7 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 
 | Scene | Current content |
 |---|---|
+| `TitleScreen.tscn` | Illustrated title mock-up with mouse/keyboard Start, Challenges, Options, and platform-aware Quit controls |
 | `Main.tscn` | Fitted board, generated railway, default black engine, station, spawner, and gutter HUD |
 | `Enemy.tscn` | Six-to-one-dot spider with 15 HP, staged transformations, and 50 bounty |
 | `Turret.tscn` | Normalized Gunner art, 360-unit detection area, bullet scene |

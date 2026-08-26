@@ -168,6 +168,9 @@ every proposed feature against that definition.
 
 ## Phase 4 — Browser build and continuous delivery
 
+- [x] Convert the supplied title-screen mock-up into the functional entry scene,
+      with responsive illustrated hit areas and Start/Enter/Space navigation into battle.
+
 **Goal:** every later milestone is playable at a shareable URL.
 
 - [x] Install the Web export templates matching the chosen Godot version (4.7.2,
