@@ -9,7 +9,7 @@ class_name TrackRenderer
 
 @export var rail_texture: Texture2D
 @export var curve_texture: Texture2D
-@export var tile_scale: float = 0.105
+@export var tile_scale: float = 0.135
 @export var path_step: float = 90.0
 @export var track_bounds: Rect2 = Rect2(-330.0, -270.0, 660.0, 810.0)
 ## Minimum tiles a placed loop must have to comfortably hold an engine plus

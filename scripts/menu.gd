@@ -48,8 +48,8 @@ signal remove_requested(screen_position: Vector2)
 
 const TOWER_BUTTONS := ["gunner_button", "slomo_button", "minigun_button", "ballast_button", "passenger_button", "coal_cannon_button", "brake_van_button", "chaingun_button", "tender_button"]
 
-const SCHEDULE_STATION_COLOR := Color(0.6, 0.71, 0.78, 1)
-const SCHEDULE_BATTLE_COLOR := Color(0.78, 0.36, 0.24, 1)
+const SCHEDULE_STATION_COLOR := Color(0.32, 0.58, 0.86, 1)
+const SCHEDULE_BATTLE_COLOR := Color(0.72, 0.16, 0.1, 1)
 
 const HP_SHEET := preload("res://assets/sprites/ui/hp/hp_variants.png")
 const HP_FRAME_WIDTH := 39.2
