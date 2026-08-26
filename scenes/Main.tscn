@@ -72,28 +72,32 @@ corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
 [sub_resource type="StyleBoxFlat" id="ButtonNormal"]
-bg_color = Color(0.18, 0.72, 0.64, 1)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
-border_color = Color(0.06, 0.12, 0.1, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
+bg_color = Color(1, 0.82, 0.13, 1)
+border_width_left = 7
+border_width_top = 5
+border_width_right = 6
+border_width_bottom = 7
+border_color = Color(0.02, 0.72, 0.68, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 9
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 7
+shadow_color = Color(0.025, 0.025, 0.02, 1)
+shadow_size = 3
 
 [sub_resource type="StyleBoxFlat" id="ButtonHover"]
-bg_color = Color(0.31, 0.84, 0.7, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.92, 0.65, 0.25, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
+bg_color = Color(1, 0.94, 0.25, 1)
+border_width_left = 8
+border_width_top = 6
+border_width_right = 5
+border_width_bottom = 8
+border_color = Color(0.05, 0.9, 0.82, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 10
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 8
+shadow_color = Color(0.025, 0.025, 0.02, 1)
+shadow_size = 4
 
 [sub_resource type="StyleBoxFlat" id="ButtonDisabled"]
 bg_color = Color(0.55, 0.2, 0.12, 1)
@@ -103,17 +107,17 @@ corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxFlat" id="ButtonSelected"]
-bg_color = Color(0.25, 0.72, 0.62, 1)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(1, 0.86, 0.56, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-shadow_color = Color(1, 0.86, 0.56, 0.35)
+bg_color = Color(1, 0.88, 0.18, 1)
+border_width_left = 8
+border_width_top = 6
+border_width_right = 7
+border_width_bottom = 8
+border_color = Color(0.08, 0.88, 0.78, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 10
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 8
+shadow_color = Color(0.25, 0.02, 0.03, 0.8)
 shadow_size = 6
 
 [sub_resource type="StyleBoxFlat" id="WaveButtonNormal"]
@@ -175,7 +179,7 @@ corner_radius_bottom_left = 10
 script = ExtResource("6")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(0.45, 0.45)
+zoom = Vector2(0.52, 0.52)
 
 [node name="MusicPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("17")
@@ -312,8 +316,8 @@ text = "ATTACH CARS"
 
 [node name="ShopGrid" type="GridContainer" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_constants/h_separation = 6
-theme_override_constants/v_separation = 6
+theme_override_constants/h_separation = 3
+theme_override_constants/v_separation = 4
 columns = 2
 
 [node name="GunnerButton" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
@@ -341,6 +345,7 @@ mouse_filter = 2
 texture = ExtResource("15")
 expand_mode = 1
 stretch_mode = 5
+rotation = -0.075
 
 [node name="Label" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/GunnerButton"]
 layout_mode = 1
@@ -381,6 +386,7 @@ mouse_filter = 2
 texture = ExtResource("16")
 expand_mode = 1
 stretch_mode = 5
+rotation = 0.065
 
 [node name="Label" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/SlomoButton"]
 layout_mode = 1
@@ -414,6 +420,7 @@ mouse_filter = 2
 texture = ExtResource("23")
 expand_mode = 1
 stretch_mode = 5
+rotation = -0.09
 
 [node name="FutureOil" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
 custom_minimum_size = Vector2(82, 72)
@@ -433,6 +440,7 @@ mouse_filter = 2
 texture = ExtResource("24")
 expand_mode = 1
 stretch_mode = 5
+rotation = 0.08
 
 [node name="FutureCoal" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
 custom_minimum_size = Vector2(82, 72)
@@ -452,6 +460,7 @@ mouse_filter = 2
 texture = ExtResource("25")
 expand_mode = 1
 stretch_mode = 5
+rotation = 0.055
 
 [node name="FutureBallast" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
 custom_minimum_size = Vector2(82, 72)
@@ -471,6 +480,7 @@ mouse_filter = 2
 texture = ExtResource("26")
 expand_mode = 1
 stretch_mode = 5
+rotation = -0.07
 
 [node name="FuturePassenger" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
 custom_minimum_size = Vector2(82, 68)
@@ -480,6 +490,7 @@ theme_override_styles/disabled = SubResource("ButtonNormal")
 tooltip_text = "Future passenger car"
 
 [node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FuturePassenger"]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -490,6 +501,26 @@ mouse_filter = 2
 texture = ExtResource("27")
 expand_mode = 1
 stretch_mode = 5
+rotation = -0.045
+
+[node name="JokeLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FuturePassenger"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 8.0
+offset_right = -5.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.08, 0.055, 0.035, 1)
+theme_override_font_sizes/font_size = 15
+text = "WEB\nWHACKER"
+horizontal_alignment = 1
+vertical_alignment = 1
+rotation = -0.07
 
 [node name="FutureMinigun" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
 custom_minimum_size = Vector2(82, 68)
@@ -499,6 +530,7 @@ theme_override_styles/disabled = SubResource("ButtonNormal")
 tooltip_text = "Future minigun car"
 
 [node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureMinigun"]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -509,6 +541,26 @@ mouse_filter = 2
 texture = ExtResource("28")
 expand_mode = 1
 stretch_mode = 5
+rotation = 0.085
+
+[node name="JokeLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureMinigun"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 8.0
+offset_right = -5.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.08, 0.055, 0.035, 1)
+theme_override_font_sizes/font_size = 15
+text = "BUG-\nZAPPER!"
+horizontal_alignment = 1
+vertical_alignment = 1
+rotation = 0.065
 
 [node name="Spacer" type="Control" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 4)
@@ -642,22 +694,34 @@ layout_mode = 2
 
 [node name="ChallengesHeader" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.86, 0.56, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.08, 0.055, 0.035, 1)
+theme_override_font_sizes/font_size = 36
 text = "CHALLENGES"
 horizontal_alignment = 1
+rotation = -0.035
+
+[node name="ChallengeScribble" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.14, 0.07, 0.04, 1)
+theme_override_font_sizes/font_size = 22
+text = "~~~~~~~~~~~"
+horizontal_alignment = 1
+rotation = 0.025
 
 [node name="ChallengeOne" type="CheckBox" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 16
 theme_override_colors/font_color = Color(0.14, 0.09, 0.055, 1)
 text = "No leaks this wave"
 
 [node name="ChallengeTwo" type="CheckBox" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 16
 theme_override_colors/font_color = Color(0.14, 0.09, 0.055, 1)
 text = "Build a three-car train"
 
@@ -690,6 +754,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Footer" type="Label" parent="CanvasLayer/Menu"]
+visible = false
 layout_mode = 0
 offset_left = 1050.0
 offset_top = 665.0

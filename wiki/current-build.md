@@ -64,11 +64,12 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 
 - Crooked illustrated wooden cabinets frame a camera-enlarged courtyard, with the
   environmental painting deliberately secondary to the tabletop play area.
-- The left cabinet is a saturated cyan/yellow two-column card rack. Gunner and Slomo
-  are functional; six illustrated cards visibly preview the future roster but remain disabled.
+- The left cabinet is a saturated cyan/yellow two-column card rack with deliberately
+  uneven borders, crooked pieces, and two handwritten joke cards. Gunner and Slomo
+  are functional; six cards visibly preview the future roster but remain disabled.
 - The right cabinet is limited to illustrated playback controls, a conductor tutorial,
   route progress, and a large paper `CHALLENGES` area.
-- Each generated route makes four or five connected passes through the courtyard,
+- Each generated route makes five connected passes through the courtyard,
   using narrow straight and curved pieces to create a dense railway puzzle.
 - The engine emits smoke; chunky cars receive varied comic-book colors, stay aligned
   to the route, and are spaced by physical length with visible couplers.
@@ -76,6 +77,9 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
   and Slomo's rough hand-drawn arrow burst all provide immediate feedback.
 - A recovered crayon-style display font, thick outlines, warm burgundy, bright cyan,
   and paper yellow unify the interface with the supplied illustrated reference.
+- The opening composition seeds three free starter cars and automatically begins wave
+  one, so the board presents moving pieces, enemies, smoke, and combat rather than an
+  empty setup screen. Additional cars still use the normal drag-to-convoy purchase flow.
 
 ## Active scenes
 

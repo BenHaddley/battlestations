@@ -31,12 +31,14 @@ not a conventional dark game dashboard.
 ## Current screen implementation
 
 - The central board is camera-cropped closer and receives the majority of the width.
-- Procedural tracks use four or five horizontal sweeps per playthrough.
+- Procedural tracks use five horizontal sweeps per playthrough.
 - The shop presents eight illustrated cards in two columns, with unavailable roster
   concepts clearly disabled.
 - Attached cars are palette-varied to keep longer trains readable at a glance.
 - The right panel contains playback, tutorial art, wave-route progress, and the
   challenge sheet; selected-unit details no longer compete with those elements.
+- The first view is composed as an active turn, with a starter consist and an
+  automatically running spider wave, instead of a sparse pre-game configuration.
 
 ## Implementation boundary
 
