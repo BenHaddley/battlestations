@@ -1,4 +1,4 @@
-[gd_scene load_steps=51 format=3]
+[gd_scene load_steps=52 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/sprites/board/THE_BOARD.png" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
@@ -42,6 +42,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/tutorial_gif/frame_06.png" id="41"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/tutorial_gif/frame_07.png" id="42"]
 [ext_resource type="Texture2D" path="res://assets/sprites/ui/tutorial_gif/frame_08.png" id="43"]
+[ext_resource type="Script" path="res://scripts/gem_icon.gd" id="44"]
 
 [sub_resource type="StyleBoxTexture" id="LeftPanelArt"]
 texture = ExtResource("18")
@@ -449,7 +450,7 @@ custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
 disabled = true
 theme_override_styles/disabled = SubResource("ButtonNormal")
-tooltip_text = "Future engine car"
+tooltip_text = "Future car — Web Whacker"
 script = ExtResource("32")
 
 [node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureBlue"]
@@ -467,14 +468,34 @@ mouse_filter = 2
 texture = ExtResource("23")
 expand_mode = 1
 stretch_mode = 5
+modulate = Color(1, 1, 1, 0.18)
 rotation = -0.09
+
+[node name="JokeLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureBlue"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 6.0
+offset_right = -5.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.08, 0.055, 0.035, 1)
+theme_override_font_sizes/font_size = 14
+text = "WEB\nWHACKER"
+horizontal_alignment = 1
+vertical_alignment = 1
+rotation = -0.06
 
 [node name="FutureOil" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
 custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
 disabled = true
 theme_override_styles/disabled = SubResource("ButtonNormal")
-tooltip_text = "Future oil car"
+tooltip_text = "Future car — Bug Zapper!"
 script = ExtResource("32")
 
 [node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureOil"]
@@ -492,7 +513,27 @@ mouse_filter = 2
 texture = ExtResource("24")
 expand_mode = 1
 stretch_mode = 5
+modulate = Color(1, 1, 1, 0.18)
 rotation = 0.08
+
+[node name="JokeLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureOil"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 6.0
+offset_right = -5.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.08, 0.055, 0.035, 1)
+theme_override_font_sizes/font_size = 14
+text = "BUG\nZAPPER!"
+horizontal_alignment = 1
+vertical_alignment = 1
+rotation = 0.05
 
 [node name="FutureCoal" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
 custom_minimum_size = Vector2(140, 90)
@@ -548,16 +589,17 @@ expand_mode = 1
 stretch_mode = 5
 rotation = -0.07
 
-[node name="FuturePassenger" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
+[node name="PassengerButton" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
 custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
-disabled = true
-theme_override_styles/disabled = SubResource("ButtonNormal")
-tooltip_text = "Future passenger car"
+mouse_default_cursor_shape = 2
+theme_override_styles/normal = SubResource("ButtonNormal")
+theme_override_styles/hover = SubResource("ButtonHover")
+theme_override_styles/disabled = SubResource("ButtonDisabled")
+tooltip_text = "Passenger Coach — $90 — pays $50 every 10s while coupled"
 script = ExtResource("32")
 
-[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FuturePassenger"]
-visible = false
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/PassengerButton"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -570,35 +612,17 @@ expand_mode = 1
 stretch_mode = 5
 rotation = -0.045
 
-[node name="JokeLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FuturePassenger"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 5.0
-offset_top = 8.0
-offset_right = -5.0
-offset_bottom = -6.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.08, 0.055, 0.035, 1)
-theme_override_font_sizes/font_size = 15
-text = "WEB\nWHACKER"
-horizontal_alignment = 1
-vertical_alignment = 1
-rotation = -0.07
-
-[node name="FutureMinigun" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
+[node name="CoalCannonButton" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
 custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
-disabled = true
-theme_override_styles/disabled = SubResource("ButtonNormal")
-tooltip_text = "Future minigun car"
+mouse_default_cursor_shape = 2
+theme_override_styles/normal = SubResource("ButtonNormal")
+theme_override_styles/hover = SubResource("ButtonHover")
+theme_override_styles/disabled = SubResource("ButtonDisabled")
+tooltip_text = "Coal Cannon — $150 — slow splash shot, 3 direct / 1 nearby"
 script = ExtResource("32")
 
-[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureMinigun"]
-visible = false
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/CoalCannonButton"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -606,39 +630,22 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("28")
+texture = ExtResource("25")
 expand_mode = 1
 stretch_mode = 5
 rotation = 0.085
 
-[node name="JokeLabel" type="Label" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureMinigun"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 5.0
-offset_top = 8.0
-offset_right = -5.0
-offset_bottom = -6.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.08, 0.055, 0.035, 1)
-theme_override_font_sizes/font_size = 15
-text = "BUG-\nZAPPER!"
-horizontal_alignment = 1
-vertical_alignment = 1
-rotation = 0.065
-
-[node name="FutureBrake" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
+[node name="BrakeVanButton" type="Button" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid"]
 custom_minimum_size = Vector2(140, 90)
 layout_mode = 2
-disabled = true
-theme_override_styles/disabled = SubResource("ButtonNormal")
-tooltip_text = "Future brake van"
+mouse_default_cursor_shape = 2
+theme_override_styles/normal = SubResource("ButtonNormal")
+theme_override_styles/hover = SubResource("ButtonHover")
+theme_override_styles/disabled = SubResource("ButtonDisabled")
+tooltip_text = "Brake Van — $60 — caps the train, +20% attack speed to the rest"
 script = ExtResource("32")
 
-[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/FutureBrake"]
+[node name="Icon" type="TextureRect" parent="CanvasLayer/Menu/LeftPanel/Margin/VBox/ShopGrid/BrakeVanButton"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -895,6 +902,34 @@ mouse_filter = 2
 theme_override_font_sizes/font_size = 16
 theme_override_colors/font_color = Color(0.14, 0.09, 0.055, 1)
 text = "Build a three-car train"
+
+[node name="GemSpacer" type="Control" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 0)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="GemStrip" type="PanelContainer" parent="CanvasLayer/Menu/RightPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_styles/panel = SubResource("RemoveStrip")
+
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/GemStrip"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="GemIcon" type="Control" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/GemStrip/HBox"]
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("44")
+
+[node name="Value" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/GemStrip/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.97, 0.9, 1)
+theme_override_font_sizes/font_size = 22
+text = "1,050.50"
+vertical_alignment = 1
 
 [node name="StationBar" type="ProgressBar" parent="CanvasLayer/Menu"]
 layout_mode = 0

@@ -11,7 +11,9 @@ class_name TurretSlomo
 @export var aps: float = 0.25 ## pulses per second
 @export var freeze_time: float = 1.0
 @export var patrol_speed: float = 80.0
+@export var weight: float = 1.0
 
+var attack_speed_multiplier: float = 1.0
 var time_until_fire: float = 0.0
 var patrol_enabled: bool = false
 var patrol_path: PackedVector2Array
@@ -21,7 +23,7 @@ var patrol_step: int = 1
 func _process(delta: float) -> void:
 	_patrol_track(delta)
 	time_until_fire += delta
-	if time_until_fire >= 1.0 / aps:
+	if time_until_fire >= 1.0 / (aps * attack_speed_multiplier):
 		_freeze_enemies()
 		time_until_fire = 0.0
 

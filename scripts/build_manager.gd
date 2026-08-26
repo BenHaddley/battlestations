@@ -9,6 +9,9 @@ extends Node
 	preload("res://resources/slomo_turret.tres"),
 	preload("res://resources/minigun_turret.tres"),
 	preload("res://resources/ballast_turret.tres"),
+	preload("res://resources/passenger_coach.tres"),
+	preload("res://resources/coal_cannon_turret.tres"),
+	preload("res://resources/brake_van.tres"),
 ]
 
 var selected_tower: int = 0

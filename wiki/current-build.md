@@ -74,8 +74,9 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
   blue points readout.
 - Each tray slot carries stable paper flecks, dry-brush streaks, an imperfect ink
   keyline, and oversized artwork that pushes beyond its yellow well.
-- The right cabinet is limited to illustrated playback controls, a conductor tutorial,
-  route progress, and a large paper `CHALLENGES` area.
+- The right cabinet holds illustrated playback controls, a conductor tutorial,
+  route progress, a large paper `CHALLENGES` area with checkbox goals, and a
+  burgundy gem/currency strip pinned along its bottom edge.
 - Each generated route makes five connected passes through the courtyard,
   using narrow straight and curved pieces to create a dense railway puzzle.
 - The engine emits smoke; chunky cars receive varied comic-book colors, stay aligned

@@ -17,6 +17,9 @@ class_name Turret
 
 @export_group("Rail Patrol")
 @export var patrol_speed: float = 95.0
+@export var weight: float = 1.0
+
+var attack_speed_multiplier: float = 1.0
 
 var target: Node2D = null
 var time_until_fire: float = 0.0
@@ -37,7 +40,7 @@ func _process(delta: float) -> void:
 		target = null
 	else:
 		time_until_fire += delta
-		if time_until_fire >= 1.0 / bps:
+		if time_until_fire >= 1.0 / (bps * attack_speed_multiplier):
 			_shoot()
 			time_until_fire = 0.0
 

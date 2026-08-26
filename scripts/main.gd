@@ -24,6 +24,7 @@ func _ready() -> void:
 	menu.train_drag_started.connect(convoy.set_drag_active.bind(true))
 	menu.train_drag_ended.connect(convoy.set_drag_active.bind(false))
 	menu.train_drop_requested.connect(_on_train_drop_requested)
+	menu.remove_requested.connect(_on_remove_requested)
 	spawner.wave_cleared.connect(_on_wave_cleared)
 	_seed_tabletop()
 
@@ -60,6 +61,10 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> voi
 		menu.show_placement_feedback("That train is not configured.", false)
 		return
 
+	if convoy.get("capped") == true:
+		menu.show_placement_feedback("This train is capped by its Brake Van — remove it to add more cars.", false)
+		return
+
 	var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * screen_position
 	if not convoy.can_attach_at(world_position):
 		menu.show_placement_feedback("Drop the car onto the black engine or its connected train.", false)
@@ -79,11 +84,22 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> voi
 	convoy.attach_car(train)
 	menu.show_placement_feedback("%s connected to the engine." % tower.tower_name, true)
 
+func _on_remove_requested(screen_position: Vector2) -> void:
+	var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * screen_position
+	if convoy.remove_car_near(world_position):
+		menu.show_placement_feedback("Car removed — the train reconnected around the gap.", true)
+	else:
+		menu.show_placement_feedback("Click directly on a car to remove it.", false)
+
+const UNTINTED_CARS := ["Minigun", "Ballast", "CoalCannon", "BrakeVan", "PassengerCoach"]
+
 func _apply_car_palette(car: Node2D, palette_index: int) -> void:
-	# These two cars have strong authored identities (red Minigun and
-	# purple/yellow Ballast), so keep their supplied colors intact.
-	if car.name.contains("Minigun") or car.name.contains("Ballast"):
-		return
+	# These cars have strong authored identities of their own, so keep
+	# their supplied colors intact — only the two plain gunner/slomo
+	# chassis get tinted per purchase.
+	for excluded in UNTINTED_CARS:
+		if car.name.contains(excluded):
+			return
 	var palette := [
 		Color(1.0, 0.48, 0.42),
 		Color(0.45, 0.68, 1.0),

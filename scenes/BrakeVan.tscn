@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/brake_van.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/BRAKE VAN.png" id="2"]
+
+[node name="BrakeVan" type="Node2D"]
+script = ExtResource("1")
+weight = 0.0
+attack_speed_bonus = 1.2
+z_index = 20
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2")
+scale = Vector2(0.17, 0.17)

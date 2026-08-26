@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/coal_cannonball.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/projectiles/COAL CANNONBALL.png" id="2"]
+
+[sub_resource type="CircleShape2D" id="BallShape"]
+radius = 10.0
+
+[node name="CoalCannonball" type="Area2D"]
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("1")
+bullet_speed = 480.0
+direct_damage = 3
+splash_damage = 1
+splash_radius = 140.0
+z_index = 40
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2")
+scale = Vector2(0.03, 0.03)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("BallShape")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]

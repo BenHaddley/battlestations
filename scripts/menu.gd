@@ -7,6 +7,7 @@ class_name Menu
 signal train_drag_started
 signal train_drag_ended
 signal train_drop_requested(tower_index: int, screen_position: Vector2)
+signal remove_requested(screen_position: Vector2)
 
 @onready var health_label: Label = $LeftPanel/Margin/VBox/HealthLabel
 @onready var currency_label: Label = $LeftPanel/Margin/VBox/CurrencyLabel
@@ -17,6 +18,9 @@ signal train_drop_requested(tower_index: int, screen_position: Vector2)
 @onready var slomo_button: Button = $LeftPanel/Margin/VBox/ShopGrid/SlomoButton
 @onready var minigun_button: Button = $LeftPanel/Margin/VBox/ShopGrid/FutureCoal
 @onready var ballast_button: Button = $LeftPanel/Margin/VBox/ShopGrid/FutureBallast
+@onready var passenger_button: Button = $LeftPanel/Margin/VBox/ShopGrid/PassengerButton
+@onready var coal_cannon_button: Button = $LeftPanel/Margin/VBox/ShopGrid/CoalCannonButton
+@onready var brake_van_button: Button = $LeftPanel/Margin/VBox/ShopGrid/BrakeVanButton
 @onready var next_wave_button: Button = $LeftPanel/Margin/VBox/NextWaveButton
 @onready var remove_button: Button = $LeftPanel/Margin/VBox/RemoveButton
 @onready var speed_button: Button = $RightPanel/Margin/VBox/TransportControls/SpeedButton
@@ -33,6 +37,8 @@ signal train_drop_requested(tower_index: int, screen_position: Vector2)
 @export var normal_style: StyleBox
 @export var selected_style: StyleBox
 
+const TOWER_BUTTONS := ["gunner_button", "slomo_button", "minigun_button", "ballast_button", "passenger_button", "coal_cannon_button", "brake_van_button"]
+
 var spawner: EnemySpawner
 var station: Station
 var convoy: Node2D
@@ -40,6 +46,7 @@ var station_lost: bool = false
 var dragging_tower: int = -1
 var drag_preview: TextureRect
 var current_wave_total: int = 1
+var removing_mode: bool = false
 
 func configure(enemy_spawner: EnemySpawner, defended_station: Station, active_convoy: Node2D) -> void:
 	spawner = enemy_spawner
@@ -51,22 +58,24 @@ func configure(enemy_spawner: EnemySpawner, defended_station: Station, active_co
 	station.defeated.connect(func() -> void: station_lost = true)
 
 func _ready() -> void:
-	gunner_button.pressed.connect(_select_tower.bind(0))
-	slomo_button.pressed.connect(_select_tower.bind(1))
-	minigun_button.pressed.connect(_select_tower.bind(2))
-	ballast_button.pressed.connect(_select_tower.bind(3))
-	gunner_button.gui_input.connect(_on_tower_gui_input.bind(0))
-	slomo_button.gui_input.connect(_on_tower_gui_input.bind(1))
-	minigun_button.gui_input.connect(_on_tower_gui_input.bind(2))
-	ballast_button.gui_input.connect(_on_tower_gui_input.bind(3))
+	for index in range(TOWER_BUTTONS.size()):
+		var button: Button = get(TOWER_BUTTONS[index])
+		button.pressed.connect(_select_tower.bind(index))
+		button.gui_input.connect(_on_tower_gui_input.bind(index))
 	next_wave_button.pressed.connect(_on_next_wave_pressed)
-	remove_button.pressed.connect(_remove_tail_car)
+	remove_button.pressed.connect(_toggle_remove_mode)
 	speed_button.pressed.connect(_toggle_speed)
 	pause_button.pressed.connect(_toggle_pause)
 	_create_drag_preview()
 	_refresh_selection()
 
 func _input(event: InputEvent) -> void:
+	if removing_mode:
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			remove_requested.emit(event.position)
+			removing_mode = false
+			remove_button.text = "X     REMOVE     X"
+		return
 	if dragging_tower < 0:
 		return
 	if event is InputEventMouseMotion:
@@ -79,10 +88,8 @@ func _input(event: InputEvent) -> void:
 
 func _process(_delta: float) -> void:
 	currency_label.text = "%d" % LevelManager.currency
-	_style_tower_button(gunner_button, 0)
-	_style_tower_button(slomo_button, 1)
-	_style_tower_button(minigun_button, 2)
-	_style_tower_button(ballast_button, 3)
+	for index in range(TOWER_BUTTONS.size()):
+		_style_tower_button(get(TOWER_BUTTONS[index]), index)
 
 	if station:
 		health_label.text = "♥ Station  %d/%d" % [station.current_health, station.max_health]
@@ -102,17 +109,27 @@ func _process(_delta: float) -> void:
 			next_wave_button.disabled = not spawner.can_start_next_wave()
 			next_wave_button.text = "NEXT WAVE" if spawner.can_start_next_wave() else "WAVE IN PROGRESS"
 	if convoy and convoy.has_method("car_count"):
-		train_label.text = "TRAIN  1 engine + %d cars" % convoy.car_count()
+		var capped_note := "  (capped)" if convoy.get("capped") == true else ""
+		train_label.text = "TRAIN  1 engine + %d cars%s" % [convoy.car_count(), capped_note]
 
 func _on_next_wave_pressed() -> void:
 	if spawner:
 		spawner.start_next_wave()
 
-func _remove_tail_car() -> void:
-	if convoy and convoy.has_method("detach_last_car") and convoy.detach_last_car():
-		show_placement_feedback("Tail car returned to the tray.", true)
+## Arms remove mode rather than removing on this same click — the button
+## press and the follow-up battlefield click are two separate input events,
+## but without the deferred arm below, the click that presses this button
+## would immediately also count as the "click a car" click.
+func _toggle_remove_mode() -> void:
+	if removing_mode:
+		removing_mode = false
+		remove_button.text = "X     REMOVE     X"
 	else:
-		show_placement_feedback("The engine cannot be removed.", false)
+		remove_button.text = "X  CLICK A CAR  X"
+		call_deferred("_arm_remove_mode")
+
+func _arm_remove_mode() -> void:
+	removing_mode = true
 
 func _toggle_speed() -> void:
 	Engine.time_scale = 2.0 if Engine.time_scale < 1.5 else 1.0
