@@ -15,6 +15,10 @@ const SAVE_PATH := "user://campaign_progress.cfg"
 var levels: Array[LevelData] = []
 var current_level_index: int = 0
 var campaign_complete: bool = false
+## Transient launch intent. This guarantees that choosing New Game replays the
+## opening lesson even when a browser has not flushed the deleted tutorial save
+## to IndexedDB before Main begins loading.
+var tutorial_requested: bool = false
 
 var _endless_level: LevelData
 
@@ -85,8 +89,15 @@ func reset_for_current_level() -> void:
 func restart_campaign() -> void:
 	current_level_index = 0
 	campaign_complete = false
+	tutorial_requested = true
 	reset_for_current_level()
 	save_progress()
+
+## Read-once request consumed by TutorialDirector as the new Main scene opens.
+func consume_tutorial_request() -> bool:
+	var requested := tutorial_requested
+	tutorial_requested = false
+	return requested
 
 ## Writes current_level_index/campaign_complete to user:// — on the web
 ## export this is backed by IndexedDB, so it survives closing the tab.
@@ -113,6 +124,7 @@ func has_saved_progress() -> bool:
 ## state (wallet, phase clock) to match — call right before changing to
 ## Main.tscn, same as restart_campaign().
 func continue_saved_game() -> void:
+	tutorial_requested = false
 	var config := ConfigFile.new()
 	if config.load(SAVE_PATH) == OK:
 		current_level_index = config.get_value("campaign", "current_level_index", 0)

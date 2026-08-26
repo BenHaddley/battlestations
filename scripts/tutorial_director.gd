@@ -40,7 +40,8 @@ func _connect_game() -> void:
 		CampaignManager.level_completed.connect(_on_level_completed)
 	baseline_car_count = _car_count()
 	var level_index: int = int(CampaignManager.get("current_level_index"))
-	if level_index == 0 and not _tutorial_was_completed():
+	var new_game_requested := CampaignManager.consume_tutorial_request()
+	if level_index == 0 and (new_game_requested or not _tutorial_was_completed()):
 		tutorial_active = true
 		_enqueue([
 			_entry("Duck", "Welcome aboard. See that train. That is your defense."),

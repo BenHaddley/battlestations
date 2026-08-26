@@ -2,6 +2,7 @@ extends Control
 ## Functional shell over the authored 16:9 title-screen illustration.
 
 const StartGameDialogueScript := preload("res://scripts/start_game_dialogue.gd")
+const TUTORIAL_SAVE_PATH := "user://battle_stations_tutorial.cfg"
 
 @onready var start_button: Button = $StartButton
 @onready var press_start_button: Button = $PressStartButton
@@ -73,8 +74,16 @@ func _on_continue_pressed() -> void:
 
 func _on_new_game_pressed() -> void:
 	start_choice_modal.hide()
+	_reset_tutorial_progress()
 	CampaignManager.restart_campaign()
 	_launch_game()
+
+## A new campaign should replay its first-time teaching sequence. Tutorial
+## completion intentionally lives outside the campaign save so Continue can
+## suppress repeated lessons, therefore Restart must clear this exact flag.
+func _reset_tutorial_progress() -> void:
+	if FileAccess.file_exists(TUTORIAL_SAVE_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(TUTORIAL_SAVE_PATH))
 
 func _launch_game() -> void:
 	if starting:
