@@ -15,6 +15,7 @@ var leak_y: float = 720.0
 var lane_configured: bool = false
 var primary_texture: Texture2D
 var animation_time: float = 0.0
+var base_sprite_scale: Vector2
 
 ## Absolute ms timestamp (Time.get_ticks_msec()) the current slow expires at.
 ## Tracking an expiry rather than a bool means a second overlapping pulse can
@@ -23,15 +24,42 @@ var _slow_expires_at: int = 0
 
 func _ready() -> void:
 	base_speed = move_speed
+	base_sprite_scale = spider_sprite.scale
 	primary_texture = spider_sprite.texture
 	health_dots = SpiderHealthDots.new()
 	spider_sprite.add_child(health_dots)
+	health_dots.stage_changed.connect(_on_health_stage_changed)
 	health.hit_points_changed.connect(health_dots.set_hit_points)
 	health_dots.set_hit_points(health.hit_points, health.max_hit_points)
 
-func configure_lane(destination_y: float) -> void:
+func configure_lane(destination_y: float, journey_duration_seconds: float = 25.0) -> void:
 	leak_y = destination_y
+	# Define pacing as travel time rather than fragile world-units/second. A
+	# larger replacement board can move the spawn or station while preserving
+	# the intended 20–30 second unslowed journey.
+	if journey_duration_seconds > 0.0:
+		base_speed = absf(leak_y - global_position.y) / journey_duration_seconds
 	lane_configured = true
+
+func _on_health_stage_changed(_previous_dots: int, current_dots: int) -> void:
+	if current_dots <= 0:
+		return
+	# A quick squash and paper puff makes each two-hit downgrade read as an
+	# actual transformation into the next dotted spider, not a HUD update.
+	spider_sprite.scale = base_sprite_scale * 0.8
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(spider_sprite, "scale", base_sprite_scale * 1.08, 0.1)
+	tween.chain().tween_property(spider_sprite, "scale", base_sprite_scale, 0.1)
+	var puff := Sprite2D.new()
+	puff.texture = preload("res://assets/sprites/effects/Puff.png")
+	puff.scale = Vector2(0.035, 0.035)
+	puff.modulate = Color(1.0, 0.9, 0.72, 0.8)
+	puff.z_index = -1
+	add_child(puff)
+	var puff_tween := create_tween().set_parallel(true)
+	puff_tween.tween_property(puff, "scale", Vector2(0.075, 0.075), 0.22)
+	puff_tween.tween_property(puff, "modulate:a", 0.0, 0.22)
+	puff_tween.chain().tween_callback(puff.queue_free)
 
 func _physics_process(delta: float) -> void:
 	if not lane_configured:

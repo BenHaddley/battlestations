@@ -51,7 +51,7 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 | `GameEvents` | Global `enemy_destroyed` signal used for wave accounting |
 | `Main` | Validates convoy drops, purchases cars, and attaches them to the engine |
 | `EnemySpawner` | Wave timing, scaling, spawning, and alive count |
-| `EnemyMovement` + `Health` | Route traversal, slowing, damage, death, and bounty |
+| `EnemyMovement` + `Health` | 25-second lane traversal, staged dot transformations, slowing, damage, death, and bounty |
 | `TowerData` | Train shop data, scene, description, price, and drag icon |
 | `TrackRenderer` | Generates a connected courtyard railway with straight and curved tiles; highlights valid drop targets |
 | `TrainConvoy` | Moves the default black engine and makes attached cars follow its movement history |
@@ -93,7 +93,7 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 | Scene | Current content |
 |---|---|
 | `Main.tscn` | Fitted board, generated railway, default black engine, station, spawner, and gutter HUD |
-| `Enemy.tscn` | Generic spider body with 2 HP and 50 bounty defaults |
+| `Enemy.tscn` | Six-to-one-dot spider with 15 HP, staged transformations, and 50 bounty |
 | `Turret.tscn` | Normalized Gunner art, 360-unit detection area, bullet scene |
 | `TurretSlomo.tscn` | Normalized white-engine art and 360-unit slow area |
 | `TurretMinigun.tscn` | Red rotating burst car, 330-unit range, five minigun bullets |

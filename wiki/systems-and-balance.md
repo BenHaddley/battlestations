@@ -31,7 +31,7 @@ The level increments after payment. Approximate next-upgrade costs at levels 1�
 
 | Parameter | Default |
 |---|---:|
-| Bullets per second | 1.0 |
+| Bullets per second | 0.45 |
 | Effective targeting range | 360 world units |
 | Scene detection radius | 360 world units |
 | Rotation speed | 5 radians/second in the Godot port |
@@ -48,15 +48,15 @@ bullets per second = base BPS × L^0.6
 targeting range    = base range × L^0.4
 ```
 
-For the active base values of 1 BPS and range 360, levels 1–5 yield approximately:
+For the active base values of 0.45 BPS and range 360, levels 1–5 yield approximately:
 
 | Level | BPS | Range |
 |---:|---:|---:|
-| 1 | 1.00 | 360 |
-| 2 | 1.52 | 475 |
-| 3 | 1.93 | 559 |
-| 4 | 2.30 | 627 |
-| 5 | 2.63 | 685 |
+| 1 | 0.45 | 360 |
+| 2 | 0.68 | 475 |
+| 3 | 0.87 | 559 |
+| 4 | 1.03 | 627 |
+| 5 | 1.18 | 685 |
 
 ## Slow defense
 
@@ -68,9 +68,9 @@ damage and has no upgrade path.
 ## Train deployment and patrol
 
 The black steam engine spawns automatically and leads the player's single convoy.
-Gunner and Slomo are trailing cars rather than independent towers. Each run builds
-one connected serpentine railway inside the central courtyard. It has three to five
-randomized horizontal sweeps, including a central sweep, joined by alternating edge
+Gunner, Slomo, Minigun, and Ballast Blaster are trailing cars rather than independent towers. Each run builds
+one connected serpentine railway inside the central courtyard. It has five
+horizontal sweeps, including a central sweep, joined by alternating edge
 connectors and curved track pieces. Every sweep crosses all seven spider lanes, so a
 Gunner in the consist can eventually cover every lane. Shop cars may only be dropped
 within 90 world units of the engine or an attached car. A valid car is appended to the
@@ -81,7 +81,14 @@ sharing the oldest recorded point. The convoy travels at 95 world units/second.
 
 ## Enemies and route
 
-The active generic spider has 2 HP, speed 180 world units/second, and a bounty of 50.
+The active generic spider has 15 HP and a bounty of 50. Its unslowed speed is derived
+from the configured lane length so it takes 25 seconds to travel from spawn to leak,
+and therefore remains stable when a larger board changes those coordinates.
+
+Spider durability is shown as staged red body dots: 15–14 HP has six dots, then one
+dot disappears after each pair of hits at 13, 11, 9, 7, and 5 HP. The final one-dot
+form takes five more one-damage hits to kill. Each stage change has a short squash and
+paper-puff transformation beat.
 It uses one 1500×1500 source frame at a normalized visual scale rather than the
 combined 3000×1500 sheet. Each spawn is assigned uniformly to one of seven fixed
 columns and travels straight from the top to the bottom of the courtyard, following

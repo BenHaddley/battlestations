@@ -11,6 +11,7 @@ signal wave_cleared(wave_number: int)
 @export var lane_x_positions: PackedFloat32Array = PackedFloat32Array([-350.0, -235.0, -118.0, 0.0, 118.0, 235.0, 350.0])
 @export var spawn_y: float = -520.0
 @export var leak_y: float = 720.0
+@export_range(20.0, 30.0, 0.5) var journey_duration_seconds: float = 25.0
 
 @export_group("Attributes")
 @export var base_enemies: int = 8
@@ -75,7 +76,7 @@ func _spawn_enemy() -> void:
 	var lane_x: float = lane_x_positions[randi() % lane_x_positions.size()]
 	enemy.global_position = Vector2(lane_x, spawn_y)
 	if enemy.has_method("configure_lane"):
-		enemy.configure_lane(leak_y)
+		enemy.configure_lane(leak_y, journey_duration_seconds)
 
 func _enemies_per_wave() -> int:
 	return roundi(base_enemies * pow(current_wave, difficulty_scaling_factor))

@@ -123,8 +123,9 @@ func _emit_smoke() -> void:
 
 func _face_engine(direction: Vector2) -> void:
 	if not direction.is_zero_approx():
-		# Steam-engine artwork faces down in the source image.
-		engine.rotation = direction.angle() - PI * 0.5
+		# Steam-engine artwork's headlamp/boiler end faces up in the source
+		# image, not down — the train was driving tender-first before this.
+		engine.rotation = direction.angle() + PI * 0.5
 
 func _record_history() -> void:
 	var direction := Vector2.DOWN

@@ -19,8 +19,14 @@ const DOT_COLOR: Color = Color(0.82, 0.07, 0.05, 1.0)
 
 var visible_dots: int = 6
 
+signal stage_changed(previous_dots: int, current_dots: int)
+
 func set_hit_points(current: int, _max_hit_points: int) -> void:
-	visible_dots = _dots_for(current)
+	var next_dots := _dots_for(current)
+	if next_dots != visible_dots:
+		var previous := visible_dots
+		visible_dots = next_dots
+		stage_changed.emit(previous, visible_dots)
 	queue_redraw()
 
 func _dots_for(hp: int) -> int:

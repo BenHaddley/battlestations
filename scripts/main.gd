@@ -11,7 +11,7 @@ extends Node2D
 
 var generated_track: PackedVector2Array
 
-@export_range(0, 6) var starting_cars: int = 3
+@export_range(0, 6) var starting_cars: int = 0
 
 func _ready() -> void:
 	get_tree().root.physics_object_picking = true
