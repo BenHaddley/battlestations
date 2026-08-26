@@ -164,6 +164,28 @@ had granted.
 
 ## Enemies and route
 
+### Enemy roster
+
+The campaign now introduces the complete supplied spider-art roster. All archetypes
+share lane movement, collision, slowing, hit feedback, and death handling, but have
+distinct authored stats and abilities:
+
+| Enemy | Campaign introduction | Base HP | Speed | Role and ability |
+|---|---:|---:|---:|---|
+| Dotted Spider | 1 | 5–15 | ×1.00 | Baseline enemy; transforms through the supplied one-to-six-dot art every two HP |
+| Baby Spider | 2 | 3 | ×1.45 | Small, fragile rush enemy |
+| Charger | 2 | 7 | ×1.00 | Periodically charges at ×2.10 speed |
+| Rally Spider | 3 | 8 | ×0.85 | Gives nearby spiders a short ×1.25 movement boost |
+| Roller | 4 | 10 | ×1.15 | Armoured; completely blocks every third incoming hit |
+| Sturdy Spider | 4 | 16 | ×0.62 | Large, slow health tank |
+| Wolf Spider | 5 | 12 | ×1.05 | Enrages below half HP, swaps to angry art, and moves ×1.55 faster |
+| Jump Spider | 6 | 10 | ×1.10 | Periodically jumps, moving ×1.80 faster and evading damage while airborne |
+| Spider Egg | 7 | 18 | ×0.48 | Slow shell that breaks at half HP and hatches into a fast Baby form |
+
+The selection pool is weighted toward the baseline spider and unlocks by campaign
+level. This keeps the first level readable and adds counters gradually rather than
+placing every special enemy into the opening wave.
+
 The active generic spider has 15 HP and a bounty of 25 (see the Economy table above —
 this is deliberately lower than Passenger Coach's passive income). Its unslowed speed is derived
 from the configured lane length so it takes 25 seconds to travel from spawn to leak,

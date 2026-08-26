@@ -106,7 +106,7 @@ kept alongside them.
 |---|---|
 | `TitleScreen.tscn` | Illustrated title mock-up with mouse/keyboard Start, Challenges, Options, and platform-aware Quit controls |
 | `Main.tscn` | Fitted board, generated railway, default black engine, station, spawner, and gutter HUD |
-| `Enemy.tscn` | Six-to-one-dot spider with 15 HP, staged transformations, and 75 bounty |
+| `Enemy.tscn` | Shared scene for nine campaign-unlocked spider archetypes, including staged dots and special behaviors |
 | `Turret.tscn` | Gunner Car — normalized art, 315-unit detection area, bullet scene |
 | `TurretMinigun.tscn` | Chaingunner Car — 315-unit range, seven minigun bullets per burst |
 | `TurretBallast.tscn` | Purple/yellow close-range car with a 135-unit area blast |
@@ -128,7 +128,8 @@ kept alongside them.
 - There is no victory or restart flow. Playback controls are present and waves now
   advance automatically, while the wider run-state flow remains prototype-level.
 - Wave number and remaining spiders are displayed, but there is no countdown.
-- Only one generic enemy is spawnable; most art has no gameplay scene.
+- All supplied spider artwork is spawnable through one shared scene and the
+  campaign-weighted `EnemyRoster`; specialist roles unlock progressively.
 - Target selection uses the first overlapping physics body, with no explicit
   first/last/strongest targeting policy.
 - Route completion and enemy death share one event. That is adequate for wave

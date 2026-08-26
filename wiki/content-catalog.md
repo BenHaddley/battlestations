@@ -65,8 +65,11 @@ See [Infowiki unit cards](infowiki-cards.md) for the full transcription.
 - Wolf additionally has two angry-state frames (one filename contains the apparent
   typo `Anfy`).
 
-Only `Spider walk 2-1 sprite.png` is used in the active enemy scene. Names such as
-Charger or Rally suggest possible roles but do not establish them.
+All supplied spider sets are now used through the shared active enemy scene. The
+one-through-six-dot walk pairs provide the generic durability transformations;
+Baby, Charger, Rally, Roller, Sturdy, Wolf, Jump, and Egg are campaign-unlocked
+archetypes. Their implemented roles are recorded in
+[Systems and balance](systems-and-balance.md#enemy-roster).
 
 ## Effects and UI
 

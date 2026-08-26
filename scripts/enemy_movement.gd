@@ -149,6 +149,7 @@ func _physics_process(delta: float) -> void:
 		speed *= 1.8
 	velocity = Vector2.DOWN * speed
 	move_and_slide()
+	queue_redraw()
 	animation_time += delta
 	if alternate_texture and animation_time >= 0.16:
 		spider_sprite.texture = alternate_texture if spider_sprite.texture == primary_texture else primary_texture
@@ -173,6 +174,14 @@ func take_damage(dmg: int) -> void:
 	tween.tween_property(spider_sprite, "modulate", Color.WHITE, 0.12)
 	health.take_damage(dmg)
 
+func _draw() -> void:
+	if ability == "rally":
+		draw_arc(Vector2.ZERO, 58.0, 0.0, TAU, 28, Color(0.45, 0.9, 0.35, 0.65), 3.0)
+		draw_arc(Vector2.ZERO, 64.0, -0.7, 0.7, 9, Color(1.0, 0.9, 0.25, 0.85), 4.0)
+	elif ability == "charge" and fmod(_special_clock, 5.0) > 3.8:
+		for offset in [-24.0, 0.0, 24.0]:
+			draw_line(Vector2(offset - 14.0, -58.0), Vector2(offset, -92.0), Color(1.0, 0.55, 0.18, 0.75), 4.0)
+
 func _update_special_state() -> void:
 	if ability == "rally" and fmod(_special_clock, 1.0) < 0.035:
 		for spider in get_tree().get_nodes_in_group("spiders"):
@@ -192,7 +201,7 @@ func _update_special_state() -> void:
 		spider_sprite.texture = archetype_break_texture()
 		primary_texture = EnemyRoster.PROFILES[1].walk_a
 		alternate_texture = EnemyRoster.PROFILES[1].walk_b
-		base_sprite_scale = Vector2.ONE * 0.075
+		base_sprite_scale = Vector2.ONE * 0.160
 		base_speed *= 2.2
 		var timer := get_tree().create_timer(0.18)
 		timer.timeout.connect(func() -> void: spider_sprite.texture = primary_texture)
