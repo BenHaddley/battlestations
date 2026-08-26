@@ -146,7 +146,7 @@ func _find_attachable_convoy(world_position: Vector2) -> Node2D:
 			best = convoy
 	return best
 
-const UNTINTED_CARS := ["Minigun", "Ballast", "CoalCannon", "BrakeVan", "PassengerCoach"]
+const UNTINTED_CARS := ["Minigun", "Ballast", "CoalCannon", "BrakeVan", "PassengerCoach", "Chaingun", "Tender"]
 
 func _apply_car_palette(car: Node2D, palette_index: int) -> void:
 	# These cars have strong authored identities of their own, so keep

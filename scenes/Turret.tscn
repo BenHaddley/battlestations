@@ -1,8 +1,8 @@
 [gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/turret.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/sprites/units/GUNNER BASE.png" id="2"]
-[ext_resource type="Texture2D" path="res://assets/sprites/units/Gunner Top 1.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/Gunner Car Base.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/Gunner Car Top.png" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/Bullet.tscn" id="4"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]

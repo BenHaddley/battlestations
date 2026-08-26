@@ -18,6 +18,7 @@ LevelManager="*res://scripts/level_manager.gd"
 BuildManager="*res://scripts/build_manager.gd"
 UIManager="*res://scripts/ui_manager.gd"
 AudioFX="*res://scripts/audio_fx.gd"
+PhaseManager="*res://scripts/phase_manager.gd"
 
 [display]
 

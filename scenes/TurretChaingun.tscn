@@ -1,16 +1,18 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
-[ext_resource type="Script" path="res://scripts/turret_ballast.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/sprites/units/BALLAST BASE.png" id="2"]
-[ext_resource type="Texture2D" path="res://assets/sprites/units/BALLAST TOP.png" id="3"]
+[ext_resource type="Script" path="res://scripts/turret_chaingun.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/CHAINGUN BASE.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/CHAINGUN TOP.png" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/ChaingunBullet.tscn" id="4"]
 
 [sub_resource type="CircleShape2D" id="RangeShape"]
-radius = 190.0
+radius = 300.0
 
-[node name="TurretBallast" type="Node2D"]
+[node name="TurretChaingun" type="Node2D"]
 script = ExtResource("1")
-targeting_range = 190.0
-bps = 0.45
+bullet_scene = ExtResource("4")
+targeting_range = 300.0
+bps = 1.5
 z_index = 20
 
 [node name="Base" type="Sprite2D" parent="."]

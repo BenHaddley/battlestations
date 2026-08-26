@@ -57,13 +57,15 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 | `TrackRenderer` | Builds 2+ short, modular railway routes (straights, bends, U-shapes, loops) placed in separate board bands, validated for lane coverage and traversability |
 | `TrainConvoy` | Reusable scene (`TrainConvoy.tscn`); each instance moves its own engine along its own route and makes its attached cars follow its movement history |
 | `BattlefieldOverlay` | Draws subdued spider-lane entrances, lane guides, and the station danger line |
-| `Turret` + `Bullet` | Convoy following, target acquisition, rotation, firing, homing, and damage — base class for Minigun, Ballast, and Coal Cannon |
+| `Turret` + `Bullet` | Convoy following, target acquisition, rotation, firing, homing, and damage — base class for Minigun, Ballast, Coal Cannon, and Chaingun |
 | `TurretMinigun` | Five-projectile spread burst followed by a three-second cooldown |
 | `TurretBallast` | Short-range area shotgun using the five illustrated ballast fragments |
 | `TurretSlomo` | Convoy following and periodic area slow without damage |
 | `TurretCoalCannon` + `CoalCannonball` | Slow-firing splash shot: full damage on direct hit, weaker damage to every other enemy within its blast radius |
+| `TurretChaingun` | Plain `Turret` subclass with no `_shoot()` override — just a much higher `bps` for sustained single-target DPS, no burst/cooldown pattern |
 | `PassengerCoach` | No weapon — passive income timer while attached and visible |
 | `BrakeVan` | No weapon — caps its train's car count and grants every other car on it an attack-speed multiplier |
+| `Tender` | No weapon — negative `weight` offsets other cars', raising the effective weight threshold before the train slows |
 | `Menu` | Run HUD, shop drag gestures, selected-train details, remove-any-car mode, and wave control |
 
 ### Current visual language
@@ -115,14 +117,19 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 | `TurretMinigun.tscn` | Red rotating burst car, 330-unit range, five minigun bullets |
 | `TurretBallast.tscn` | Purple/yellow close-range car with a 190-unit area blast |
 | `TurretCoalCannon.tscn` | 340-unit range, ~4.5s cooldown, weight 2.0, fires `CoalCannonball.tscn` |
+| `TurretChaingun.tscn` | 300-unit range, 1.5 bullets/sec continuous, fires `ChaingunBullet.tscn` |
 | `PassengerCoach.tscn` | Weight 1.0, pays $50 every 10 seconds while coupled |
 | `BrakeVan.tscn` | Weight 0.0, caps its train and grants +20% attack speed to the rest of it |
+| `Tender.tscn` | Weight -2.0, no weapon — pure hauling-capacity utility car |
 | `Bullet.tscn` | Homing gunner projectile with enemy collision mask |
 
 ## Known gaps and risks
 
-- The tray can attach all seven cars (Gunner, Slomo, Minigun, Ballast Blaster, Coal
-  Cannon, Passenger Coach, Brake Van). There is no per-car upgrade system — it was
+- The tray can attach all seven original cars (Gunner, Slomo, Minigun, Ballast
+  Blaster, Coal Cannon, Passenger Coach, Brake Van). Chaingun and Tender exist as
+  complete `TowerData` entries in `BuildManager.towers` and are fully playable if
+  attached programmatically, but the 2×5 shop grid is full — there is no tray slot
+  wired up to purchase them yet. There is no per-car upgrade system — it was
   removed entirely (it was dead code left over from the click-to-place Plot design
   that predates the drag/drop train convoy, and had no reachable UI). REMOVE now
   detaches whichever car is clicked, anywhere in the train, not just the tail; there
