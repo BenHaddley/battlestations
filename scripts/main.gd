@@ -50,6 +50,7 @@ const ENGINE_LIVERIES: Array[Texture2D] = [
 ]
 
 var _car_palette_cursor := 0
+var upgrade_panel: UnitUpgradePanel
 
 func _ready() -> void:
 	get_tree().root.physics_object_picking = true
@@ -61,6 +62,9 @@ func _ready() -> void:
 	menu.train_drop_requested.connect(_on_train_drop_requested)
 	menu.remove_requested.connect(_on_remove_requested)
 	_seed_tabletop()
+	upgrade_panel = UnitUpgradePanel.new()
+	$CanvasLayer.add_child(upgrade_panel)
+	upgrade_panel.sell_requested.connect(_on_upgrade_sell_requested)
 
 ## Regenerates the railway until it passes validation (every lane reachable,
 ## every route internally connected, at least two usable routes) or the
@@ -110,6 +114,7 @@ func _seed_tabletop() -> void:
 		if tower == null or tower.scene == null:
 			continue
 		var car: Node2D = tower.scene.instantiate()
+		car.set_meta("tower_data", tower)
 		trains.add_child(car)
 		_apply_car_palette(car, _car_palette_cursor)
 		_car_palette_cursor += 1
@@ -135,6 +140,7 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> voi
 		return
 
 	var car: Node2D = tower.scene.instantiate()
+	car.set_meta("tower_data", tower)
 	trains.add_child(car)
 	_apply_car_palette(car, _car_palette_cursor)
 	_car_palette_cursor += 1
@@ -144,6 +150,34 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> voi
 		menu.show_placement_feedback("That train cannot take another car.", false)
 		return
 	menu.show_placement_feedback("%s connected to the train." % tower.tower_name, true)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if upgrade_panel == null or upgrade_panel.visible or menu.dragging_tower >= 0 or menu.removing_mode:
+		return
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * event.position
+		var best_car: Node2D = null
+		var best_convoy: Node2D = null
+		var best_distance := 72.0
+		for convoy in convoys:
+			for car in convoy.followers:
+				if not is_instance_valid(car) or not car.visible:
+					continue
+				var distance: float = car.global_position.distance_to(world_position)
+				if distance < best_distance:
+					best_distance = distance
+					best_car = car
+					best_convoy = convoy
+		if best_car:
+			var data = best_car.get_meta("tower_data", null)
+			if data is TowerData:
+				upgrade_panel.open_for(best_car, best_convoy, data)
+				get_viewport().set_input_as_handled()
+
+func _on_upgrade_sell_requested(unit: Node2D, convoy: Node2D, refund: int) -> void:
+	if is_instance_valid(convoy) and convoy.remove_car(unit):
+		LevelManager.increase_currency(refund)
+		menu.show_placement_feedback("Unit sold for Δ%d." % refund, true)
 
 func _on_remove_requested(screen_position: Vector2) -> void:
 	var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * screen_position

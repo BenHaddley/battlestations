@@ -92,6 +92,8 @@ func _shoot() -> void:
 		return
 	AudioFX.play(preload("res://assets/audio/sfx/turret_shoot.wav"), -6.0)
 	var bullet: Node2D = bullet_scene.instantiate()
+	if bullet.get("bullet_damage") != null:
+		bullet.set("bullet_damage", maxi(1, int(round(float(bullet.get("bullet_damage")) * float(get_meta("damage_multiplier", 1.0))))))
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = firing_point.global_position
 	bullet.set_target(target)

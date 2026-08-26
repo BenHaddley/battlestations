@@ -204,6 +204,18 @@ func remove_car_near(world_position: Vector2) -> bool:
 	queue_redraw()
 	return true
 
+func remove_car(car: Node2D) -> bool:
+	var index := followers.find(car)
+	if index < 0:
+		return false
+	followers.remove_at(index)
+	if car.get("is_train_cap") == true:
+		capped = false
+		_reset_attack_speed_buffs()
+	car.queue_free()
+	queue_redraw()
+	return true
+
 func _draw() -> void:
 	var previous := Vector2.ZERO
 	if drag_active and not capped:
