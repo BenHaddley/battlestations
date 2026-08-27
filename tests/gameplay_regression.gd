@@ -6,6 +6,7 @@ const ConvoyScene := preload("res://scenes/TrainConvoy.tscn")
 const EnemyScene := preload("res://scenes/Enemy.tscn")
 const StationScene := preload("res://scenes/Station.tscn")
 const MainScene := preload("res://scenes/Main.tscn")
+const GameOverScene := preload("res://scenes/ui/GameOverOverlay.tscn")
 
 var failures: Array[String] = []
 
@@ -23,6 +24,7 @@ func _run() -> void:
 	_test_campaign_track_library()
 	_test_challenge_job_cards()
 	_test_music_playlist_rotation()
+	_test_game_over_modes()
 	await _test_station_attackers()
 	await _test_main_scene_train_integration()
 	if failures.is_empty():
@@ -131,6 +133,25 @@ func _test_music_playlist_rotation() -> void:
 		_check(track.resource_path.begins_with("res://assets/audio/songs/"), "gameplay playlist contains a track outside the songs folder")
 	_check(unique_paths.size() == 20, "gameplay playlist contains duplicate songs")
 	main.queue_free()
+
+func _test_game_over_modes() -> void:
+	var mission: GameOverOverlay = GameOverScene.instantiate()
+	add_child(mission)
+	mission.show_failure(false)
+	_check(mission.visible and get_tree().paused, "mission failure did not freeze gameplay and show its overlay")
+	_check(mission._banner.texture.resource_path.ends_with("speed up.png"), "normal level loss did not use the Mission Failed banner")
+	_check(mission._primary_button.get_meta("failure_action") == "restart_level", "normal level loss did not offer Restart Level")
+	get_tree().paused = false
+	mission.queue_free()
+
+	var challenge: GameOverOverlay = GameOverScene.instantiate()
+	add_child(challenge)
+	challenge.show_failure(true)
+	_check(challenge._banner.texture.resource_path.contains("9176d68e"), "challenge loss did not use the Challenge Failed banner")
+	_check(challenge._primary_button.get_meta("failure_action") == "retry_challenge", "challenge loss did not offer Retry Challenge")
+	_check(challenge._menu_button.texture_normal.resource_path.contains("951252df"), "failure overlay did not use the supplied Main Menu button")
+	get_tree().paused = false
+	challenge.queue_free()
 
 func _test_station_attackers() -> void:
 	var station: Station = StationScene.instantiate()

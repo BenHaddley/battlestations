@@ -19,6 +19,10 @@ func _ready() -> void:
 	if "--pause-menu" in arguments:
 		main.menu.pause_menu.open()
 		await get_tree().process_frame
+	if "--game-over" in arguments:
+		main.game_over_overlay.show_failure("--challenge" in arguments)
+		for frame in range(40):
+			await get_tree().process_frame
 	var output := "/tmp/battle-stations-main.png"
 	var flag_index := arguments.find("--capture-path")
 	if flag_index >= 0 and flag_index + 1 < arguments.size():

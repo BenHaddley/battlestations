@@ -4,6 +4,7 @@ extends Node2D
 ## near.
 
 const TrainConvoyScene := preload("res://scenes/TrainConvoy.tscn")
+const GameOverOverlayScene := preload("res://scenes/ui/GameOverOverlay.tscn")
 const NEW_BOARD_CAR_SCALE := Vector2(0.54, 0.54)
 
 @onready var spawner: EnemySpawner = $EnemySpawner
@@ -55,6 +56,7 @@ var upgrade_panel: UnitUpgradePanel
 var level_complete_overlay: LevelCompleteOverlay
 var train_control_panel: TrainControlPanel
 var selected_convoy: TrainConvoy
+var game_over_overlay: GameOverOverlay
 
 func _ready() -> void:
 	get_tree().root.physics_object_picking = true
@@ -80,6 +82,9 @@ func _ready() -> void:
 	$CanvasLayer.add_child(level_complete_overlay)
 	level_complete_overlay.continue_pressed.connect(CampaignManager.advance_to_next_level)
 	CampaignManager.level_completed.connect(level_complete_overlay.show_for)
+	game_over_overlay = GameOverOverlayScene.instantiate()
+	$CanvasLayer.add_child(game_over_overlay)
+	$Station.defeated.connect(_on_station_defeated)
 	train_control_panel = TrainControlPanel.new()
 	$CanvasLayer.add_child(train_control_panel)
 	train_control_panel.anchor_left = 0.5
@@ -200,7 +205,16 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> voi
 		return
 	menu.show_placement_feedback("%s connected to the train." % tower.tower_name, true)
 
+func _on_station_defeated() -> void:
+	if game_over_overlay == null or game_over_overlay.visible:
+		return
+	PhaseManager.paused = true
+	$MusicPlayer.stream_paused = true
+	game_over_overlay.show_failure(CampaignManager.is_challenge_active())
+
 func _unhandled_input(event: InputEvent) -> void:
+	if game_over_overlay != null and game_over_overlay.visible:
+		return
 	if upgrade_panel == null or upgrade_panel.visible or menu.dragging_tower >= 0 or menu.removing_mode:
 		return
 	if level_complete_overlay != null and level_complete_overlay.visible:
