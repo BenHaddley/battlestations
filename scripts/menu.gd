@@ -66,6 +66,8 @@ var _wave_start_health: int = -1
 var _wave_start_enemy_count: int = 0
 var _hovered_removable: Node2D = null
 var station_progress_panel: StationProgressPanel
+var speed_caption: Label
+var pause_caption: Label
 
 const HOVER_TINT := Color(1.0, 0.42, 0.34, 1.0)
 
@@ -166,6 +168,55 @@ func _install_new_ui_layout() -> void:
 	$HpRail/Margin/VBox/HeartIcon.modulate.a = 0.0
 	$RightPanel/Margin/VBox/TodoPanel/Margin/VBox/TodoHeader.modulate.a = 0.0
 	$RightPanel/Margin/VBox/TodoPanel/Margin/VBox/TodoHeader.custom_minimum_size.y = 55.0
+	_install_compact_hp_gauge(hp_panel)
+	speed_caption = _add_control_caption(speed_button, "2X SPEED")
+	pause_caption = _add_control_caption(pause_button, "PAUSE")
+	feedback_label.add_theme_color_override("font_color", Color("ffe6a7"))
+	feedback_label.add_theme_color_override("font_outline_color", Color("35140f"))
+	feedback_label.add_theme_constant_override("outline_size", 3)
+	feedback_label.custom_minimum_size.y = 24.0
+
+func _install_compact_hp_gauge(hp_panel: PanelContainer) -> void:
+	# The authored UI contains the casing, label and heart. Cover only its baked
+	# sample fill, then place a shorter live gauge inside the middle of the slot.
+	$HpRail/Margin.visible = false
+	var overlay_host := Control.new()
+	overlay_host.name = "HpOverlayHost"
+	overlay_host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hp_panel.add_child(overlay_host)
+	var baked_fill_mask := ColorRect.new()
+	baked_fill_mask.name = "BakedHpFillMask"
+	baked_fill_mask.position = Vector2(20.0, 58.0)
+	baked_fill_mask.size = Vector2(27.0, 568.0)
+	baked_fill_mask.color = Color("25130f")
+	baked_fill_mask.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay_host.add_child(baked_fill_mask)
+
+	hp_fill = HpGauge.new()
+	hp_fill.name = "CompactHpFill"
+	hp_fill.position = Vector2(14.0, 148.0)
+	hp_fill.size = Vector2(39.0, 390.0)
+	hp_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay_host.add_child(hp_fill)
+
+func _add_control_caption(button: Button, caption_text: String) -> Label:
+	var caption := Label.new()
+	caption.name = "Caption"
+	caption.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	caption.offset_top = -20.0
+	caption.offset_bottom = -3.0
+	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	caption.text = caption_text
+	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	caption.add_theme_font_override("font", preload("res://assets/fonts/ArchitectsDaughter-Regular.ttf"))
+	caption.add_theme_font_size_override("font_size", 12)
+	caption.add_theme_color_override("font_color", Color("fff0b0"))
+	caption.add_theme_color_override("font_outline_color", Color("2b100e"))
+	caption.add_theme_constant_override("outline_size", 3)
+	button.add_child(caption)
+	return caption
 
 func _install_station_progress_panel() -> void:
 	$RightPanel/Margin/VBox/SchedulePanel/Margin.visible = false
@@ -413,11 +464,15 @@ func _toggle_speed() -> void:
 	Engine.time_scale = 2.0 if Engine.time_scale < 1.5 else 1.0
 	speed_button.tooltip_text = "Return to normal speed" if Engine.time_scale > 1.5 else "Run at double speed"
 	speed_button.modulate = Color(1.0, 0.82, 0.38) if Engine.time_scale > 1.5 else Color.WHITE
+	if speed_caption:
+		speed_caption.text = "1X NORMAL" if Engine.time_scale > 1.5 else "2X SPEED"
 
 func _toggle_pause() -> void:
 	get_tree().paused = not get_tree().paused
 	pause_button.tooltip_text = "Resume" if get_tree().paused else "Pause"
 	pause_button.modulate = Color(1.0, 0.82, 0.38) if get_tree().paused else Color.WHITE
+	if pause_caption:
+		pause_caption.text = "RESUME" if get_tree().paused else "PAUSE"
 
 func _select_tower(index: int) -> void:
 	BuildManager.set_selected_tower(index)
@@ -467,7 +522,9 @@ func _style_tower_button(button: Button, index: int) -> void:
 	button.set_meta("train_yard_style_state", style_state)
 	if not unlocked:
 		button.disabled = true
-		button.modulate = Color(0.48, 0.48, 0.5, 0.72)
+		# Keep the supplied turret drawing readable. The muted card and STOP label
+		# communicate locking without blacking out the art itself.
+		button.modulate = Color(0.82, 0.82, 0.82, 1.0)
 		button.add_theme_stylebox_override("disabled", _locked_train_yard_style(index))
 		return
 	var style := _train_yard_row_style(index, is_selected)
@@ -481,6 +538,6 @@ func _style_tower_button(button: Button, index: int) -> void:
 
 func _locked_train_yard_style(index: int) -> StyleBoxFlat:
 	var style := _train_yard_row_style(index, false)
-	style.bg_color = Color("80786a")
-	style.border_color = Color("302923")
+	style.bg_color = Color("9a765d")
+	style.border_color = Color("352018")
 	return style
