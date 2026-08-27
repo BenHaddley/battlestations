@@ -91,13 +91,18 @@ func _ready() -> void:
 ## bad board loudly visible in testing rather than silently shipping one.
 func _generate_and_spawn_trains() -> void:
 	var routes: Array[PackedVector2Array] = []
-	for attempt in range(max_generation_attempts):
-		routes = track.generate_layout(starting_trains)
-		var valid := routes.size() >= 2 \
-			and track.covers_lanes(spawner.lane_x_positions, 360.0) \
-			and track.routes_are_traversable()
-		if valid:
-			break
+	var level := CampaignManager.current_level()
+	var uses_campaign_track := level != null and level.track_layout_index >= 0
+	if uses_campaign_track:
+		routes = track.generate_campaign_layout(level.track_layout_index)
+	else:
+		for attempt in range(max_generation_attempts):
+			routes = track.generate_layout(starting_trains)
+			var valid := routes.size() >= 2 \
+				and track.covers_lanes(spawner.lane_x_positions, 360.0) \
+				and track.routes_are_traversable()
+			if valid:
+				break
 	if routes.size() < 2:
 		push_error("Track generation could not place at least two usable routes.")
 	elif not track.covers_lanes(spawner.lane_x_positions, 360.0):

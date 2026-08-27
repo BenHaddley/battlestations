@@ -5,6 +5,10 @@ extends Node
 const MainScene := preload("res://scenes/Main.tscn")
 
 func _ready() -> void:
+	var arguments := OS.get_cmdline_user_args()
+	var level_flag := arguments.find("--campaign-level")
+	if level_flag >= 0 and level_flag + 1 < arguments.size():
+		CampaignManager.current_level_index = clampi(int(arguments[level_flag + 1]), 0, CampaignManager.levels.size() - 1)
 	var main = MainScene.instantiate()
 	add_child(main)
 	for frame in range(8):
@@ -13,7 +17,6 @@ func _ready() -> void:
 		main._select_convoy(main.convoys[0])
 		await get_tree().process_frame
 	var output := "/tmp/battle-stations-main.png"
-	var arguments := OS.get_cmdline_user_args()
 	var flag_index := arguments.find("--capture-path")
 	if flag_index >= 0 and flag_index + 1 < arguments.size():
 		output = arguments[flag_index + 1]

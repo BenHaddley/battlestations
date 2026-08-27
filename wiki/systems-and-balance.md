@@ -149,6 +149,15 @@ train's attachment radius is nearest the drop point and isn't capped — see
 `_find_attachable_convoy()`. Active drag motion and release are handled before UI
 controls can consume the event, making drops reliable across the full viewport.
 
+Campaign levels are deterministic rather than procedurally placed. The ten supplied
+red-line track reference sheets have been transcribed onto the live 9×12 grid in
+`TrackRenderer.generate_campaign_layout()`. The seven current stops deliberately
+progress through simple paired rectangles, three-loop boards, stacked and nested
+loops, four independent circuits, offset irregular circuits, and finally the dense
+outer-and-comb layout. Each closed circuit receives one train. The post-campaign
+**Open Rails** level keeps calling `generate_layout()`, so the existing automatic
+track generator remains playable and available for later modes.
+
 ## Removing cars
 
 Pressing REMOVE arms a one-shot "click a car" mode (the arm is deferred by one frame

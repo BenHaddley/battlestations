@@ -26,6 +26,15 @@ var columns: Array[float] = []
 var rows: Array[float] = []
 var routes: Array[PackedVector2Array] = []
 
+## The ten artist reference sheets are preserved as an authored route library.
+## Indices correspond to image.png, 2.png ... 10.png in
+## assets/_reference/.../track image references. CampaignManager chooses a
+## difficulty-ordered subset; callers can still use every supplied design.
+const REFERENCE_LAYOUT_NAMES := [
+	"image.png", "2.png", "3.png", "4.png", "5.png",
+	"6.png", "7.png", "8.png", "9.png", "10.png"
+]
+
 ## route_count is a placement target, not a promise — see generate_layout().
 func generate_layout(route_count: int = 2) -> Array[PackedVector2Array]:
 	randomize()
@@ -47,6 +56,91 @@ func generate_layout(route_count: int = 2) -> Array[PackedVector2Array]:
 
 	_render_all()
 	return routes
+
+## Builds one deterministic campaign layout from the artist's red-line track
+## sketches. Coordinates are integer cells on the live 9x12 board, so rails
+## remain perfectly registered even though the source marks are freehand.
+func generate_campaign_layout(layout_index: int) -> Array[PackedVector2Array]:
+	for child in get_children():
+		child.queue_free()
+	_build_grid()
+	var layouts := _reference_cell_layouts()
+	if layout_index < 0 or layout_index >= layouts.size():
+		push_warning("Unknown campaign track layout %d; using procedural rails." % layout_index)
+		return generate_layout(2)
+	routes = []
+	for cell_route in layouts[layout_index]:
+		var world_route := PackedVector2Array()
+		for cell in cell_route:
+			if cell.x < 0 or cell.x >= columns.size() or cell.y < 0 or cell.y >= rows.size():
+				push_error("%s contains out-of-board rail cell %s." % [REFERENCE_LAYOUT_NAMES[layout_index], cell])
+				continue
+			world_route.append(Vector2(columns[cell.x], rows[cell.y]))
+		if world_route.size() >= 4:
+			routes.append(world_route)
+	_render_all()
+	return routes
+
+## Authored from the ten supplied diagrams. A polygon helper expands corner
+## vertices into one-cell steps, keeping closed-route validation identical to
+## generated tracks. This data is deliberately code-native, not image sampled.
+func _reference_cell_layouts() -> Array:
+	return [
+		# 1, two plain loops. Simplest teaching board.
+		[_offset_ring(_rectangle_ring(4, 4), Vector2i(2, 2)),
+		 _offset_ring(_rectangle_ring(8, 4), Vector2i(0, 7))],
+		# 2, one large U-like circuit.
+		[_orthogonal_ring([Vector2i(0, 2), Vector2i(2, 2), Vector2i(2, 7), Vector2i(6, 7), Vector2i(6, 2), Vector2i(8, 2), Vector2i(8, 11), Vector2i(0, 11)])],
+		# 3, large outer circuit plus a nested inner circuit.
+		[_offset_ring(_rectangle_ring(8, 10), Vector2i(0, 1)),
+		 _offset_ring(_rectangle_ring(4, 5), Vector2i(2, 3))],
+		# 4, two offset notched circuits.
+		[_orthogonal_ring([Vector2i(0, 2), Vector2i(4, 2), Vector2i(4, 3), Vector2i(7, 3), Vector2i(7, 5), Vector2i(4, 5), Vector2i(4, 6), Vector2i(0, 6)]),
+		 _orthogonal_ring([Vector2i(1, 7), Vector2i(4, 7), Vector2i(4, 8), Vector2i(7, 8), Vector2i(7, 11), Vector2i(4, 11), Vector2i(4, 10), Vector2i(1, 10)])],
+		# 5, three tall narrow circuits with changing profiles.
+		[_orthogonal_ring([Vector2i(0, 0), Vector2i(1, 0), Vector2i(1, 8), Vector2i(0, 8)]),
+		 _orthogonal_ring([Vector2i(3, 0), Vector2i(5, 0), Vector2i(5, 2), Vector2i(6, 2), Vector2i(6, 6), Vector2i(5, 6), Vector2i(5, 11), Vector2i(3, 11)]),
+		 _orthogonal_ring([Vector2i(7, 0), Vector2i(8, 0), Vector2i(8, 11), Vector2i(7, 11)])],
+		# 6, one broad T-shaped perimeter.
+		[_orthogonal_ring([Vector2i(1, 1), Vector2i(7, 1), Vector2i(7, 3), Vector2i(5, 3), Vector2i(5, 10), Vector2i(8, 10), Vector2i(8, 11), Vector2i(0, 11), Vector2i(0, 10), Vector2i(3, 10), Vector2i(3, 3), Vector2i(1, 3)])],
+		# 7, four independent corner circuits.
+		[_offset_ring(_rectangle_ring(3, 3), Vector2i(0, 0)),
+		 _offset_ring(_rectangle_ring(3, 3), Vector2i(5, 0)),
+		 _offset_ring(_rectangle_ring(3, 3), Vector2i(0, 8)),
+		 _offset_ring(_rectangle_ring(3, 3), Vector2i(5, 8))],
+		# 8, dense outer notches surrounding a long comb circuit.
+		[_orthogonal_ring([Vector2i(0, 0), Vector2i(2, 0), Vector2i(2, 2), Vector2i(6, 2), Vector2i(6, 0), Vector2i(8, 0), Vector2i(8, 11), Vector2i(6, 11), Vector2i(6, 9), Vector2i(2, 9), Vector2i(2, 11), Vector2i(0, 11)]),
+		 _orthogonal_ring([Vector2i(2, 3), Vector2i(6, 3), Vector2i(6, 4), Vector2i(3, 4), Vector2i(3, 5), Vector2i(6, 5), Vector2i(6, 6), Vector2i(3, 6), Vector2i(3, 7), Vector2i(6, 7), Vector2i(6, 8), Vector2i(2, 8)])],
+		# 9, three progressively wider stacked circuits.
+		[_offset_ring(_rectangle_ring(4, 2), Vector2i(2, 1)),
+		 _offset_ring(_rectangle_ring(6, 2), Vector2i(1, 4)),
+		 _offset_ring(_rectangle_ring(8, 3), Vector2i(0, 8))],
+		# 10, two upright side loops and one broad station-side loop.
+		[_offset_ring(_rectangle_ring(2, 4), Vector2i(0, 3)),
+		 _offset_ring(_rectangle_ring(2, 4), Vector2i(6, 3)),
+		 _offset_ring(_rectangle_ring(8, 2), Vector2i(0, 9))],
+	]
+
+func _offset_ring(base: Array[Vector2i], origin: Vector2i) -> Array[Vector2i]:
+	var result: Array[Vector2i] = []
+	for cell in base:
+		result.append(origin + cell)
+	return result
+
+func _orthogonal_ring(vertices: Array[Vector2i]) -> Array[Vector2i]:
+	var result: Array[Vector2i] = []
+	for index in range(vertices.size()):
+		var cursor := vertices[index]
+		var finish := vertices[(index + 1) % vertices.size()]
+		var delta := finish - cursor
+		if delta.x != 0 and delta.y != 0:
+			push_error("Campaign rail vertices must be orthogonal: %s to %s" % [cursor, finish])
+			return []
+		var step := Vector2i(signi(delta.x), signi(delta.y))
+		while cursor != finish:
+			result.append(cursor)
+			cursor += step
+	return result
 
 func _fallback_routes(route_count: int) -> Array[PackedVector2Array]:
 	var result: Array[PackedVector2Array] = []

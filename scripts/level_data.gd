@@ -12,3 +12,6 @@ class_name LevelData
 ## Index of the car newly introduced this level, for the level-complete
 ## reward callout. -1 if nothing new (the first level).
 @export var new_tower_index: int = -1
+## Index into TrackRenderer's authored reference-layout library. -1 retains
+## procedural generation (used by post-campaign Open Rails).
+@export var track_layout_index: int = -1

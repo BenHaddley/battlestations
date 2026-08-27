@@ -138,9 +138,10 @@ kept alongside them.
 - Spiders stop at the station and attack it repeatedly rather than disappearing.
   They remain targetable and keep the wave active until killed. Station HP is a
   separately tunable 60-point pool; no station gun has been added.
-- Trains are fixed at 2 for the whole run — there is no purchasable third or
-  fourth engine, and no true track junctions/switches (each train's route is
-  a single reversing path, not a branching network a train chooses between).
+- Campaign boards now use deterministic artist-reference layouts and receive one
+  train per closed circuit, so later boards can open with three or four distinct
+  trains. There are still no purchasable engines or true junctions/switches; each
+  circuit is an independent closed route.
 - Attaching a car still targets the nearest valid convoy. Engines can now be clicked
   to show a small selected-train control and highlight, then held forward or reverse;
   signed acceleration prevents instant direction changes.

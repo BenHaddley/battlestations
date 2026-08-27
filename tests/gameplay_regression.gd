@@ -20,6 +20,7 @@ func _check(condition: bool, message: String) -> void:
 func _run() -> void:
 	await get_tree().process_frame
 	_test_convoy_spacing_and_reverse()
+	_test_campaign_track_library()
 	await _test_station_attackers()
 	await _test_main_scene_train_integration()
 	if failures.is_empty():
@@ -55,6 +56,20 @@ func _test_convoy_spacing_and_reverse() -> void:
 	_check(convoy.route_distance != distance_before, "reversing convoy did not move along route")
 	_check(convoy._positions_valid_at(convoy.route_distance, convoy.followers.size()), "reverse movement caused consist overlap")
 	convoy.queue_free()
+
+func _test_campaign_track_library() -> void:
+	var renderer := TrackRenderer.new()
+	add_child(renderer)
+	for layout_index in range(TrackRenderer.REFERENCE_LAYOUT_NAMES.size()):
+		var layout := renderer.generate_campaign_layout(layout_index)
+		_check(not layout.is_empty(), "campaign track %d produced no routes" % layout_index)
+		_check(renderer.routes_are_traversable(), "campaign track %d contains a disconnected route" % layout_index)
+		for route in layout:
+			var unique: Dictionary = {}
+			for point in route:
+				_check(not unique.has(point), "campaign track %d repeats a cell within one route" % layout_index)
+				unique[point] = true
+	renderer.queue_free()
 
 func _test_station_attackers() -> void:
 	var station: Station = StationScene.instantiate()
