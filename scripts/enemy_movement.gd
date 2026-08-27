@@ -1,10 +1,20 @@
 extends CharacterBody2D
 class_name EnemyMovement
-## Walks a spider straight down its assigned courtyard lane. Reaching the
-## bottom is a leak (no base-health system exists yet) — see wiki.
+## Walks a spider straight down its assigned courtyard lane. At the station
+## it stops, stays targetable, and attacks until the train destroys it.
 
 @export var move_speed: float = 1.0
 @export var alternate_texture: Texture2D
+
+@export_group("Station Attack")
+@export var station_attack_damage: int = 1
+@export var station_attack_interval: float = 2.25
+@export var station_attack_windup: float = 0.55
+
+@export_group("Hit Feedback")
+@export var hit_flash_color := Color(1.65, 1.55, 0.82, 1.0)
+@export var hit_flash_duration: float = 0.09
+@export var hit_squash := Vector2(1.06, 0.92)
 
 const DOT_STAGE_TEXTURES: Array[Array] = [
 	[preload("res://assets/sprites/spiders/Spider walk 1.png"), preload("res://assets/sprites/spiders/Spider walk 2.png")],
@@ -36,6 +46,9 @@ var _rally_expires_at := 0
 var _armored_hit_counter := 0
 var _jumping := false
 var _hatched := false
+var attacking_station := false
+var _station_attack_timer := 0.0
+var _hit_feedback_tween: Tween
 
 ## Absolute ms timestamp (Time.get_ticks_msec()) the current slow expires at.
 ## Tracking an expiry rather than a bool means a second overlapping pulse can
@@ -129,10 +142,19 @@ func _set_dot_stage(dot_count: int) -> void:
 func _physics_process(delta: float) -> void:
 	if not lane_configured:
 		return
+	if attacking_station:
+		velocity = Vector2.ZERO
+		_station_attack_timer -= delta
+		if _station_attack_timer <= 0.0:
+			_attack_station()
+		_animate_walk(delta)
+		return
 	if global_position.y >= leak_y:
-		GameEvents.enemy_destroyed.emit()
-		GameEvents.enemy_leaked.emit()
-		queue_free()
+		global_position.y = leak_y
+		attacking_station = true
+		_station_attack_timer = station_attack_windup
+		velocity = Vector2.ZERO
+		queue_redraw()
 		return
 	_special_clock += delta
 	_update_special_state()
@@ -150,6 +172,9 @@ func _physics_process(delta: float) -> void:
 	velocity = Vector2.DOWN * speed
 	move_and_slide()
 	queue_redraw()
+	_animate_walk(delta)
+
+func _animate_walk(delta: float) -> void:
 	animation_time += delta
 	if alternate_texture and animation_time >= 0.16:
 		spider_sprite.texture = alternate_texture if spider_sprite.texture == primary_texture else primary_texture
@@ -169,12 +194,31 @@ func take_damage(dmg: int) -> void:
 	if ability == "jump" and _jumping:
 		_play_block_effect()
 		return
-	spider_sprite.modulate = Color(1.0, 0.32, 0.2, 1.0)
-	var tween := create_tween()
-	tween.tween_property(spider_sprite, "modulate", Color.WHITE, 0.12)
 	health.take_damage(dmg)
+	if not health.is_destroyed:
+		_play_hit_feedback()
+
+func _attack_station() -> void:
+	GameEvents.station_attacked.emit(station_attack_damage)
+	_station_attack_timer = maxf(station_attack_interval, 0.15)
+	var rest := spider_sprite.position
+	var tween := create_tween()
+	tween.tween_property(spider_sprite, "position", rest + Vector2(0, 9), 0.08)
+	tween.tween_property(spider_sprite, "position", rest, 0.12)
+
+func _play_hit_feedback() -> void:
+	if _hit_feedback_tween and _hit_feedback_tween.is_valid():
+		_hit_feedback_tween.kill()
+	var rest_scale := base_sprite_scale * (1.18 if _jumping else 1.0)
+	spider_sprite.modulate = hit_flash_color
+	spider_sprite.scale = rest_scale * hit_squash
+	_hit_feedback_tween = create_tween().set_parallel(true)
+	_hit_feedback_tween.tween_property(spider_sprite, "modulate", Color.WHITE, hit_flash_duration)
+	_hit_feedback_tween.tween_property(spider_sprite, "scale", rest_scale, hit_flash_duration)
 
 func _draw() -> void:
+	if attacking_station:
+		draw_arc(Vector2.ZERO, 48.0, -2.6, -0.55, 12, Color(0.9, 0.18, 0.1, 0.65), 3.0)
 	if ability == "rally":
 		draw_arc(Vector2.ZERO, 58.0, 0.0, TAU, 28, Color(0.45, 0.9, 0.35, 0.65), 3.0)
 		draw_arc(Vector2.ZERO, 64.0, -0.7, 0.7, 9, Color(1.0, 0.9, 0.25, 0.85), 4.0)

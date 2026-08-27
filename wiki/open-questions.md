@@ -32,7 +32,7 @@ question is resolved, then update the affected design page.
 | Question | Why it matters | Current evidence |
 |---|---|---|
 | ~~What world-unit scale should targeting, bullets, and movement use?~~ **Resolved** | Current defaults mixed 5-unit script ranges with pixel-scale collision areas. | Standardized around 360-unit Gunner range and 900-unit projectile speed; spider speed is derived from lane length for a 25-second journey. Verified in live browser playtests. |
-| Should a leak and a kill be separate events? | Base damage, bounty, stats, and wave accounting need different semantics. | Both currently emit `enemy_destroyed`. |
+| ~~Should a leak and a kill be separate events?~~ **Resolved for prototype** | Base damage, bounty, stats, and wave accounting need different semantics. | Arrival now enters a persistent station-attack state. Only actual death emits `enemy_destroyed` and pays bounty. |
 | What targeting policy should turrets use? | Strongly affects strategy and balance. | Current code uses the first overlap returned by physics. |
 | ~~What is the supported Godot version?~~ **Resolved** | Required for reproducible exports. | **4.7.2**, installed locally with matching export templates. Project `features` string (`4.3`) is Godot's own minimum-compatibility tag, unrelated to the actual engine version used. |
 | ~~What is the shop's selection UI going to look like?~~ **Resolved for prototype** | Train deployment needs a clear interaction. | Each infowiki-backed car acts as a drag source in a scrollable Train Yard list; a preview follows the cursor and the convoy glows as the valid attachment target. |

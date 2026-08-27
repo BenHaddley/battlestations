@@ -53,6 +53,8 @@ const ENGINE_LIVERIES: Array[Texture2D] = [
 var _car_palette_cursor := 0
 var upgrade_panel: UnitUpgradePanel
 var level_complete_overlay: LevelCompleteOverlay
+var train_control_panel: TrainControlPanel
+var selected_convoy: TrainConvoy
 
 func _ready() -> void:
 	get_tree().root.physics_object_picking = true
@@ -75,6 +77,11 @@ func _ready() -> void:
 	$CanvasLayer.add_child(level_complete_overlay)
 	level_complete_overlay.continue_pressed.connect(CampaignManager.advance_to_next_level)
 	CampaignManager.level_completed.connect(level_complete_overlay.show_for)
+	train_control_panel = TrainControlPanel.new()
+	train_control_panel.position = Vector2(465, 654)
+	$CanvasLayer.add_child(train_control_panel)
+	train_control_panel.command_changed.connect(_on_train_command_changed)
+	train_control_panel.deselect_requested.connect(_clear_train_selection)
 
 ## Regenerates the railway until it passes validation (every lane reachable,
 ## every route internally connected, at least two usable routes) or the
@@ -170,6 +177,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * event.position
+		var clicked_convoy: TrainConvoy = _find_convoy_engine_near(world_position)
+		if clicked_convoy:
+			_select_convoy(clicked_convoy)
+			get_viewport().set_input_as_handled()
+			return
 		var best_car: Node2D = null
 		var best_convoy: Node2D = null
 		var best_distance := 72.0
@@ -187,6 +199,41 @@ func _unhandled_input(event: InputEvent) -> void:
 			if data is TowerData:
 				upgrade_panel.open_for(best_car, best_convoy, data)
 				get_viewport().set_input_as_handled()
+		else:
+			_clear_train_selection()
+
+func _find_convoy_engine_near(world_position: Vector2) -> TrainConvoy:
+	var best: TrainConvoy
+	var best_distance := 48.0
+	for candidate in convoys:
+		if not candidate is TrainConvoy:
+			continue
+		var distance := candidate.global_position.distance_to(world_position)
+		if distance < best_distance:
+			best = candidate
+			best_distance = distance
+	return best
+
+func _select_convoy(convoy: TrainConvoy) -> void:
+	if selected_convoy == convoy:
+		_clear_train_selection()
+		return
+	_clear_train_selection()
+	selected_convoy = convoy
+	selected_convoy.set_selected(true)
+	train_control_panel.show_for(convoy, convoys.find(convoy) + 1)
+
+func _clear_train_selection() -> void:
+	if is_instance_valid(selected_convoy):
+		selected_convoy.set_manual_command(0)
+		selected_convoy.set_selected(false)
+	selected_convoy = null
+	if train_control_panel:
+		train_control_panel.clear()
+
+func _on_train_command_changed(command: int) -> void:
+	if is_instance_valid(selected_convoy):
+		selected_convoy.set_manual_command(command)
 
 func _on_upgrade_sell_requested(unit: Node2D, convoy: Node2D, refund: int) -> void:
 	if is_instance_valid(convoy) and convoy.remove_car(unit):

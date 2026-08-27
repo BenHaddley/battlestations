@@ -87,9 +87,9 @@ Both effects are now implemented. The current build grants a flat +20%
 **attack speed** to every other car — plausibly what "increase in attack power" means,
 but the card doesn't actually say "speed," so treat that mapping as an assumption, not
 a confirmed match. The acceleration/braking-time reduction described in the third
-paragraph is implemented as a 15% cut to `accel_time`/`coast_stop_time` (`brake_time_multiplier`
-on `brake_van.gd`) — the card doesn't give an exact percentage either, so treat that
-number the same way.
+paragraph is implemented as a 15% improvement to convoy braking
+(`brake_time_multiplier` on `brake_van.gd`) — the card doesn't give an exact
+percentage either, so treat that number the same way.
 
 ### #005 — Coal Cannon
 

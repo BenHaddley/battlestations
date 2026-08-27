@@ -1,7 +1,8 @@
 extends Node2D
 class_name TrainConvoy
-## The always-present locomotive leads one train. Cars sample its movement
-## history at increasing distances, producing Snake-like following at turns.
+## The always-present locomotive leads one train. Every consist member is
+## sampled at a fixed distance along one closed route, so reversing cannot
+## make the engine retrace into its own cars.
 ##
 ## Weight follows the infowiki Steam Engine card (#001): a hard
 ## carry_capacity budget (1000 units by default), not a soft speed penalty.
@@ -13,14 +14,21 @@ class_name TrainConvoy
 ## further cars can attach), grants every other car its attack-speed bonus,
 ## and — per its card's third paragraph — trims accel/coast time.
 
-@export var max_speed: float = 95.0
+@export_group("Movement")
+@export var cruise_speed: float = 62.0
+@export var max_speed: float = 105.0
+@export var acceleration: float = 34.0
+@export var deceleration: float = 48.0
+@export var reverse_acceleration: float = 28.0
+@export var occupancy_distance: float = 64.0
+@export var occupancy_debug: bool = false
+
+@export_group("Capacity")
 @export var carry_capacity: float = 1000.0 ## Steam Engine card: "Carry Capacity of 1000 Units of Weight."
 @export var tender_capacity_bonus: float = 500.0 ## Tender card: +500 if coupled directly behind the engine.
-@export var accel_time: float = 2.0
-@export var coast_stop_time: float = 5.0
 ## Cars render at roughly 112.5 world units. This leaves a visible coupling gap
 ## on straights and enough clearance while two cars straddle a square corner.
-@export var car_spacing: float = 82.0
+@export var car_spacing: float = 94.0
 @export var attachment_radius: float = 76.0
 @export var smoke_texture: Texture2D
 
@@ -33,13 +41,18 @@ const ENGINE_TOKEN_SIZE := 68.0
 
 var path: PackedVector2Array
 var path_index: int = 0
-var path_step: int = 1
 var followers: Array[Node2D] = []
-var history: Array[Dictionary] = []
+var segment_starts: PackedFloat32Array = PackedFloat32Array()
+var route_length := 0.0
+var route_distance := 0.0
 var smoke_timer: float = 0.0
-var current_speed: float = 0.0
+var current_speed: float = 0.0 ## Signed. Positive is route-forward, negative reverse.
+var manual_command: int = 0 ## -1 reverse, 0 automatic cruise, +1 forward boost.
+var cruise_direction: int = 1
 var capped: bool = false
 var drag_active: bool = false
+var selected: bool = false
+var movement_blocked: bool = false
 var _brake_time_multiplier: float = 1.0
 
 func set_engine_livery(texture: Texture2D) -> void:
@@ -54,46 +67,120 @@ func set_engine_livery(texture: Texture2D) -> void:
 
 func configure_path(track_path: PackedVector2Array) -> void:
 	path = track_path.duplicate()
-	if path.is_empty():
+	if path.size() < 2:
 		return
+	_build_route_metrics()
 	path_index = 0
-	path_step = 1
-	global_position = path[0]
-	var direction := path[1] - path[0] if path.size() > 1 else Vector2.DOWN
-	_face_engine(direction)
-	_seed_loop_history()
+	route_distance = 0.0
+	current_speed = cruise_speed
+	_apply_consist_positions()
 
 func _process(delta: float) -> void:
 	if path.size() < 2:
 		return
 	_update_speed(delta)
-	var remaining := current_speed * delta
-	while remaining > 0.0:
-		var target_index := (path_index + 1) % path.size()
-		var target_point := path[target_index]
-		var distance := global_position.distance_to(target_point)
-		var direction := (target_point - global_position).normalized()
-		_face_engine(direction)
-		if distance <= remaining:
-			global_position = target_point
-			path_index = target_index
-			remaining -= distance
-		else:
-			global_position += direction * remaining
-			remaining = 0.0
-	_record_history()
-	_update_followers()
+	_advance_safely(current_speed * delta)
 	smoke_timer -= delta
-	if smoke_timer <= 0.0:
+	if smoke_timer <= 0.0 and absf(current_speed) > 2.0:
 		_emit_smoke()
 		smoke_timer = 0.32
 	queue_redraw()
 
 func _update_speed(delta: float) -> void:
-	var accelerating := current_speed < max_speed
-	var duration := (accel_time if accelerating else coast_stop_time) * _brake_time_multiplier
-	var rate := max_speed / maxf(duration, 0.05)
-	current_speed = move_toward(current_speed, max_speed, rate * delta)
+	var target_speed := cruise_speed * cruise_direction
+	if manual_command != 0:
+		target_speed = max_speed * manual_command
+	var current_sign := signi(current_speed)
+	var target_sign := signi(target_speed)
+	var rate := acceleration
+	if current_sign != 0 and current_sign != target_sign:
+		# Opposite command first brakes to zero. Direction cannot flip instantly.
+		target_speed = 0.0
+		rate = deceleration / maxf(_brake_time_multiplier, 0.05)
+	elif absf(target_speed) < absf(current_speed):
+		rate = deceleration / maxf(_brake_time_multiplier, 0.05)
+	elif target_sign < 0:
+		rate = reverse_acceleration
+	current_speed = move_toward(current_speed, target_speed, rate * delta)
+	if is_zero_approx(current_speed) and manual_command != 0:
+		cruise_direction = manual_command
+
+func set_manual_command(command: int) -> void:
+	manual_command = clampi(command, -1, 1)
+
+func set_selected(value: bool) -> void:
+	selected = value
+	queue_redraw()
+
+func _build_route_metrics() -> void:
+	segment_starts = PackedFloat32Array()
+	route_length = 0.0
+	for index in range(path.size()):
+		segment_starts.append(route_length)
+		route_length += path[index].distance_to(path[(index + 1) % path.size()])
+
+func _sample_route(distance_on_route: float) -> Dictionary:
+	if route_length <= 0.0:
+		return {"position": global_position, "direction": Vector2.DOWN, "index": 0}
+	var wrapped := fposmod(distance_on_route, route_length)
+	for index in range(path.size()):
+		var start_distance: float = segment_starts[index]
+		var next_distance := route_length if index == path.size() - 1 else float(segment_starts[index + 1])
+		if wrapped <= next_distance or index == path.size() - 1:
+			var start := path[index]
+			var finish := path[(index + 1) % path.size()]
+			var segment_length := maxf(next_distance - start_distance, 0.001)
+			var weight := clampf((wrapped - start_distance) / segment_length, 0.0, 1.0)
+			return {"position": start.lerp(finish, weight), "direction": (finish - start).normalized(), "index": index}
+	return {"position": path[0], "direction": Vector2.DOWN, "index": 0}
+
+func _advance_safely(signed_distance: float) -> void:
+	movement_blocked = false
+	var remaining := absf(signed_distance)
+	var direction_sign := signf(signed_distance)
+	while remaining > 0.001:
+		var step_distance := minf(remaining, 6.0)
+		var candidate := route_distance + step_distance * direction_sign
+		if not _positions_valid_at(candidate, followers.size()):
+			current_speed = 0.0
+			movement_blocked = true
+			break
+		route_distance = fposmod(candidate, route_length)
+		remaining -= step_distance
+	_apply_consist_positions()
+
+func _positions_valid_at(engine_distance: float, follower_count: int) -> bool:
+	if route_length <= 0.0:
+		return false
+	var positions: Array[Vector2] = []
+	positions.append(_sample_route(engine_distance).position)
+	for index in range(follower_count):
+		positions.append(_sample_route(engine_distance - car_spacing * (index + 1)).position)
+	for first in range(positions.size()):
+		for second in range(first + 1, positions.size()):
+			if positions[first].distance_to(positions[second]) < occupancy_distance:
+				return false
+	return true
+
+func _apply_consist_positions() -> void:
+	var engine_sample := _sample_route(route_distance)
+	global_position = engine_sample.position
+	path_index = int(engine_sample.index)
+	var engine_direction: Vector2 = engine_sample.direction * cruise_direction
+	_face_engine(engine_direction)
+	for index in range(followers.size()):
+		var car := followers[index]
+		if not is_instance_valid(car):
+			continue
+		var sample := _sample_route(route_distance - car_spacing * (index + 1))
+		if not car.visible:
+			car.visible = true
+			car.process_mode = Node.PROCESS_MODE_INHERIT
+		var car_direction: Vector2 = sample.direction * cruise_direction
+		if car.has_method("set_convoy_transform"):
+			car.set_convoy_transform(sample.position, car_direction)
+		else:
+			car.global_position = sample.position
 
 func total_weight() -> float:
 	var sum := 0.0
@@ -118,27 +205,19 @@ func attach_car(car: Node2D) -> bool:
 	var car_weight: float = declared_weight if declared_weight != null else 1.0
 	if total_weight() + car_weight > effective_capacity():
 		return false
+	var requested_count := followers.size() + 1
+	# A closed loop has finite physical capacity. Reject a consist whose tail
+	# would wrap around onto its own engine or another car.
+	if requested_count * car_spacing + occupancy_distance >= route_length:
+		return false
+	if not _positions_valid_at(route_distance, requested_count):
+		return false
 	followers.append(car)
-	# A newly purchased car waits invisibly until the engine has travelled far
-	# enough to provide it with a unique on-track tail position. Previously all
-	# cars beyond the available history received history[-1] and piled up.
-	car.visible = false
-	car.process_mode = Node.PROCESS_MODE_DISABLED
-	_update_followers()
+	_apply_consist_positions()
 	if car.get("is_train_cap") == true:
 		capped = true
 		_apply_brake_buff(car)
 	return true
-
-func _seed_loop_history() -> void:
-	history = [{"position": global_position, "direction": (path[1] - path[0]).normalized()}]
-	for offset in range(1, path.size() + 1):
-		var index := posmod(path_index - offset, path.size())
-		var next_index := (index + 1) % path.size()
-		history.append({
-			"position": path[index],
-			"direction": (path[next_index] - path[index]).normalized(),
-		})
 
 func _apply_brake_buff(brake_van: Node2D) -> void:
 	var bonus = brake_van.get("attack_speed_bonus")
@@ -180,8 +259,7 @@ func car_count() -> int:
 
 ## Removes whichever car (if any) is within attachment_radius of
 ## world_position. Cars in front and behind it snap together automatically
-## next frame, since every car's position is always resampled from the
-## engine's movement history at car_spacing * its (now-shifted) index.
+## because their fixed route-distance offsets are recalculated immediately.
 func remove_car_near(world_position: Vector2) -> bool:
 	var closest_index := -1
 	var closest_distance := attachment_radius
@@ -218,12 +296,21 @@ func remove_car(car: Node2D) -> bool:
 
 func _draw() -> void:
 	var previous := Vector2.ZERO
+	if selected:
+		draw_circle(Vector2.ZERO, 43.0, Color(0.15, 0.78, 1.0, 0.12))
+		draw_arc(Vector2.ZERO, 44.0, 0.04, TAU - 0.08, 30, Color("35d9ff"), 4.0, true)
+		draw_arc(Vector2(1.5, -1.0), 48.0, 0.2, TAU - 0.16, 27, Color(0.04, 0.03, 0.02, 0.9), 2.5, true)
+	if occupancy_debug:
+		var debug_color := Color(1.0, 0.22, 0.18, 0.75) if movement_blocked else Color(0.12, 0.9, 0.95, 0.45)
+		draw_arc(Vector2.ZERO, occupancy_distance * 0.5, 0.0, TAU, 24, debug_color, 2.0, true)
 	if drag_active and not capped:
 		_draw_attach_target(Vector2.ZERO)
 	for car in followers:
 		if not is_instance_valid(car) or not car.visible:
 			continue
 		var car_local := to_local(car.global_position)
+		if occupancy_debug:
+			draw_arc(car_local, occupancy_distance * 0.5, 0.0, TAU, 24, Color(0.12, 0.9, 0.95, 0.45), 2.0, true)
 		draw_line(previous, car_local, Color(0.12, 0.1, 0.07, 0.9), 9.0)
 		draw_circle(previous.lerp(car_local, 0.5), 7.0, Color(0.72, 0.48, 0.18, 1.0))
 		if drag_active and not capped:
@@ -259,58 +346,3 @@ func _face_engine(direction: Vector2) -> void:
 		# Steam-engine artwork's headlamp/boiler end faces up in the source
 		# image, not down — the train was driving tender-first before this.
 		engine.rotation = direction.angle() + PI * 0.5
-
-func _record_history() -> void:
-	var direction := Vector2.DOWN
-	if not history.is_empty():
-		direction = (global_position - history[0].position).normalized()
-	if direction.is_zero_approx():
-		direction = history[0].direction if not history.is_empty() else Vector2.DOWN
-	history.push_front({"position": global_position, "direction": direction})
-	_trim_history((followers.size() + 2) * car_spacing + 240.0)
-
-func _update_followers() -> void:
-	for index in range(followers.size()):
-		var car := followers[index]
-		if not is_instance_valid(car):
-			continue
-		var sample := _sample_history(car_spacing * (index + 1))
-		if not sample.valid:
-			car.visible = false
-			car.process_mode = Node.PROCESS_MODE_DISABLED
-			continue
-		if not car.visible:
-			car.visible = true
-			car.process_mode = Node.PROCESS_MODE_INHERIT
-		if car.has_method("set_convoy_transform"):
-			car.set_convoy_transform(sample.position, sample.direction)
-		else:
-			car.global_position = sample.position
-
-func _sample_history(distance_behind: float) -> Dictionary:
-	if history.is_empty():
-		return {"valid": false, "position": global_position, "direction": Vector2.DOWN}
-	var travelled := 0.0
-	for index in range(history.size() - 1):
-		var newer: Vector2 = history[index].position
-		var older: Vector2 = history[index + 1].position
-		var segment := newer.distance_to(older)
-		if travelled + segment >= distance_behind and segment > 0.0:
-			var weight := (distance_behind - travelled) / segment
-			return {
-				"valid": true,
-				"position": newer.lerp(older, weight),
-				"direction": history[index + 1].direction,
-			}
-		travelled += segment
-	return {"valid": false, "position": history[-1].position, "direction": history[-1].direction}
-
-func _trim_history(required_distance: float) -> void:
-	# Retain distance, not a guessed number of frames. This remains correct at
-	# 30, 60, 120 Hz and during occasional long browser frames.
-	var travelled := 0.0
-	for index in range(history.size() - 1):
-		travelled += Vector2(history[index].position).distance_to(history[index + 1].position)
-		if travelled >= required_distance:
-			history.resize(index + 2)
-			return

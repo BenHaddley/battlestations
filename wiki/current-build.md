@@ -55,7 +55,7 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 | `EnemyMovement` + `Health` | Wave-scaled lane traversal speed, staged dot transformations, slowing, damage, death, and bounty |
 | `TowerData` | Train shop data, scene, description, price, and drag icon |
 | `TrackRenderer` | Builds 2+ closed concentric oval railway loops inside the playable board, validated for lane coverage and full-loop traversability |
-| `TrainConvoy` | Reusable scene (`TrainConvoy.tscn`); each instance moves its own engine along its own route and makes its attached cars follow its movement history |
+| `TrainConvoy` | Reusable scene (`TrainConvoy.tscn`); each instance samples its engine and attached cars at fixed distances along a closed route, including safe acceleration and reversing |
 | `BattlefieldOverlay` | Draws subdued spider-lane entrances, lane guides, and the station danger line |
 | `Turret` + `Bullet` | Convoy following, target acquisition, rotation, firing, homing, and damage — base class for Chaingunner, Ballast, and Coal Cannon |
 | `TurretMinigun` | The Chaingunner Car — seven-projectile spread burst followed by a four-second cooldown (filenames kept as Minigun, its earlier working name) |
@@ -135,14 +135,15 @@ kept alongside them.
   campaign-weighted `EnemyRoster`; specialist roles unlock progressively.
 - Target selection uses the first overlapping physics body, with no explicit
   first/last/strongest targeting policy.
-- Route completion and enemy death share one event. That is adequate for wave
-  accounting, but cannot distinguish kills from leaks.
+- Spiders stop at the station and attack it repeatedly rather than disappearing.
+  They remain targetable and keep the wave active until killed. Station HP is a
+  separately tunable 60-point pool; no station gun has been added.
 - Trains are fixed at 2 for the whole run — there is no purchasable third or
   fourth engine, and no true track junctions/switches (each train's route is
   a single reversing path, not a branching network a train chooses between).
-- Attaching a car targets whichever train's radius the drop lands in; there is
-  no explicit click-to-select-train step or highlight, so two trains parked
-  very close together could make a drop ambiguous.
+- Attaching a car still targets the nearest valid convoy. Engines can now be clicked
+  to show a small selected-train control and highlight, then held forward or reverse;
+  signed acceleration prevents instant direction changes.
 
 Resolved this session (were previously listed here): the slow effect now reduces
 speed relative to each enemy's own base speed and safely extends under overlapping

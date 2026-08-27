@@ -89,10 +89,9 @@ sets that train's `capped` flag, which makes both `can_attach_at()` and the drop
 handler refuse any further car for that train; applies `attack_speed_bonus = 1.2`
 to every other car currently on it by writing directly to each car's
 `attack_speed_multiplier` (read by `Turret`'s fire-rate check as
-`bps * attack_speed_multiplier`); and cuts `accel_time`/`coast_stop_time` to 85% of
-normal (`brake_time_multiplier`) for as long as it's attached. Removing the Brake Van
-clears the cap and resets every other car's multiplier and the train's accel/coast
-time back to normal.
+`bps * attack_speed_multiplier`); and improves braking by 15%
+(`brake_time_multiplier`) for as long as it's attached. Removing the Brake Van
+clears the cap and resets every other car's attack and braking multipliers.
 
 **Tender** (`scripts/tender.gd`) — no weapon. Adds its own 50 weight like any other
 car, but `TrainConvoy.effective_capacity()` also checks whether it's specifically
@@ -110,30 +109,31 @@ used to describe. A train's total weight is the sum of every attached car's `wei
 
 | Parameter | Default |
 |---|---:|
-| Max speed | 95 world units/second |
+| Cruise / boosted max speed | 62 / 105 world units/second |
 | Carry capacity | 1000 |
 | Tender capacity bonus (directly behind the engine only) | +500 |
-| Base acceleration time (0 → max) | 2.0 seconds |
-| Base coast-to-stop time | 5.0 seconds |
-| Brake Van accel/coast-time multiplier | ×0.85 |
-| Car spacing | 170 world units |
-| Attachment radius | 115 world units |
+| Forward acceleration | 34 world units/second² |
+| Reverse acceleration | 28 world units/second² |
+| Deceleration | 48 world units/second² |
+| Brake Van braking multiplier | ×0.85 time factor |
+| Car spacing | 94 world units |
+| Minimum consist clearance | 64 world units |
+| Attachment radius | 76 world units |
 
 `TrainConvoy.attach_car()` checks `total_weight() + new_car.weight` against
 `effective_capacity()` (1000, or 1500 with a Tender coupled as `followers[0]`)
 *before* appending the car, and simply returns `false` — refusing the attachment
 entirely, refunding its cost — if it would exceed capacity. There is no partial
-penalty: every train that's actually running is always at full `max_speed`, eased
-toward via `accel_time`/`coast_stop_time` (trimmed by the Brake Van multiplier while
-one is attached) rather than snapping instantly. The engine follows a closed route and
-wraps from its final path sample back to the first, maintaining forward motion around
-the loop.
+weight penalty. Each train cruises automatically and can be selected to receive a
+temporary forward or reverse command. Signed speed approaches the requested speed
+using separate acceleration, deceleration and reverse-acceleration values; an
+opposite command always brakes through zero instead of flipping instantly.
 
-Cars don't have independent physics — each one samples the engine's own recent
-movement history at `car_spacing × its index` behind the front, which is what
-produces the snake-like following through turns. Loop history is pre-seeded behind
-the engine, so starter and newly bought cars have distinct visible tail positions
-immediately rather than waiting for the engine to travel first.
+Cars don't have independent physics. The engine and every car sample the closed
+route at fixed distance offsets. Before advancing, the convoy validates all sampled
+positions against `occupancy_distance`; it stops before self-overlap and refuses an
+attachment whose tail would wrap into the engine. `occupancy_debug` draws the tested
+clearance circles for route tuning.
 
 ## Multiple trains
 
@@ -155,9 +155,9 @@ Pressing REMOVE arms a one-shot "click a car" mode (the arm is deferred by one f
 so the button's own click can't immediately count as the car click). The next
 left-click anywhere is checked against every train's attached cars; whichever one is
 within `attachment_radius` of the click is detached. Because every car's position is
-always resampled from its train's movement history rather than stored independently,
+always resampled from its train's route-distance offsets rather than stored independently,
 removing a car from the middle of a train doesn't need any special "reconnect"
-logic — the cars behind it are simply resampled at their same history-distance next
+logic — the cars behind it are simply resampled at their new route-distance next
 frame, which is now a shorter physical gap, so they visually snap forward on their
 own. Removing a Brake Van clears its train's cap and resets the attack-speed bonus it
 had granted.
@@ -188,7 +188,7 @@ placing every special enemy into the opening wave.
 
 The active generic spider has 15 HP and a bounty of 25 (see the Economy table above —
 this is deliberately lower than Passenger Coach's passive income). Its unslowed speed is derived
-from the configured lane length so it takes 25 seconds to travel from spawn to leak,
+from the configured lane length so it takes about 25 seconds to travel from spawn to the station,
 and therefore remains stable when a larger board changes those coordinates.
 
 Spider durability is also the wave difficulty ladder. Wave 1 starts with the one-dot,
@@ -198,10 +198,11 @@ one-damage hits until the final one-dot form, which takes five hits to kill. Eac
 stage change has a short squash and paper-puff transformation beat.
 It uses one 1500×1500 source frame at a normalized visual scale rather than the
 combined 3000×1500 sheet. Each spawn is assigned uniformly to one of nine fixed
-columns on the new 9×12 courtyard and travels straight from the top to the bottom, following
-a Plants-vs.-Zombies-style lane model. Reaching the bottom removes the spider, counts
-it as cleared for wave progression, awards no currency, and damages the station by
-one health.
+columns on the new 9×12 courtyard and travels straight from the top to the bottom,
+following a Plants-vs.-Zombies-style lane model. Reaching the station changes it to
+a persistent attack state. It stops, remains targetable, and deals one station damage
+every 2.25 seconds after a 0.55-second windup. It counts as alive until killed, so a
+wave cannot clear while attackers remain at the station. Station HP defaults to 60.
 
 ## Waves
 

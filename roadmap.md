@@ -67,8 +67,8 @@ configuration or known unit-scale errors.
 - [x] Replace the unwired menu-animation hooks with an intentional two-gutter HUD.
 - [x] Normalize the full board, one-frame spider art, trains, projectiles,
       colliders, render order, and seven top-to-bottom lanes around a 1280×720 viewport.
-- [x] Spawn one default black engine and replace fixed build pads with convoy
-      drag/drop; attached combat cars follow its route history as a trailing consist.
+- [x] Spawn distinct engine liveries and replace fixed build pads with convoy
+      drag/drop; attached combat cars use collision-safe route-distance spacing.
 - [x] Complete the first cohesion pass: stronger rails and curves, lane/danger guides,
       larger linked cars, smoke, animated enemies, combat feedback, and a train-aware HUD.
 - [ ] Converge on the recovered illustrated control-desk reference: wooden full-height
@@ -98,9 +98,9 @@ editor-only setup, and the implemented values agree with
 
 ### Run state
 
-- [ ] Separate enemy **killed** and **leaked** events; keep both usable for wave
-      accounting while only kills award currency.
-- [ ] Add base health and apply damage when a spider reaches the final waypoint.
+- [x] Replace one-shot leaks with a persistent station-attack state; only kills
+      clear the enemy from wave accounting and award currency.
+- [x] Add tunable station health and periodic damage from surviving attackers.
 - [ ] Define and implement a loss condition at zero base health.
 - [ ] Decide the initial victory model: finite final wave or endless score chase.
 - [ ] Add game-over/victory UI with restart and return-to-menu actions.
