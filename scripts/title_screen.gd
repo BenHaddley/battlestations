@@ -107,10 +107,35 @@ func _launch_game() -> void:
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
 
 func _show_challenges() -> void:
-	modal_title.text = "CHALLENGES"
-	modal_copy.text = "Challenge cards are being prepared.\n\nFor now: keep the station safe and build your train."
+	modal_title.text = "CHALLENGE JOB CARDS"
+	modal_copy.text = "Pick one strange railway job. Challenge runs do not overwrite campaign progress."
+	for old_button in $Modal/Margin/VBox.get_children():
+		if old_button is Button and old_button.name.begins_with("Challenge"):
+			old_button.queue_free()
+	var back_button: Button = $Modal/Margin/VBox/BackButton
+	for challenge in CampaignManager.CHALLENGES:
+		var button := Button.new()
+		button.name = "Challenge%s" % String(challenge.id).to_pascal_case()
+		button.custom_minimum_size = Vector2(0, 48)
+		button.text = "%s. %s" % [String(challenge.name), String(challenge.tagline)]
+		button.add_theme_font_size_override("font_size", 18)
+		button.add_theme_color_override("font_color", Color("2b160d"))
+		button.pressed.connect(_launch_challenge.bind(String(challenge.id)))
+		$Modal/Margin/VBox.add_child(button)
+		$Modal/Margin/VBox.move_child(button, back_button.get_index())
+	modal.offset_left = -330.0
+	modal.offset_right = 330.0
+	modal.offset_top = -290.0
+	modal.offset_bottom = 290.0
 	modal.show()
-	$Modal/Margin/VBox/BackButton.grab_focus()
+	var first_button := $Modal/Margin/VBox.get_node_or_null("ChallengeLastTrain") as Button
+	if first_button:
+		first_button.grab_focus()
+
+func _launch_challenge(challenge_id: String) -> void:
+	if CampaignManager.start_challenge(challenge_id):
+		modal.hide()
+		_launch_game()
 
 func _show_options() -> void:
 	modal_title.text = "OPTIONS"

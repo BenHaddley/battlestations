@@ -92,13 +92,21 @@ func _ready() -> void:
 		button.pressed.connect(_select_tower.bind(index))
 		button.gui_input.connect(_on_tower_gui_input.bind(index))
 		button.visible = true
-		button.disabled = not unlocked
+		button.disabled = not unlocked or not CampaignManager.challenge_shop_enabled()
+		if not CampaignManager.challenge_shop_enabled():
+			_set_price_text(button, "FIXED")
+			button.tooltip_text = "This challenge uses a fixed train."
+			continue
 		if unlocked:
 			_set_price_text(button, "%d" % (BuildManager.towers[index].cost if index < BuildManager.towers.size() else 0))
 		else:
 			_set_price_text(button, "STOP %d" % CampaignManager.tower_unlock_level(index))
 			button.tooltip_text = "%s. Unlocks at campaign stop %d." % [BuildManager.towers[index].tower_name, CampaignManager.tower_unlock_level(index)]
 	remove_button.pressed.connect(_toggle_remove_mode)
+	if not CampaignManager.challenge_train_edit_enabled():
+		remove_button.disabled = true
+		remove_button.text = "FIXED TRAIN"
+		remove_button.tooltip_text = "This job card forbids changing the supplied train."
 	speed_button.pressed.connect(_toggle_speed)
 	pause_button.pressed.connect(_toggle_pause)
 	station_progress_panel.skip_wait_pressed.connect(_on_advance_pressed)

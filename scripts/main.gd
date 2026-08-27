@@ -58,6 +58,9 @@ var selected_convoy: TrainConvoy
 
 func _ready() -> void:
 	get_tree().root.physics_object_picking = true
+	if CampaignManager.is_challenge_active():
+		starting_trains = int(CampaignManager.challenge_value("trains", starting_trains))
+		starting_cars = int(CampaignManager.challenge_value("cars", starting_cars))
 	var level: LevelData = CampaignManager.current_level()
 	if level:
 		LevelManager.reset_currency(level.starting_currency)
@@ -111,10 +114,13 @@ func _generate_and_spawn_trains() -> void:
 			if valid:
 				break
 	if routes.size() < 2:
-		push_error("Track generation could not place at least two usable routes.")
+		if not CampaignManager.is_challenge_active() or routes.is_empty():
+			push_error("Track generation could not place at least two usable routes.")
 	elif not track.covers_lanes(spawner.lane_x_positions, 360.0):
 		push_error("Generated railway does not cover every spider lane.")
 
+	if CampaignManager.is_challenge_active() and routes.size() > starting_trains:
+		routes.resize(starting_trains)
 	for child in trains.get_children():
 		child.queue_free()
 	convoys = []
@@ -124,6 +130,12 @@ func _generate_and_spawn_trains() -> void:
 		var convoy: Node2D = TrainConvoyScene.instantiate()
 		trains.add_child(convoy)
 		convoy.configure_path(routes[route_index])
+		if CampaignManager.is_challenge_active():
+			var speed_scale := float(CampaignManager.challenge_value("speed", 1.0))
+			convoy.cruise_speed *= speed_scale
+			convoy.max_speed *= speed_scale
+			convoy.current_speed = convoy.cruise_speed
+			convoy.set_meta("reverse_locked", not bool(CampaignManager.challenge_value("reverse", true)))
 		convoy.set_engine_livery(ENGINE_LIVERIES[livery_indices[route_index % livery_indices.size()]])
 		convoys.append(convoy)
 
@@ -151,6 +163,9 @@ func _seed_tabletop() -> void:
 		convoy.attach_car(car)
 
 func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> void:
+	if not CampaignManager.challenge_shop_enabled():
+		menu.show_placement_feedback("This job card forbids purchasing new cars.", false)
+		return
 	if tower_index < 0 or tower_index >= BuildManager.towers.size():
 		menu.show_placement_feedback("That train is not configured.", false)
 		return
@@ -245,14 +260,24 @@ func _clear_train_selection() -> void:
 
 func _on_train_control_changed(direction: int, throttle_notch: int) -> void:
 	if is_instance_valid(selected_convoy):
+		if selected_convoy.get_meta("reverse_locked", false) and (direction < 0 or throttle_notch == 0):
+			menu.show_placement_feedback("NO BRAKES keeps the train moving forward.", false)
+			direction = 1
+			throttle_notch = maxi(throttle_notch, 1)
 		selected_convoy.set_driver_controls(direction, throttle_notch)
 
 func _on_upgrade_sell_requested(unit: Node2D, convoy: Node2D, refund: int) -> void:
+	if not CampaignManager.challenge_train_edit_enabled():
+		menu.show_placement_feedback("The supplied challenge train cannot be changed.", false)
+		return
 	if is_instance_valid(convoy) and convoy.remove_car(unit):
 		LevelManager.increase_currency(refund)
 		menu.show_placement_feedback("Unit sold for Δ%d." % refund, true)
 
 func _on_remove_requested(screen_position: Vector2) -> void:
+	if not CampaignManager.challenge_train_edit_enabled():
+		menu.show_placement_feedback("The supplied challenge train cannot be changed.", false)
+		return
 	var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * screen_position
 	for convoy in convoys:
 		if convoy.remove_car_near(world_position):

@@ -26,3 +26,9 @@ static func available(campaign_level: int) -> Array[Dictionary]:
 static func pick(campaign_level: int) -> Dictionary:
 	var pool := available(campaign_level)
 	return pool.pick_random() if not pool.is_empty() else PROFILES[0]
+
+static func by_id(profile_id: String) -> Dictionary:
+	for profile in PROFILES:
+		if String(profile.id) == profile_id:
+			return profile
+	return {}

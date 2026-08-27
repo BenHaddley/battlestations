@@ -21,6 +21,7 @@ func _run() -> void:
 	await get_tree().process_frame
 	_test_convoy_spacing_and_reverse()
 	_test_campaign_track_library()
+	_test_challenge_job_cards()
 	_test_music_playlist_rotation()
 	await _test_station_attackers()
 	await _test_main_scene_train_integration()
@@ -67,6 +68,19 @@ func _test_convoy_spacing_and_reverse() -> void:
 	convoy.release_driver_controls()
 	_check(convoy.requested_direction == 0 and convoy.throttle_notch == 1, "releasing driver controls did not restore automatic COAST")
 	convoy.queue_free()
+
+func _test_challenge_job_cards() -> void:
+	_check(CampaignManager.CHALLENGES.size() == 5, "challenge menu should expose five launchable job cards")
+	var seen_ids: Dictionary = {}
+	for challenge in CampaignManager.CHALLENGES:
+		var challenge_id := String(challenge.get("id", ""))
+		_check(not challenge_id.is_empty() and not seen_ids.has(challenge_id), "challenge ids must be present and unique")
+		seen_ids[challenge_id] = true
+		_check(CampaignManager.start_challenge(challenge_id), "challenge %s did not start" % challenge_id)
+		var level := CampaignManager.current_level()
+		_check(level != null and level.level_name == String(challenge.name), "challenge %s did not supply its level data" % challenge_id)
+		_check(level.wave_count > 0, "challenge %s must have a finite wave target" % challenge_id)
+	CampaignManager.clear_challenge()
 
 func _test_campaign_track_library() -> void:
 	var renderer := TrackRenderer.new()

@@ -76,7 +76,8 @@ func _on_enemy_destroyed() -> void:
 
 func _end_wave() -> void:
 	is_spawning = false
-	LevelManager.increase_currency(wave_bonus_base + wave_bonus_per_wave * current_wave)
+	var payout_scale := float(CampaignManager.challenge_value("bounty", 1.0))
+	LevelManager.increase_currency(roundi((wave_bonus_base + wave_bonus_per_wave * current_wave) * payout_scale))
 	wave_cleared.emit(current_wave)
 	if wave_target > 0 and current_wave >= wave_target:
 		CampaignManager.complete_current_level()
@@ -88,7 +89,8 @@ func _spawn_enemy() -> void:
 	var enemy: Node2D = prefab.instantiate()
 	get_tree().current_scene.add_child(enemy)
 	var campaign_level := int(CampaignManager.get("current_level_index"))
-	var profile := EnemyRoster.pick(campaign_level)
+	var forced_enemy := String(CampaignManager.challenge_value("enemy", ""))
+	var profile := EnemyRoster.by_id(forced_enemy) if not forced_enemy.is_empty() else EnemyRoster.pick(campaign_level)
 	if enemy.has_method("configure_archetype"):
 		enemy.configure_archetype(profile, current_wave, campaign_level)
 	# The new courtyard uses 65.5-unit cells instead of the previous 90-unit
@@ -100,6 +102,10 @@ func _spawn_enemy() -> void:
 		enemy.configure_difficulty(_hit_points_for_wave())
 	if enemy.has_method("configure_bounty") and current_wave <= 3 and String(profile.get("id", "generic")) == "generic":
 		enemy.configure_bounty(early_bounty)
+	var bounty_scale := float(CampaignManager.challenge_value("bounty", 1.0))
+	if enemy.has_method("configure_bounty") and not is_equal_approx(bounty_scale, 1.0):
+		var normal_bounty := early_bounty if current_wave <= 3 and String(profile.get("id", "generic")) == "generic" else int(profile.get("bounty", 45)) + campaign_level * 8
+		enemy.configure_bounty(maxi(1, roundi(normal_bounty * bounty_scale)))
 	if enemy.has_method("configure_lane"):
 		enemy.configure_lane(leak_y, _journey_duration_for_wave())
 
