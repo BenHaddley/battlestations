@@ -143,8 +143,9 @@ kept alongside them.
   trains. There are still no purchasable engines or true junctions/switches; each
   circuit is an independent closed route.
 - Attaching a car still targets the nearest valid convoy. Engines can now be clicked
-  to show a small selected-train control and highlight, then held forward or reverse;
-  signed acceleration prevents instant direction changes.
+  to expand a hand-drawn mechanical control stand with a separate reverser, six-notch
+  draggable throttle, live speed bars and actual direction indication. Deselecting
+  collapses it into a small SELECT A LOCOMOTIVE plate and returns automatic cruise.
 
 Resolved this session (were previously listed here): the slow effect now reduces
 speed relative to each enemy's own base speed and safely extends under overlapping

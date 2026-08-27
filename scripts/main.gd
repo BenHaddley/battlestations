@@ -78,9 +78,16 @@ func _ready() -> void:
 	level_complete_overlay.continue_pressed.connect(CampaignManager.advance_to_next_level)
 	CampaignManager.level_completed.connect(level_complete_overlay.show_for)
 	train_control_panel = TrainControlPanel.new()
-	train_control_panel.position = Vector2(465, 654)
 	$CanvasLayer.add_child(train_control_panel)
-	train_control_panel.command_changed.connect(_on_train_command_changed)
+	train_control_panel.anchor_left = 0.5
+	train_control_panel.anchor_right = 0.5
+	train_control_panel.anchor_top = 1.0
+	train_control_panel.anchor_bottom = 1.0
+	train_control_panel.offset_left = -250.0
+	train_control_panel.offset_right = 250.0
+	train_control_panel.offset_top = -104.0
+	train_control_panel.offset_bottom = -4.0
+	train_control_panel.control_changed.connect(_on_train_control_changed)
 	train_control_panel.deselect_requested.connect(_clear_train_selection)
 
 ## Regenerates the railway until it passes validation (every lane reachable,
@@ -230,15 +237,15 @@ func _select_convoy(convoy: TrainConvoy) -> void:
 
 func _clear_train_selection() -> void:
 	if is_instance_valid(selected_convoy):
-		selected_convoy.set_manual_command(0)
+		selected_convoy.release_driver_controls()
 		selected_convoy.set_selected(false)
 	selected_convoy = null
 	if train_control_panel:
 		train_control_panel.clear()
 
-func _on_train_command_changed(command: int) -> void:
+func _on_train_control_changed(direction: int, throttle_notch: int) -> void:
 	if is_instance_valid(selected_convoy):
-		selected_convoy.set_manual_command(command)
+		selected_convoy.set_driver_controls(direction, throttle_notch)
 
 func _on_upgrade_sell_requested(unit: Node2D, convoy: Node2D, refund: int) -> void:
 	if is_instance_valid(convoy) and convoy.remove_car(unit):

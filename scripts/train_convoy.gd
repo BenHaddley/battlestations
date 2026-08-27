@@ -47,7 +47,8 @@ var route_length := 0.0
 var route_distance := 0.0
 var smoke_timer: float = 0.0
 var current_speed: float = 0.0 ## Signed. Positive is route-forward, negative reverse.
-var manual_command: int = 0 ## -1 reverse, 0 automatic cruise, +1 forward boost.
+var requested_direction: int = 0 ## Reverser: -1 REV, 0 N, +1 FWD.
+var throttle_notch: int = 1 ## 0 BRAKE, 1 COAST, 2–5 increasing manual power.
 var cruise_direction: int = 1
 var capped: bool = false
 var drag_active: bool = false
@@ -88,8 +89,12 @@ func _process(delta: float) -> void:
 
 func _update_speed(delta: float) -> void:
 	var target_speed := cruise_speed * cruise_direction
-	if manual_command != 0:
-		target_speed = max_speed * manual_command
+	if throttle_notch == 0:
+		target_speed = 0.0
+	elif requested_direction != 0 and throttle_notch >= 2:
+		var power_fraction := float(throttle_notch - 1) / 4.0
+		var powered_speed := lerpf(cruise_speed, max_speed, power_fraction)
+		target_speed = powered_speed * requested_direction
 	var current_sign := signi(current_speed)
 	var target_sign := signi(target_speed)
 	var rate := acceleration
@@ -102,11 +107,21 @@ func _update_speed(delta: float) -> void:
 	elif target_sign < 0:
 		rate = reverse_acceleration
 	current_speed = move_toward(current_speed, target_speed, rate * delta)
-	if is_zero_approx(current_speed) and manual_command != 0:
-		cruise_direction = manual_command
+	if is_zero_approx(current_speed) and requested_direction != 0 and throttle_notch >= 2:
+		cruise_direction = requested_direction
 
+## Compatibility helper for older callers and tests. New UI should use
+## set_driver_controls() so direction and power remain separate intentions.
 func set_manual_command(command: int) -> void:
-	manual_command = clampi(command, -1, 1)
+	var normalized := clampi(command, -1, 1)
+	set_driver_controls(normalized, 5 if normalized != 0 else 1)
+
+func set_driver_controls(direction: int, notch: int) -> void:
+	requested_direction = clampi(direction, -1, 1)
+	throttle_notch = clampi(notch, 0, 5)
+
+func release_driver_controls() -> void:
+	set_driver_controls(0, 1)
 
 func set_selected(value: bool) -> void:
 	selected = value

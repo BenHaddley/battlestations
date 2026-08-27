@@ -124,10 +124,15 @@ used to describe. A train's total weight is the sum of every attached car's `wei
 `effective_capacity()` (1000, or 1500 with a Tender coupled as `followers[0]`)
 *before* appending the car, and simply returns `false` — refusing the attachment
 entirely, refunding its cost — if it would exceed capacity. There is no partial
-weight penalty. Each train cruises automatically and can be selected to receive a
-temporary forward or reverse command. Signed speed approaches the requested speed
-using separate acceleration, deceleration and reverse-acceleration values; an
-opposite command always brakes through zero instead of flipping instantly.
+weight penalty. Each train cruises automatically and can be selected to open a
+custom-drawn locomotive control stand. Its REV/N/FWD reverser is separate from the
+six-position BRAKE/COAST/POWER 1/POWER 2/POWER 3/FULL throttle. BRAKE targets zero,
+COAST restores automatic cruise, and the four power steps interpolate from cruise
+to configured maximum speed in the requested direction. Signed speed still uses
+separate acceleration, deceleration and reverse-acceleration values; an opposite
+direction always brakes through zero instead of flipping instantly. The stand reads
+actual velocity for its speed bars and movement-direction lamp, independently of
+the requested controls.
 
 Cars don't have independent physics. The engine and every car sample the closed
 route at fixed distance offsets. Before advancing, the convoy validates all sampled

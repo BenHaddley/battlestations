@@ -56,6 +56,16 @@ func _test_convoy_spacing_and_reverse() -> void:
 	convoy._advance_safely(convoy.current_speed)
 	_check(convoy.route_distance != distance_before, "reversing convoy did not move along route")
 	_check(convoy._positions_valid_at(convoy.route_distance, convoy.followers.size()), "reverse movement caused consist overlap")
+	convoy.current_speed = convoy.max_speed
+	convoy.set_driver_controls(0, 0)
+	convoy._update_speed(0.5)
+	_check(convoy.current_speed < convoy.max_speed, "BRAKE notch did not actively decelerate")
+	convoy.current_speed = convoy.cruise_speed
+	convoy.set_driver_controls(1, 2)
+	convoy._update_speed(0.5)
+	_check(convoy.current_speed > convoy.cruise_speed, "POWER 1 did not add light acceleration")
+	convoy.release_driver_controls()
+	_check(convoy.requested_direction == 0 and convoy.throttle_notch == 1, "releasing driver controls did not restore automatic COAST")
 	convoy.queue_free()
 
 func _test_campaign_track_library() -> void:
@@ -114,10 +124,15 @@ func _test_main_scene_train_integration() -> void:
 	if not main.convoys.is_empty():
 		_check(main.convoys[0].car_count() >= 1, "starter car was rejected or missing")
 		main._select_convoy(main.convoys[0])
-		_check(main.train_control_panel.visible, "engine selection did not reveal train controls")
-		main._on_train_command_changed(1)
-		_check(main.convoys[0].manual_command == 1, "forward UI command did not reach selected train")
+		await get_tree().create_timer(0.2).timeout
+		_check(main.train_control_panel._expansion > 0.9, "engine selection did not expand train controls")
+		_check(main.train_control_panel.find_children("*", "Button", true, false).is_empty(), "train stand still contains generic Godot buttons")
+		main.train_control_panel._set_reverser(-1)
+		main.train_control_panel._set_throttle(3)
+		_check(main.convoys[0].requested_direction == -1 and main.convoys[0].throttle_notch == 3, "physical reverser/throttle controls did not reach selected train")
+		_check(main.train_control_panel._nearest_throttle(166.0) == 0 and main.train_control_panel._nearest_throttle(368.5) == 5, "throttle click targets do not snap to end notches")
 		main._clear_train_selection()
-		_check(not main.train_control_panel.visible, "train controls remained after deselection")
+		await get_tree().create_timer(0.2).timeout
+		_check(main.train_control_panel._expansion < 0.1, "train controls did not collapse after deselection")
 	main.queue_free()
 	await get_tree().process_frame
