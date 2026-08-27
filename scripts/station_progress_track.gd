@@ -15,7 +15,7 @@ var _progress_tween: Tween
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	custom_minimum_size = Vector2(0.0, 55.0)
+	custom_minimum_size = Vector2(0.0, 38.0)
 
 func set_progress(value: float, animate := true) -> void:
 	var next_progress := clampf(value, 0.0, 1.0)
@@ -60,7 +60,7 @@ func _draw() -> void:
 
 	_draw_flag(Vector2(left, track_y), false)
 	_draw_flag(Vector2(right, track_y), true)
-	_draw_locomotive(Vector2(lerpf(left, right, _display_progress), track_y - 12.0))
+	_draw_locomotive(Vector2(lerpf(left, right, _display_progress), track_y + 5.0))
 
 func _draw_checkpoint(at: Vector2) -> void:
 	draw_line(at + Vector2(0.0, -8.0), at + Vector2(0.0, -16.0), Color("17100d"), 2.0)

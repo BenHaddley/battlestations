@@ -4,6 +4,7 @@ extends Node2D
 ## near.
 
 const TrainConvoyScene := preload("res://scenes/TrainConvoy.tscn")
+const NEW_BOARD_CAR_SCALE := Vector2(0.54, 0.54)
 
 @onready var spawner: EnemySpawner = $EnemySpawner
 @onready var track: TrackRenderer = $Track
@@ -125,6 +126,7 @@ func _seed_tabletop() -> void:
 		var car: Node2D = tower.scene.instantiate()
 		car.set_meta("tower_data", tower)
 		trains.add_child(car)
+		car.scale = NEW_BOARD_CAR_SCALE
 		_apply_car_palette(car, _car_palette_cursor)
 		_car_palette_cursor += 1
 		convoy.attach_car(car)
@@ -151,6 +153,7 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> voi
 	var car: Node2D = tower.scene.instantiate()
 	car.set_meta("tower_data", tower)
 	trains.add_child(car)
+	car.scale = NEW_BOARD_CAR_SCALE
 	_apply_car_palette(car, _car_palette_cursor)
 	_car_palette_cursor += 1
 	if not target_convoy.attach_car(car):

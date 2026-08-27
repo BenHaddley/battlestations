@@ -3,14 +3,15 @@ extends Control
 ## All measurements mirror the live TrackRenderer, EnemySpawner and
 ## BattlefieldOverlay values so replacement artwork can be aligned exactly.
 
-const BOARD_TEXTURE := preload("res://assets/sprites/board/THE_BOARD.png")
+const BOARD_TEXTURE := preload("res://assets/the_new_map.png")
 const FONT := preload("res://assets/fonts/ArchitectsDaughter-Regular.ttf")
-const SOURCE_SIZE := Vector2(2100.0, 1920.0)
-const TRACK_BOUNDS := Rect2(-330.0, -270.0, 660.0, 810.0)
-const TRACK_STEP := 90.0
-const LANE_X := [-350.0, -235.0, -118.0, 0.0, 118.0, 235.0, 350.0]
-const LANE_TOP := -335.0
-const LANE_BOTTOM := 665.0
+const SOURCE_SIZE := Vector2(3840.0, 2160.0)
+const BOARD_WORLD_SCALE := 0.438596
+const TRACK_BOUNDS := Rect2(-262.0, -377.0, 524.0, 720.5)
+const TRACK_STEP := 65.5
+const LANE_X := [-262.0, -196.5, -131.0, -65.5, 0.0, 65.5, 131.0, 196.5, 262.0]
+const LANE_TOP := -401.0
+const LANE_BOTTOM := 380.0
 
 var board_rect := Rect2()
 var board_scale := 1.0
@@ -42,7 +43,8 @@ func _draw() -> void:
 	_draw_legend()
 
 func _screen_from_world(world: Vector2) -> Vector2:
-	return board_rect.position + (world + SOURCE_SIZE * 0.5) * board_scale
+	var source_pixel := world / BOARD_WORLD_SCALE + SOURCE_SIZE * 0.5
+	return board_rect.position + source_pixel * board_scale
 
 func _draw_track_grid() -> void:
 	var bounds_top_left := _screen_from_world(TRACK_BOUNDS.position)
@@ -85,8 +87,8 @@ func _draw_spider_lanes() -> void:
 		var finish := _screen_from_world(Vector2(lane_x, LANE_BOTTOM))
 		draw_dashed_line(start, finish, Color(1.0, 0.15, 0.55, 0.92), 3.0, 10.0)
 		_draw_tag("LANE %d" % (index + 1), start + Vector2(-27.0, -17.0), Color("ff3f91"), 15)
-	var danger_a := _screen_from_world(Vector2(-390.0, LANE_BOTTOM))
-	var danger_b := _screen_from_world(Vector2(390.0, LANE_BOTTOM))
+	var danger_a := _screen_from_world(Vector2(-295.0, LANE_BOTTOM))
+	var danger_b := _screen_from_world(Vector2(295.0, LANE_BOTTOM))
 	draw_line(danger_a, danger_b, Color("ff5b25"), 5.0)
 	_draw_tag("STATION LEAK LINE", danger_a + Vector2(6.0, -8.0), Color("ff7a3c"), 18)
 
@@ -95,8 +97,8 @@ func _draw_header() -> void:
 	draw_rect(panel, Color(0.04, 0.055, 0.045, 0.93), true)
 	draw_rect(panel, Color("f7da82"), false, 4.0)
 	draw_string(FONT, panel.position + Vector2(18.0, 32.0), "ARTIST BOARD GRID", HORIZONTAL_ALIGNMENT_LEFT, -1, 27, Color("fff0b2"))
-	draw_string(FONT, panel.position + Vector2(18.0, 60.0), "Source canvas. 2100 by 1920 pixels", HORIZONTAL_ALIGNMENT_LEFT, -1, 19, Color.WHITE)
-	draw_string(FONT, panel.position + Vector2(18.0, 86.0), "Rail centres. 90 pixels apart", HORIZONTAL_ALIGNMENT_LEFT, -1, 19, Color("75f4ff"))
+	draw_string(FONT, panel.position + Vector2(18.0, 60.0), "Source canvas. 3840 by 2160 pixels", HORIZONTAL_ALIGNMENT_LEFT, -1, 19, Color.WHITE)
+	draw_string(FONT, panel.position + Vector2(18.0, 86.0), "Nine by twelve gameplay grid", HORIZONTAL_ALIGNMENT_LEFT, -1, 19, Color("75f4ff"))
 
 func _draw_legend() -> void:
 	var panel := Rect2(size.x - 395.0, size.y - 118.0, 375.0, 98.0)

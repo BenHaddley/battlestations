@@ -50,7 +50,7 @@ Passenger Coach, Brake Van, and Tender are non-combat utility cars.
 | Tender | 50 | 50 | — | — | none — +500 capacity behind the engine |
 
 Range is the infowiki cards' `NxN` grid notation converted to the shipped world-unit
-radius as `radius = (N / 2) * path_step` (`path_step = 90`) — this conversion factor
+radius as `radius = (N / 2) * path_step` (`path_step = 65.5`) — this conversion factor
 isn't stated on the cards themselves, so treat it as a judgment call, not a recovered
 fact. All four combat cars fire a homing projectile that flies at a fixed speed toward
 its locked target's current position each frame (Gunner Car 900 u/s, Chaingunner Car
@@ -197,8 +197,8 @@ uses the full six-dot spider. During combat one dot disappears after each pair o
 one-damage hits until the final one-dot form, which takes five hits to kill. Each
 stage change has a short squash and paper-puff transformation beat.
 It uses one 1500×1500 source frame at a normalized visual scale rather than the
-combined 3000×1500 sheet. Each spawn is assigned uniformly to one of seven fixed
-columns and travels straight from the top to the bottom of the courtyard, following
+combined 3000×1500 sheet. Each spawn is assigned uniformly to one of nine fixed
+columns on the new 9×12 courtyard and travels straight from the top to the bottom, following
 a Plants-vs.-Zombies-style lane model. Reaching the bottom removes the spider, counts
 it as cleared for wave progression, awards no currency, and damages the station by
 one health.

@@ -66,14 +66,14 @@ func _build_elements() -> void:
 		return
 	var stack := VBoxContainer.new()
 	stack.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	stack.offset_left = 10.0
-	stack.offset_top = 8.0
-	stack.offset_right = -10.0
-	stack.offset_bottom = -8.0
+	stack.offset_left = 8.0
+	stack.offset_top = 5.0
+	stack.offset_right = -8.0
+	stack.offset_bottom = -5.0
 	stack.add_theme_constant_override("separation", 1)
 	add_child(stack)
 
-	title_label = _label(title_text, 17, Color("4e1716"))
+	title_label = _label(title_text, 14, Color("4e1716"))
 	title_label.rotation = -0.012
 	stack.add_child(title_label)
 
@@ -82,19 +82,19 @@ func _build_elements() -> void:
 	track.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	stack.add_child(track)
 
-	phase_label = _label(phase_text, 30, Color("fff7dd"), 4)
+	phase_label = _label(phase_text, 23, Color("fff7dd"), 3)
 	phase_label.rotation = 0.012
 	stack.add_child(phase_label)
-	status_label = _label(status_text, 17, Color("fff5dc"), 2)
+	status_label = _label(status_text, 14, Color("fff5dc"), 2)
 	stack.add_child(status_label)
-	subtitle_label = _label(subtitle_text, 11, Color("f7edd5"), 1)
+	subtitle_label = _label(subtitle_text, 9, Color("f7edd5"), 1)
 	stack.add_child(subtitle_label)
 
 	skip_button = Button.new()
-	skip_button.custom_minimum_size = Vector2(0.0, 31.0)
+	skip_button.custom_minimum_size = Vector2(0.0, 25.0)
 	skip_button.text = "SKIP WAIT"
 	skip_button.add_theme_font_override("font", FONT)
-	skip_button.add_theme_font_size_override("font_size", 15)
+	skip_button.add_theme_font_size_override("font_size", 13)
 	skip_button.add_theme_color_override("font_color", Color("fff2d2"))
 	skip_button.add_theme_stylebox_override("normal", _button_style(Color("79201b")))
 	skip_button.add_theme_stylebox_override("hover", _button_style(Color("a52d24")))

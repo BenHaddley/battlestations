@@ -52,6 +52,7 @@ const SCHEDULE_BATTLE_COLOR := Color(0.72, 0.16, 0.1, 1)
 const PORTRAIT_STATION := preload("res://assets/sprites/ui/portrait/portrait_station.png")
 const PORTRAIT_BATTLE := preload("res://assets/sprites/ui/portrait/portrait_battle.png")
 const StationProgressPanelScene := preload("res://scenes/ui/StationProgressPanel.tscn")
+const NEW_UI_TEXTURE := preload("res://assets/the_new_ui.png")
 
 var spawner: EnemySpawner
 var station: Station
@@ -80,6 +81,7 @@ func configure(enemy_spawner: EnemySpawner, defended_station: Station, active_tr
 	PhaseManager.configure(spawner)
 
 func _ready() -> void:
+	_install_new_ui_layout()
 	_install_station_progress_panel()
 	_style_train_yard()
 	for index in range(TOWER_BUTTONS.size()):
@@ -96,10 +98,74 @@ func _ready() -> void:
 	_create_drag_preview()
 	_on_phase_changed(PhaseManager.phase_label().to_lower())
 
+## The supplied UI is a transparent illustrated frame. It sits behind live
+## Controls, while the old opaque web panels are cleared so the authored
+## cutouts remain visible and every button/label stays interactive.
+func _install_new_ui_layout() -> void:
+	var illustrated_frame := TextureRect.new()
+	illustrated_frame.name = "NewIllustratedUi"
+	illustrated_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	illustrated_frame.texture = NEW_UI_TEXTURE
+	illustrated_frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	illustrated_frame.stretch_mode = TextureRect.STRETCH_SCALE
+	illustrated_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	illustrated_frame.z_index = -90
+	add_child(illustrated_frame)
+	move_child(illustrated_frame, 0)
+
+	var transparent := StyleBoxEmpty.new()
+	var left_panel: PanelContainer = $LeftPanel
+	var hp_panel: PanelContainer = $HpRail
+	var right_panel: PanelContainer = $RightPanel
+	left_panel.add_theme_stylebox_override("panel", transparent)
+	hp_panel.add_theme_stylebox_override("panel", transparent)
+	right_panel.add_theme_stylebox_override("panel", transparent)
+	left_panel.position = Vector2(8.0, 7.0)
+	left_panel.size = Vector2(342.0, 706.0)
+	hp_panel.position = Vector2(932.0, 8.0)
+	hp_panel.size = Vector2(66.0, 704.0)
+	right_panel.position = Vector2(998.0, 7.0)
+	right_panel.size = Vector2(274.0, 706.0)
+
+	$BoardFrame.visible = false
+	$LeftPanel/Frame.visible = false
+	$HpRail/Frame.visible = false
+	$RightPanel/Frame.visible = false
+	$RightPanel/Margin/VBox/ControlsPanel/Frame.visible = false
+	$RightPanel/Margin/VBox/PortraitPanel/Frame.visible = false
+	$RightPanel/Margin/VBox/TodoPanel/Frame.visible = false
+
+	var controls_panel: PanelContainer = $RightPanel/Margin/VBox/ControlsPanel
+	var portrait_panel: PanelContainer = $RightPanel/Margin/VBox/PortraitPanel
+	var todo_panel: PanelContainer = $RightPanel/Margin/VBox/TodoPanel
+	var currency_panel: PanelContainer = $LeftPanel/Margin/VBox/CurrencyRow
+	controls_panel.add_theme_stylebox_override("panel", transparent)
+	portrait_panel.add_theme_stylebox_override("panel", transparent)
+	todo_panel.add_theme_stylebox_override("panel", transparent)
+	currency_panel.add_theme_stylebox_override("panel", transparent)
+	controls_panel.custom_minimum_size.y = 64.0
+	portrait_panel.custom_minimum_size.y = 184.0
+	todo_panel.custom_minimum_size.y = 224.0
+
+	# The authored lightning and pause symbols remain visible underneath these
+	# invisible hit targets, so they behave as controls without doubled artwork.
+	speed_button.flat = true
+	pause_button.flat = true
+	$RightPanel/Margin/VBox/ControlsPanel/Margin/ControlsRow/SpeedButton/Icon.visible = false
+	$RightPanel/Margin/VBox/ControlsPanel/Margin/ControlsRow/PauseButton/Icon.visible = false
+	$LeftPanel/Margin/VBox/CurrencyRow/HBox/Icon.visible = false
+	# Invisible placeholders retain the exact space occupied by artwork already
+	# present in the UI texture, preventing live content from colliding with it.
+	$HpRail/Margin/VBox/HpLabel.modulate.a = 0.0
+	$HpRail/Margin/VBox/HeartIcon.modulate.a = 0.0
+	$RightPanel/Margin/VBox/TodoPanel/Margin/VBox/TodoHeader.modulate.a = 0.0
+	$RightPanel/Margin/VBox/TodoPanel/Margin/VBox/TodoHeader.custom_minimum_size.y = 55.0
+
 func _install_station_progress_panel() -> void:
 	$RightPanel/Margin/VBox/SchedulePanel/Margin.visible = false
 	$RightPanel/Margin/VBox/SchedulePanel/Frame.visible = false
-	schedule_panel.custom_minimum_size.y = 205.0
+	schedule_panel.custom_minimum_size.y = 148.0
+	schedule_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	station_progress_panel = StationProgressPanelScene.instantiate()
 	station_progress_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	schedule_panel.add_child(station_progress_panel)

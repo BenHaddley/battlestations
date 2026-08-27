@@ -9,9 +9,11 @@ class_name TrackRenderer
 
 @export var rail_texture: Texture2D
 @export var curve_texture: Texture2D
-@export var tile_scale: float = 0.135
-@export var path_step: float = 90.0
-@export var track_bounds: Rect2 = Rect2(-330.0, -270.0, 660.0, 810.0)
+@export var tile_scale: float = 0.09
+@export var path_step: float = 65.5
+## Nine columns by twelve rows, registered to the square courtyard in
+## the_new_map.png. Values are rail-centre positions rather than tile edges.
+@export var track_bounds: Rect2 = Rect2(-262.0, -377.0, 524.0, 720.5)
 ## Minimum tiles a placed loop must have to comfortably hold an engine plus
 ## a few cars (car_spacing 170 / path_step 90 ≈ 2 tiles per car).
 @export var minimum_route_tiles: int = 10
@@ -209,7 +211,7 @@ func _render_route(route_points: PackedVector2Array) -> void:
 
 		if not previous_direction.is_equal_approx(-next_direction):
 			tile.texture = curve_texture
-			tile.scale = Vector2(0.125, 0.125)
+			tile.scale = Vector2(tile_scale, tile_scale)
 			tile.rotation = _curve_rotation(previous_direction, next_direction)
 			shadow.texture = curve_texture
 			shadow.scale = tile.scale * 1.08
@@ -218,9 +220,9 @@ func _render_route(route_points: PackedVector2Array) -> void:
 			tile.texture = rail_texture
 			# Source art is vertical: keep its width narrow while extending its
 			# length slightly beyond the path step to eliminate seams.
-			tile.scale = Vector2(tile_scale, 0.125)
+			tile.scale = Vector2(tile_scale, tile_scale)
 			tile.rotation = PI * 0.5 if absf(next_direction.x) > 0.5 else 0.0
-			shadow.scale = Vector2(tile_scale * 1.12, 0.13)
+			shadow.scale = Vector2(tile_scale * 1.12, tile_scale * 1.05)
 			shadow.rotation = tile.rotation
 		add_child(shadow)
 		add_child(tile)

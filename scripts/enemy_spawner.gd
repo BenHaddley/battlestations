@@ -8,9 +8,9 @@ signal wave_started(wave_number: int)
 signal wave_cleared(wave_number: int)
 
 @export var enemy_prefabs: Array[PackedScene] = []
-@export var lane_x_positions: PackedFloat32Array = PackedFloat32Array([-350.0, -235.0, -118.0, 0.0, 118.0, 235.0, 350.0])
-@export var spawn_y: float = -520.0
-@export var leak_y: float = 720.0
+@export var lane_x_positions: PackedFloat32Array = PackedFloat32Array([-262.0, -196.5, -131.0, -65.5, 0.0, 65.5, 131.0, 196.5, 262.0])
+@export var spawn_y: float = -425.0
+@export var leak_y: float = 380.0
 @export_range(20.0, 30.0, 0.5) var journey_duration_seconds: float = 25.0
 
 @export_group("Attributes")
@@ -91,6 +91,9 @@ func _spawn_enemy() -> void:
 	var profile := EnemyRoster.pick(campaign_level)
 	if enemy.has_method("configure_archetype"):
 		enemy.configure_archetype(profile, current_wave, campaign_level)
+	# The new courtyard uses 65.5-unit cells instead of the previous 90-unit
+	# board. Scale the complete enemy body, including collision, with the art.
+	enemy.scale = Vector2(0.54, 0.54)
 	var lane_x: float = lane_x_positions[randi() % lane_x_positions.size()]
 	enemy.global_position = Vector2(lane_x, spawn_y)
 	if enemy.has_method("configure_difficulty") and String(profile.get("id", "generic")) == "generic":

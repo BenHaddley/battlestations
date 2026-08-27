@@ -9,7 +9,7 @@ z_index = 15
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2")
-scale = Vector2(0.16, 0.16)
+scale = Vector2(0.085, 0.085)
 
 [node name="NameLabel" type="Label" parent="."]
 offset_left = -70.0

@@ -20,8 +20,8 @@ class_name TrainConvoy
 @export var coast_stop_time: float = 5.0
 ## Cars render at roughly 112.5 world units. This leaves a visible coupling gap
 ## on straights and enough clearance while two cars straddle a square corner.
-@export var car_spacing: float = 170.0
-@export var attachment_radius: float = 115.0
+@export var car_spacing: float = 82.0
+@export var attachment_radius: float = 76.0
 @export var smoke_texture: Texture2D
 
 @onready var engine: Sprite2D = $Engine
@@ -29,7 +29,7 @@ class_name TrainConvoy
 ## Turret art occupies a 1500px square at 0.085 scale (127.5 world units).
 ## Engine liveries exist as both 750px and 1500px sources, so derive their
 ## scale from the texture instead of inheriting the old 750px-only value.
-const ENGINE_TOKEN_SIZE := 127.5
+const ENGINE_TOKEN_SIZE := 68.0
 
 var path: PackedVector2Array
 var path_index: int = 0

@@ -5,7 +5,7 @@
 ## Status
 
 The active codebase is a Godot 4 scaffold port of the archived Unity prototype. Its
-main scene contains one fitted board, seven vertical enemy lanes, a randomized bounded railway, one enemy
+main scene contains one fitted 9×12 board, nine vertical enemy lanes, a randomized bounded railway, one enemy
 spawner, a defended station, and a two-gutter HUD/shop. The port closely preserves the eleven original Unity
 gameplay scripts as GDScript plus four autoload managers.
 
@@ -73,7 +73,8 @@ kept alongside them.
 
 ### Current visual language
 
-- Crooked illustrated wooden cabinets frame a camera-enlarged courtyard, with the
+- The separated `the_new_map.png` and `the_new_ui.png` layers now register a
+  3840×2160 authored composition to the 1280×720 viewport. Crooked illustrated cabinets frame the courtyard, with the
   environmental painting deliberately secondary to the tabletop play area.
 - The left panel is a scrollable Train Yard list of illustrated shop rows (icon, name,
   Delta price pill) rather than a fixed grid, so the roster can grow without the tray

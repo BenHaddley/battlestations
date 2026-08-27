@@ -1,6 +1,6 @@
-[gd_scene load_steps=50 format=3]
+[gd_scene load_steps=51 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/board/THE_BOARD.png" id="1"]
+[ext_resource type="Texture2D" path="res://assets/the_new_map.png" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
 [ext_resource type="Script" path="res://scripts/enemy_spawner.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/menu.gd" id="5"]
@@ -262,6 +262,7 @@ tracks = Array[AudioStream]([ExtResource("17"), ExtResource("65")])
 [node name="Board" type="Sprite2D" parent="."]
 z_index = -100
 texture = ExtResource("1")
+scale = Vector2(0.438596, 0.438596)
 
 [node name="BattlefieldTiles" type="Node2D" parent="."]
 z_index = -50
@@ -279,7 +280,7 @@ z_index = -20
 script = ExtResource("13")
 
 [node name="Station" parent="." instance=ExtResource("9")]
-position = Vector2(0, 800)
+position = Vector2(0, 420)
 
 [node name="Trains" type="Node2D" parent="."]
 
