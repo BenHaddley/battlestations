@@ -122,6 +122,15 @@ func _test_music_playlist_rotation() -> void:
 		first_cycle[playlist.play_history[index]] = true
 	_check(first_cycle.size() == 3, "music playlist repeated before playing every track")
 	playlist.queue_free()
+	var main = MainScene.instantiate()
+	var music_player := main.get_node("MusicPlayer") as AudioStreamPlayer
+	_check(music_player.tracks.size() == 20, "gameplay playlist should contain all 20 songs")
+	var unique_paths: Dictionary = {}
+	for track in music_player.tracks:
+		unique_paths[track.resource_path] = true
+		_check(track.resource_path.begins_with("res://assets/audio/songs/"), "gameplay playlist contains a track outside the songs folder")
+	_check(unique_paths.size() == 20, "gameplay playlist contains duplicate songs")
+	main.queue_free()
 
 func _test_station_attackers() -> void:
 	var station: Station = StationScene.instantiate()

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://f4x1g54qy8fv"
+path="res://.godot/imported/Jesse James.mp3-f7d59c2c38accb992f7765d845360039.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/songs/Jesse James.mp3"
+dest_files=["res://.godot/imported/Jesse James.mp3-f7d59c2c38accb992f7765d845360039.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

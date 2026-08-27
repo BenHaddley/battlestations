@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://ci84dqb48bkvr"
+path="res://.godot/imported/Foggy Mountain Special.mp3-ed178883f3395d5314637f59ac9381e9.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/songs/Foggy Mountain Special.mp3"
+dest_files=["res://.godot/imported/Foggy Mountain Special.mp3-ed178883f3395d5314637f59ac9381e9.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

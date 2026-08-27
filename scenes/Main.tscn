@@ -1,4 +1,4 @@
-[gd_scene load_steps=58 format=3]
+[gd_scene load_steps=69 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/the_new_map.png" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="3"]
@@ -11,7 +11,6 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/board/Rail Curve.png" id="10"]
 [ext_resource type="Script" path="res://scripts/battlefield_overlay.gd" id="13"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Gunner Top 1.png" id="15"]
-[ext_resource type="AudioStream" path="res://assets/audio/Train 45.mp3" id="17"]
 [ext_resource type="Script" path="res://scripts/music_playlist.gd" id="66"]
 [ext_resource type="AudioStream" path="res://assets/audio/songs/Clinch Mountan Backstep.mp3" id="68"]
 [ext_resource type="AudioStream" path="res://assets/audio/songs/Done Gone.mp3" id="69"]
@@ -21,6 +20,18 @@
 [ext_resource type="AudioStream" path="res://assets/audio/songs/Roanoke.mp3" id="73"]
 [ext_resource type="AudioStream" path="res://assets/audio/songs/Sally Ann.mp3" id="74"]
 [ext_resource type="AudioStream" path="res://assets/audio/songs/St. Anne's Reel.mp3" id="75"]
+[ext_resource type="AudioStream" path="res://assets/audio/songs/Come Along Jody.mp3" id="76"]
+[ext_resource type="AudioStream" path="res://assets/audio/songs/Dear Old Dixie.mp3" id="77"]
+[ext_resource type="AudioStream" path="res://assets/audio/songs/Foggy Mountain Special.mp3" id="78"]
+[ext_resource type="AudioStream" path="res://assets/audio/songs/Home Sweet Home.mp3" id="79"]
+[ext_resource type="AudioStream" path="res://assets/audio/songs/Hot Burrito Breakdown.mp3" id="80"]
+[ext_resource type="AudioStream" path="res://assets/audio/songs/Jerusalem's Ridge.mp3" id="81"]
+[ext_resource type="AudioStream" path="res://assets/audio/songs/Jesse James.mp3" id="82"]
+[ext_resource type="AudioStream" path="res://assets/audio/songs/Leather Britches.mp3" id="83"]
+[ext_resource type="AudioStream" path="res://assets/audio/songs/Little Rock Getaway.mp3" id="84"]
+[ext_resource type="AudioStream" path="res://assets/audio/songs/Louisville Breakdown.mp3" id="85"]
+[ext_resource type="AudioStream" path="res://assets/audio/songs/Red Apple Rag.mp3" id="86"]
+[ext_resource type="AudioStream" path="res://assets/audio/songs/Steel Guitar Rag.mp3" id="87"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/COAL CANNON BASE.png" id="25"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Ballast Blaster.png" id="26"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Passenger Coach.png" id="27"]
@@ -264,7 +275,7 @@ zoom = Vector2(0.76, 0.76)
 [node name="MusicPlayer" type="AudioStreamPlayer" parent="."]
 volume_db = -8.0
 script = ExtResource("66")
-tracks = Array[AudioStream]([ExtResource("17"), ExtResource("68"), ExtResource("69"), ExtResource("70"), ExtResource("71"), ExtResource("72"), ExtResource("73"), ExtResource("74"), ExtResource("75")])
+tracks = Array[AudioStream]([ExtResource("68"), ExtResource("69"), ExtResource("70"), ExtResource("71"), ExtResource("72"), ExtResource("73"), ExtResource("74"), ExtResource("75"), ExtResource("76"), ExtResource("77"), ExtResource("78"), ExtResource("79"), ExtResource("80"), ExtResource("81"), ExtResource("82"), ExtResource("83"), ExtResource("84"), ExtResource("85"), ExtResource("86"), ExtResource("87")])
 
 [node name="Board" type="Sprite2D" parent="."]
 z_index = -100

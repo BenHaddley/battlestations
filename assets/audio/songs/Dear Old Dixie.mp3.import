@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bp7u2kgj4t08w"
+path="res://.godot/imported/Dear Old Dixie.mp3-5651d1382f60269663549f4ef8640d93.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/songs/Dear Old Dixie.mp3"
+dest_files=["res://.godot/imported/Dear Old Dixie.mp3-5651d1382f60269663549f4ef8640d93.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
