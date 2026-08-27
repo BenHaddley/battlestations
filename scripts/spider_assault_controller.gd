@@ -6,6 +6,29 @@ class_name SpiderAssaultController
 const FONT := preload("res://assets/fonts/ArchitectsDaughter-Regular.ttf")
 const DialogueOverlayScript := preload("res://scripts/dialogue_overlay.gd")
 
+class WebOrb extends Control:
+	var filled := false
+	var gaining := false
+
+	func _init() -> void:
+		custom_minimum_size = Vector2(17, 22)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func set_state(is_filled: bool, is_gaining: bool = false) -> void:
+		filled = is_filled
+		gaining = is_gaining
+		queue_redraw()
+
+	func _draw() -> void:
+		var center := size * 0.5
+		var radius := minf(size.x, size.y) * 0.38
+		if gaining:
+			draw_circle(center, radius + 3.0, Color(0.72, 0.31, 0.9, 0.25))
+		draw_circle(center, radius, Color("782b91") if filled else Color("514952"))
+		draw_arc(center, radius, 0.0, TAU, 20, Color("24102b"), 2.0, true)
+		draw_line(center + Vector2(-radius * 0.7, 0), center + Vector2(radius * 0.7, 0), Color(0.9, 0.72, 0.96, 0.65), 1.0)
+		draw_line(center + Vector2(0, -radius * 0.7), center + Vector2(0, radius * 0.7), Color(0.9, 0.72, 0.96, 0.65), 1.0)
+
 const STARTING_WEB := 5.0
 const MAX_WEB := 10.0
 const WEB_REGEN_SECONDS := 2.4
@@ -51,7 +74,7 @@ var swarm_button: Button
 var spider_buttons: Array[Button] = []
 var entrance_buttons: Array[Button] = []
 var hp_segments: Array[ColorRect] = []
-var web_orbs: Array[Label] = []
+var web_orbs: Array[WebOrb] = []
 var selected_name_label: Label
 var selected_detail_label: Label
 var selected_cost_label: Label
@@ -115,7 +138,7 @@ func _build_ui() -> void:
 	left.set_anchors_preset(Control.PRESET_LEFT_WIDE)
 	left.offset_left = 8
 	left.offset_top = 8
-	left.offset_right = 312
+	left.offset_right = 342
 	left.offset_bottom = -8
 	left.mouse_filter = Control.MOUSE_FILTER_STOP
 	left.add_theme_stylebox_override("panel", _panel_style(Color("32133f"), Color("120917"), 7))
@@ -163,10 +186,10 @@ func _build_ui() -> void:
 	var assault_header := PanelContainer.new()
 	assault_header.custom_minimum_size.y = 60
 	assault_header.add_theme_stylebox_override("panel", _button_style(Color("4a1b58"), Color("120917")))
-	assault_header.add_child(_label("SPIDER ASSAULT", 27, HORIZONTAL_ALIGNMENT_CENTER, Color("fff0c5")))
+	assault_header.add_child(_label("SPIDER ASSAULT", 21, HORIZONTAL_ALIGNMENT_CENTER, Color("fff0c5")))
 	status.add_child(assault_header)
 	status.add_child(_label("OBJECTIVE", 16, HORIZONTAL_ALIGNMENT_CENTER, Color("563248")))
-	status.add_child(_label("DESTROY THE STATION.", 22, HORIZONTAL_ALIGNMENT_CENTER, Color("7e1420")))
+	status.add_child(_label("DESTROY THE STATION.", 17, HORIZONTAL_ALIGNMENT_CENTER, Color("7e1420")))
 	status.add_child(_divider())
 	hp_label = _label("STATION HP", 19, HORIZONTAL_ALIGNMENT_CENTER, Color("4b1920"))
 	status.add_child(hp_label)
@@ -185,8 +208,7 @@ func _build_ui() -> void:
 	web_row.add_theme_constant_override("separation", 2)
 	status.add_child(web_row)
 	for orb_index in range(int(MAX_WEB)):
-		var orb := _label("●", 20, HORIZONTAL_ALIGNMENT_CENTER, Color("6d2782"))
-		orb.custom_minimum_size.x = 18
+		var orb := WebOrb.new()
 		web_row.add_child(orb)
 		web_orbs.append(orb)
 	web_label = _label("", 18, HORIZONTAL_ALIGNMENT_CENTER, Color("3e174c"))
@@ -204,6 +226,9 @@ func _build_ui() -> void:
 	swarm_button.custom_minimum_size = Vector2(0, 112)
 	swarm_button.add_theme_font_override("font", FONT)
 	swarm_button.add_theme_font_size_override("font_size", 27)
+	swarm_button.add_theme_color_override("font_color", Color("fff0c5"))
+	swarm_button.add_theme_color_override("font_hover_color", Color("fff7dc"))
+	swarm_button.add_theme_color_override("font_disabled_color", Color("e8d6e9"))
 	swarm_button.add_theme_stylebox_override("normal", _round_button_style(Color("70258a"), Color("1b0922")))
 	swarm_button.add_theme_stylebox_override("hover", _round_button_style(Color("9b42b5"), Color("fff0a0")))
 	swarm_button.add_theme_stylebox_override("disabled", _round_button_style(Color("4b3b50"), Color("211825")))
@@ -214,6 +239,10 @@ func _build_ui() -> void:
 	pause.custom_minimum_size.y = 36
 	pause.add_theme_font_override("font", FONT)
 	pause.add_theme_font_size_override("font_size", 20)
+	pause.add_theme_color_override("font_color", Color("2b172c"))
+	pause.add_theme_color_override("font_hover_color", Color("6f2783"))
+	pause.add_theme_stylebox_override("normal", _button_style(Color("d9c89d"), Color("3b2240")))
+	pause.add_theme_stylebox_override("hover", _button_style(Color("f5e6bd"), Color("7f3196")))
 	pause.pressed.connect(func() -> void: main.menu._toggle_pause())
 	status.add_child(pause)
 
@@ -244,26 +273,49 @@ func _spider_card(index: int) -> Button:
 	var profile := EnemyRoster.by_id(String(card_data.id))
 	var button := Button.new()
 	button.custom_minimum_size.y = 82
-	button.text = "       %s\n       %s     %d WEB" % [String(card_data.name), String(card_data.role), int(card_data.cost)]
-	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	button.clip_text = true
+	button.text = ""
 	button.tooltip_text = "%s\nCost. %d Web.\n%s" % [String(card_data.name), int(card_data.cost), String(card_data.description)]
 	button.add_theme_font_override("font", FONT)
-	button.add_theme_font_size_override("font_size", 16)
 	button.add_theme_stylebox_override("normal", _button_style(Color("f1dfb1"), Color("3a2240")))
 	button.add_theme_stylebox_override("hover", _button_style(Color("fff0c4"), Color("9d45b3")))
 	button.add_theme_stylebox_override("disabled", _button_style(Color("b9aa9a"), Color("6e525b")))
 	button.pressed.connect(_select_spider.bind(index))
 	button.mouse_entered.connect(_hover_card.bind(button, true))
 	button.mouse_exited.connect(_hover_card.bind(button, false))
+	var row := HBoxContainer.new()
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 7
+	row.offset_top = 7
+	row.offset_right = -8
+	row.offset_bottom = -7
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_theme_constant_override("separation", 7)
+	button.add_child(row)
 	var icon := TextureRect.new()
-	icon.position = Vector2(7, 8)
-	icon.size = Vector2(62, 62)
+	icon.custom_minimum_size = Vector2(58, 58)
 	icon.texture = profile.get("walk_a")
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	button.add_child(icon)
+	row.add_child(icon)
+	var copy := VBoxContainer.new()
+	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	copy.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	copy.add_theme_constant_override("separation", -2)
+	row.add_child(copy)
+	var name_label := _label(String(card_data.name), 17, HORIZONTAL_ALIGNMENT_LEFT, Color("2b1723"))
+	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	copy.add_child(name_label)
+	var role_label := _label(String(card_data.role), 13, HORIZONTAL_ALIGNMENT_LEFT, Color("624656"))
+	role_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	role_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	copy.add_child(role_label)
+	var cost_label := _label("%d\nWEB" % int(card_data.cost), 15, HORIZONTAL_ALIGNMENT_CENTER, Color("632b76"))
+	cost_label.custom_minimum_size.x = 44
+	cost_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	cost_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(cost_label)
 	return button
 
 func _position_entrances() -> void:
@@ -366,7 +418,7 @@ func _refresh_status() -> void:
 	if web_label:
 		web_label.text = "%d / %d" % [floori(web), int(MAX_WEB)]
 	for orb_index in range(web_orbs.size()):
-		web_orbs[orb_index].add_theme_color_override("font_color", Color("7f2c99") if orb_index < floori(web) else Color("554b56"))
+		web_orbs[orb_index].set_state(orb_index < floori(web), orb_index == floori(web) and web < MAX_WEB)
 	if hp_label and station:
 		hp_label.text = "STATION HP  %d OF %d" % [station.current_health, station.max_health]
 		var hp_fraction := float(station.current_health) / maxf(float(station.max_health), 1.0)
