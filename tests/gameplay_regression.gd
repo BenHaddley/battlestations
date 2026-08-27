@@ -185,6 +185,15 @@ func _test_spider_assault() -> void:
 	await get_tree().process_frame
 	var assault: SpiderAssaultController = main.spider_assault_controller
 	_check(assault != null, "Spider Assault did not create its deployment controller")
+	_check(SpiderAssaultController.ENTRANCES.size() == 5, "Spider Assault should expose five roof entrances")
+	for entrance in SpiderAssaultController.ENTRANCES:
+		_check(is_equal_approx(float(entrance.world.y), -425.0), "Spider Assault still contains a side or bottom entrance")
+	_check(assault.entrance_buttons.size() == 5, "Spider Assault did not render all five roof entrances")
+	_check(assault.spider_buttons.size() == 5, "Spider Nest does not show all five spider roles")
+	_check(not main.menu.get_node("LeftPanel").visible and not main.menu.get_node("HpRail").visible and not main.menu.get_node("RightPanel").visible, "normal HUD overlaps the Spider Assault faction UI")
+	var nest_rect: Rect2 = assault.get_node("SpiderNest").get_rect()
+	_check(nest_rect.end.x <= 318.0, "Spider Nest overlaps the center board, rect is %s" % nest_rect)
+	_check(assault.get_node("AssaultStatus").get_rect().position.x >= 1030.0, "Spider Assault status panel overlaps the center board")
 	var assault_music := main.get_node("MusicPlayer") as AudioStreamPlayer
 	_check(assault_music.tracks.size() == 1, "Spider Assault did not replace the shuffled music playlist")
 	_check(assault_music.stream.resource_path.ends_with("Spider Assault - The Fun House.mp3"), "Spider Assault loaded the wrong level song")

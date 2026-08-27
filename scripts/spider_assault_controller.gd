@@ -1,7 +1,7 @@
 extends Control
 class_name SpiderAssaultController
 ## Reverse-mode challenge controller. The player spends regenerating Web to
-## deploy existing spider archetypes from four entrances around the station.
+## deploy existing spider archetypes from five entrances along the board roof.
 
 const FONT := preload("res://assets/fonts/ArchitectsDaughter-Regular.ttf")
 const DialogueOverlayScript := preload("res://scripts/dialogue_overlay.gd")
@@ -14,18 +14,19 @@ const SWARM_DURATION := 6.0
 const SWARM_COOLDOWN := 45.0
 
 const SPIDER_CARDS: Array[Dictionary] = [
-	{"id":"generic", "name":"BASIC", "role":"RELIABLE", "cost":1},
-	{"id":"baby", "name":"FAST", "role":"RUNNER", "cost":2},
-	{"id":"roller", "name":"ARMOURED", "role":"BLOCKS HITS", "cost":3},
-	{"id":"sturdy", "name":"HEAVY", "role":"TOUGH", "cost":5},
-	{"id":"rally", "name":"SPECIAL", "role":"RALLIES", "cost":6},
+	{"id":"generic", "name":"BASIC SPIDER", "role":"CHEAP ATTACKER", "description":"A reliable body for building a swarm.", "cost":1},
+	{"id":"baby", "name":"FAST SPIDER", "role":"QUICK PRESSURE", "description":"Quick and agile. Great for rushing gaps.", "cost":2},
+	{"id":"roller", "name":"TANK SPIDER", "role":"ABSORBS FIRE", "description":"Armoured and steady under defensive fire.", "cost":3},
+	{"id":"rally", "name":"WEB SPITTER", "role":"SUPPORT", "description":"Rallies nearby spiders through dangerous lanes.", "cost":4},
+	{"id":"sturdy", "name":"HEAVY SPIDER", "role":"BREAKTHROUGH", "description":"Slow, tough, and built for the final push.", "cost":5},
 ]
 
 const ENTRANCES: Array[Dictionary] = [
-	{"name":"NORTH TUNNEL", "world":Vector2(-150, -425)},
-	{"name":"EAST VENT", "world":Vector2(270, 30)},
-	{"name":"SOUTH TUNNEL", "world":Vector2(255, 310)},
-	{"name":"MAINTENANCE", "world":Vector2(-270, 60)},
+	{"name":"TOP LEFT", "world":Vector2(-250, -425)},
+	{"name":"CENTER LEFT", "world":Vector2(-125, -425)},
+	{"name":"TOP CENTER", "world":Vector2(0, -425)},
+	{"name":"CENTER RIGHT", "world":Vector2(125, -425)},
+	{"name":"TOP RIGHT", "world":Vector2(250, -425)},
 ]
 
 var main: Node
@@ -49,6 +50,13 @@ var feedback_label: Label
 var swarm_button: Button
 var spider_buttons: Array[Button] = []
 var entrance_buttons: Array[Button] = []
+var hp_segments: Array[ColorRect] = []
+var web_orbs: Array[Label] = []
+var selected_name_label: Label
+var selected_detail_label: Label
+var selected_cost_label: Label
+var web_popup: Label
+var previous_whole_web := floori(STARTING_WEB)
 var dialogue: DialogueOverlay
 var victory_overlay: Control
 
@@ -66,11 +74,18 @@ func configure(game: Node, enemy_spawner: EnemySpawner, target_station: Station,
 	# Disable the normal station-to-battle clock. Every spider in this challenge
 	# must come from the player's Spider Nest rather than an automatic wave.
 	PhaseManager.paused = true
+	_hide_normal_hud()
 	_build_ui()
 	station.health_changed.connect(_on_station_health_changed)
 	station.defeated.connect(_on_station_destroyed)
 	_show_intro()
 	call_deferred("_position_entrances")
+
+func _hide_normal_hud() -> void:
+	for path in ["LeftPanel", "HpRail", "RightPanel"]:
+		var normal_panel: CanvasItem = main.menu.get_node_or_null(path) as CanvasItem
+		if normal_panel:
+			normal_panel.visible = false
 
 func _process(delta: float) -> void:
 	if get_tree().paused or not active or finished:
@@ -79,6 +94,10 @@ func _process(delta: float) -> void:
 	time_remaining = maxf(0.0, time_remaining - delta)
 	var regen_rate := (1.0 / WEB_REGEN_SECONDS) * (2.0 if swarm_remaining > 0.0 else 1.0)
 	web = minf(MAX_WEB, web + regen_rate * delta)
+	var whole_web := floori(web)
+	if whole_web > previous_whole_web and web_popup:
+		_show_web_popup()
+	previous_whole_web = whole_web
 	if swarm_remaining > 0.0:
 		swarm_remaining = maxf(0.0, swarm_remaining - delta)
 		if swarm_remaining <= 0.0:
@@ -93,47 +112,44 @@ func _process(delta: float) -> void:
 func _build_ui() -> void:
 	var left := PanelContainer.new()
 	left.name = "SpiderNest"
-	left.position = Vector2(8, 7)
-	left.size = Vector2(342, 706)
+	left.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+	left.offset_left = 8
+	left.offset_top = 8
+	left.offset_right = 312
+	left.offset_bottom = -8
 	left.mouse_filter = Control.MOUSE_FILTER_STOP
-	left.add_theme_stylebox_override("panel", _panel_style(Color("733622")))
+	left.add_theme_stylebox_override("panel", _panel_style(Color("32133f"), Color("120917"), 7))
 	add_child(left)
 	var left_margin := MarginContainer.new()
-	left_margin.add_theme_constant_override("margin_left", 18)
+	left_margin.add_theme_constant_override("margin_left", 12)
 	left_margin.add_theme_constant_override("margin_top", 17)
-	left_margin.add_theme_constant_override("margin_right", 18)
+	left_margin.add_theme_constant_override("margin_right", 12)
 	left_margin.add_theme_constant_override("margin_bottom", 16)
 	left.add_child(left_margin)
 	var nest := VBoxContainer.new()
-	nest.add_theme_constant_override("separation", 8)
+	nest.add_theme_constant_override("separation", 6)
 	left_margin.add_child(nest)
-	nest.add_child(_label("SPIDER NEST", 34, HORIZONTAL_ALIGNMENT_CENTER, Color("ffe29a")))
-	web_label = _label("", 25, HORIZONTAL_ALIGNMENT_CENTER, Color("8ee7dc"))
-	nest.add_child(web_label)
+	var nest_header := _label("// SPIDER NEST //", 25, HORIZONTAL_ALIGNMENT_CENTER, Color("fff0c5"))
+	nest_header.custom_minimum_size.y = 48
+	nest.add_child(nest_header)
 	for index in range(SPIDER_CARDS.size()):
 		var card := _spider_card(index)
 		spider_buttons.append(card)
 		nest.add_child(card)
-	feedback_label = _label("Pick a spider, then an entrance.", 17, HORIZONTAL_ALIGNMENT_CENTER, Color("fff0c2"))
+	feedback_label = _label("Pick a spider. Then pick a roof entrance.", 14, HORIZONTAL_ALIGNMENT_CENTER, Color("fff0c2"))
 	feedback_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	feedback_label.custom_minimum_size.y = 45
 	nest.add_child(feedback_label)
-	swarm_button = Button.new()
-	swarm_button.text = "🕸  SWARM"
-	swarm_button.custom_minimum_size.y = 56
-	swarm_button.add_theme_font_override("font", FONT)
-	swarm_button.add_theme_font_size_override("font_size", 28)
-	swarm_button.add_theme_stylebox_override("normal", _button_style(Color("771e42"), Color("160a0e")))
-	swarm_button.add_theme_stylebox_override("hover", _button_style(Color("a62e5e"), Color("ffe17a")))
-	swarm_button.pressed.connect(_activate_swarm)
-	nest.add_child(swarm_button)
 
 	var right := PanelContainer.new()
 	right.name = "AssaultStatus"
-	right.position = Vector2(998, 350)
-	right.size = Vector2(274, 363)
+	right.set_anchors_preset(Control.PRESET_RIGHT_WIDE)
+	right.offset_left = -248
+	right.offset_top = 8
+	right.offset_right = -8
+	right.offset_bottom = -8
 	right.mouse_filter = Control.MOUSE_FILTER_STOP
-	right.add_theme_stylebox_override("panel", _panel_style(Color("5d1c19")))
+	right.add_theme_stylebox_override("panel", _panel_style(Color("ead7a4"), Color("291035"), 7))
 	add_child(right)
 	var right_margin := MarginContainer.new()
 	right_margin.add_theme_constant_override("margin_left", 16)
@@ -142,21 +158,60 @@ func _build_ui() -> void:
 	right_margin.add_theme_constant_override("margin_bottom", 16)
 	right.add_child(right_margin)
 	var status := VBoxContainer.new()
-	status.add_theme_constant_override("separation", 11)
+	status.add_theme_constant_override("separation", 8)
 	right_margin.add_child(status)
-	status.add_child(_label("SPIDER ASSAULT", 29, HORIZONTAL_ALIGNMENT_CENTER, Color("ffcf72")))
-	status.add_child(_label("DESTROY THE STATION", 20, HORIZONTAL_ALIGNMENT_CENTER, Color("fff2d0")))
-	hp_label = _label("", 22, HORIZONTAL_ALIGNMENT_CENTER, Color("ff7770"))
+	var assault_header := PanelContainer.new()
+	assault_header.custom_minimum_size.y = 60
+	assault_header.add_theme_stylebox_override("panel", _button_style(Color("4a1b58"), Color("120917")))
+	assault_header.add_child(_label("SPIDER ASSAULT", 27, HORIZONTAL_ALIGNMENT_CENTER, Color("fff0c5")))
+	status.add_child(assault_header)
+	status.add_child(_label("OBJECTIVE", 16, HORIZONTAL_ALIGNMENT_CENTER, Color("563248")))
+	status.add_child(_label("DESTROY THE STATION.", 22, HORIZONTAL_ALIGNMENT_CENTER, Color("7e1420")))
+	status.add_child(_divider())
+	hp_label = _label("STATION HP", 19, HORIZONTAL_ALIGNMENT_CENTER, Color("4b1920"))
 	status.add_child(hp_label)
-	timer_label = _label("", 24, HORIZONTAL_ALIGNMENT_CENTER, Color("fff0be"))
+	var hp_row := HBoxContainer.new()
+	hp_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	hp_row.add_theme_constant_override("separation", 3)
+	status.add_child(hp_row)
+	for segment_index in range(10):
+		var segment := ColorRect.new()
+		segment.custom_minimum_size = Vector2(16, 24)
+		hp_row.add_child(segment)
+		hp_segments.append(segment)
+	status.add_child(_label("WEB", 19, HORIZONTAL_ALIGNMENT_CENTER, Color("3e174c")))
+	var web_row := HBoxContainer.new()
+	web_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	web_row.add_theme_constant_override("separation", 2)
+	status.add_child(web_row)
+	for orb_index in range(int(MAX_WEB)):
+		var orb := _label("●", 20, HORIZONTAL_ALIGNMENT_CENTER, Color("6d2782"))
+		orb.custom_minimum_size.x = 18
+		web_row.add_child(orb)
+		web_orbs.append(orb)
+	web_label = _label("", 18, HORIZONTAL_ALIGNMENT_CENTER, Color("3e174c"))
+	status.add_child(web_label)
+	web_popup = _label("+1 WEB", 18, HORIZONTAL_ALIGNMENT_CENTER, Color("8e36ad"))
+	web_popup.modulate.a = 0.0
+	status.add_child(web_popup)
+	status.add_child(_divider())
+	status.add_child(_label("TIME REMAINING", 17, HORIZONTAL_ALIGNMENT_CENTER, Color("563248")))
+	timer_label = _label("", 30, HORIZONTAL_ALIGNMENT_CENTER, Color("291035"))
 	status.add_child(timer_label)
-	var instructions := _label("Choose a spider. Choose an entrance. Time the swarm between trains.", 17, HORIZONTAL_ALIGNMENT_CENTER, Color("e9d5b3"))
-	instructions.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	instructions.custom_minimum_size.y = 82
-	status.add_child(instructions)
+	status.add_child(_divider())
+	swarm_button = Button.new()
+	swarm_button.text = "SWARM.\nREADY."
+	swarm_button.custom_minimum_size = Vector2(0, 112)
+	swarm_button.add_theme_font_override("font", FONT)
+	swarm_button.add_theme_font_size_override("font_size", 27)
+	swarm_button.add_theme_stylebox_override("normal", _round_button_style(Color("70258a"), Color("1b0922")))
+	swarm_button.add_theme_stylebox_override("hover", _round_button_style(Color("9b42b5"), Color("fff0a0")))
+	swarm_button.add_theme_stylebox_override("disabled", _round_button_style(Color("4b3b50"), Color("211825")))
+	swarm_button.pressed.connect(_activate_swarm)
+	status.add_child(swarm_button)
 	var pause := Button.new()
 	pause.text = "PAUSE"
-	pause.custom_minimum_size.y = 42
+	pause.custom_minimum_size.y = 36
 	pause.add_theme_font_override("font", FONT)
 	pause.add_theme_font_size_override("font_size", 20)
 	pause.pressed.connect(func() -> void: main.menu._toggle_pause())
@@ -164,17 +219,21 @@ func _build_ui() -> void:
 
 	for entrance in ENTRANCES:
 		var marker := Button.new()
-		marker.text = "🕸\n%s" % String(entrance.name)
-		marker.custom_minimum_size = Vector2(122, 48)
-		marker.size = Vector2(122, 48)
+		marker.text = "\\ /\n%s" % String(entrance.name)
+		marker.tooltip_text = "Spiders enter here."
+		marker.custom_minimum_size = Vector2(100, 55)
+		marker.size = Vector2(100, 55)
 		marker.add_theme_font_override("font", FONT)
-		marker.add_theme_font_size_override("font_size", 13)
+		marker.add_theme_font_size_override("font_size", 12)
 		marker.add_theme_color_override("font_color", Color("fff0b0"))
-		marker.add_theme_stylebox_override("normal", _button_style(Color(0.12, 0.08, 0.09, 0.88), Color("d94d4b")))
-		marker.add_theme_stylebox_override("hover", _button_style(Color("68253a"), Color("fff080")))
+		marker.add_theme_stylebox_override("normal", _button_style(Color(0.07, 0.035, 0.09, 0.94), Color("42244d")))
+		marker.add_theme_stylebox_override("hover", _button_style(Color("6f2686"), Color("d890ef")))
+		marker.add_theme_stylebox_override("disabled", _button_style(Color("3b2428"), Color("a62b35")))
 		marker.pressed.connect(_deploy_at.bind(entrance))
 		add_child(marker)
 		entrance_buttons.append(marker)
+
+	_build_selected_strip()
 
 	_build_victory_overlay()
 	_refresh_status()
@@ -185,13 +244,18 @@ func _spider_card(index: int) -> Button:
 	var profile := EnemyRoster.by_id(String(card_data.id))
 	var button := Button.new()
 	button.custom_minimum_size.y = 82
-	button.text = "      %s. %s.  %d WEB" % [String(card_data.name), String(card_data.role), int(card_data.cost)]
+	button.text = "       %s\n       %s     %d WEB" % [String(card_data.name), String(card_data.role), int(card_data.cost)]
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.clip_text = true
+	button.tooltip_text = "%s\nCost. %d Web.\n%s" % [String(card_data.name), int(card_data.cost), String(card_data.description)]
 	button.add_theme_font_override("font", FONT)
-	button.add_theme_font_size_override("font_size", 19)
-	button.add_theme_stylebox_override("normal", _button_style(Color("ead18f"), Color("16100c")))
-	button.add_theme_stylebox_override("hover", _button_style(Color("ffe47f"), Color("23c9c4")))
+	button.add_theme_font_size_override("font_size", 16)
+	button.add_theme_stylebox_override("normal", _button_style(Color("f1dfb1"), Color("3a2240")))
+	button.add_theme_stylebox_override("hover", _button_style(Color("fff0c4"), Color("9d45b3")))
+	button.add_theme_stylebox_override("disabled", _button_style(Color("b9aa9a"), Color("6e525b")))
 	button.pressed.connect(_select_spider.bind(index))
+	button.mouse_entered.connect(_hover_card.bind(button, true))
+	button.mouse_exited.connect(_hover_card.bind(button, false))
 	var icon := TextureRect.new()
 	icon.position = Vector2(7, 8)
 	icon.size = Vector2(62, 62)
@@ -206,13 +270,58 @@ func _position_entrances() -> void:
 	var transform := get_viewport().get_canvas_transform()
 	for index in range(mini(entrance_buttons.size(), ENTRANCES.size())):
 		var screen_point: Vector2 = transform * Vector2(ENTRANCES[index].world)
-		entrance_buttons[index].position = screen_point - entrance_buttons[index].size * 0.5
+		entrance_buttons[index].position = Vector2(screen_point.x - entrance_buttons[index].size.x * 0.5, 62.0)
+
+func _build_selected_strip() -> void:
+	var strip := PanelContainer.new()
+	strip.name = "SelectedSpiderStrip"
+	strip.anchor_left = 0.255
+	strip.anchor_right = 0.735
+	strip.anchor_top = 1.0
+	strip.anchor_bottom = 1.0
+	strip.offset_left = 8
+	strip.offset_right = -8
+	strip.offset_top = -62
+	strip.offset_bottom = -8
+	strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	strip.add_theme_stylebox_override("panel", _panel_style(Color(0.94, 0.86, 0.69, 0.96), Color("35143e"), 4))
+	add_child(strip)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	strip.add_child(row)
+	selected_name_label = _label("", 19, HORIZONTAL_ALIGNMENT_LEFT, Color("3b1745"))
+	selected_name_label.custom_minimum_size.x = 145
+	row.add_child(selected_name_label)
+	selected_detail_label = _label("", 14, HORIZONTAL_ALIGNMENT_LEFT, Color("3a2a31"))
+	selected_detail_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	selected_detail_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	row.add_child(selected_detail_label)
+	selected_cost_label = _label("", 18, HORIZONTAL_ALIGNMENT_CENTER, Color("6f2783"))
+	selected_cost_label.custom_minimum_size.x = 72
+	row.add_child(selected_cost_label)
+
+func _hover_card(button: Button, hovering: bool) -> void:
+	button.pivot_offset = button.size * 0.5
+	var tween := button.create_tween()
+	tween.tween_property(button, "scale", Vector2.ONE * (1.018 if hovering else 1.0), 0.08)
+
+func _show_web_popup() -> void:
+	web_popup.modulate.a = 1.0
+	web_popup.position.y = 2.0
+	var tween := web_popup.create_tween().set_parallel(true)
+	tween.tween_property(web_popup, "modulate:a", 0.0, 0.65)
+	tween.tween_property(web_popup, "position:y", -7.0, 0.65)
 
 func _select_spider(index: int) -> void:
 	selected_spider = clampi(index, 0, SPIDER_CARDS.size() - 1)
 	for button_index in range(spider_buttons.size()):
-		spider_buttons[button_index].modulate = Color("fff093") if button_index == selected_spider else Color.WHITE
-	feedback_label.text = "%s selected. Pick an entrance." % String(SPIDER_CARDS[selected_spider].name)
+		spider_buttons[button_index].modulate = Color("d9a8f2") if button_index == selected_spider else Color.WHITE
+	var selected := SPIDER_CARDS[selected_spider]
+	selected_name_label.text = String(selected.name)
+	selected_detail_label.text = String(selected.description)
+	selected_cost_label.text = "%d WEB" % int(selected.cost)
+	feedback_label.text = "%s selected. Pick a glowing roof entrance." % String(selected.name)
+	_refresh_status()
 
 func _deploy_at(entrance: Dictionary) -> void:
 	if not active or finished or spawn_cooldown > 0.0:
@@ -255,21 +364,42 @@ func _update_defense_pressure() -> void:
 
 func _refresh_status() -> void:
 	if web_label:
-		web_label.text = "WEB  %d OF %d" % [floori(web), int(MAX_WEB)]
+		web_label.text = "%d / %d" % [floori(web), int(MAX_WEB)]
+	for orb_index in range(web_orbs.size()):
+		web_orbs[orb_index].add_theme_color_override("font_color", Color("7f2c99") if orb_index < floori(web) else Color("554b56"))
 	if hp_label and station:
 		hp_label.text = "STATION HP  %d OF %d" % [station.current_health, station.max_health]
+		var hp_fraction := float(station.current_health) / maxf(float(station.max_health), 1.0)
+		var lit_segments := ceili(hp_fraction * hp_segments.size())
+		for segment_index in range(hp_segments.size()):
+			hp_segments[segment_index].color = Color("bd2636") if segment_index < lit_segments else Color("372d31")
 	if timer_label:
 		var seconds := ceili(time_remaining)
-		timer_label.text = "TIME  %02d:%02d" % [seconds / 60, seconds % 60]
+		timer_label.text = "%02d:%02d" % [seconds / 60, seconds % 60]
+		timer_label.add_theme_color_override("font_color", Color("b51625") if seconds <= 30 else Color("c26920") if seconds <= 60 else Color("291035"))
+	var selected_cost := float(SPIDER_CARDS[selected_spider].cost)
+	var affordable := web + 0.001 >= selected_cost
+	for button_index in range(spider_buttons.size()):
+		var card_affordable := web + 0.001 >= float(SPIDER_CARDS[button_index].cost)
+		spider_buttons[button_index].self_modulate = Color.WHITE if card_affordable else Color(0.62, 0.58, 0.6, 1.0)
+	for entrance_index in range(entrance_buttons.size()):
+		var entrance_button := entrance_buttons[entrance_index]
+		entrance_button.disabled = not active or finished or not affordable or spawn_cooldown > 0.0
+		entrance_button.text = ("\\ /\n%s" if affordable else "X\n%s") % String(ENTRANCES[entrance_index].name)
+		if active and affordable and spawn_cooldown <= 0.0:
+			var pulse := 1.0 + 0.018 * (sin(Time.get_ticks_msec() / 180.0 + entrance_index) + 1.0)
+			entrance_button.scale = Vector2.ONE * pulse
+		else:
+			entrance_button.scale = Vector2.ONE
 	if swarm_button:
 		if swarm_remaining > 0.0:
-			swarm_button.text = "SWARM  %d" % ceili(swarm_remaining)
+			swarm_button.text = "SWARM.\n%d" % ceili(swarm_remaining)
 			swarm_button.disabled = true
 		elif swarm_cooldown_remaining > 0.0:
-			swarm_button.text = "SWARM  %d" % ceili(swarm_cooldown_remaining)
+			swarm_button.text = "COOLDOWN.\n00:%02d" % ceili(swarm_cooldown_remaining)
 			swarm_button.disabled = true
 		else:
-			swarm_button.text = "🕸  SWARM"
+			swarm_button.text = "SWARM.\nREADY."
 			swarm_button.disabled = false
 
 func _on_station_health_changed(_current: int, _maximum: int) -> void:
@@ -296,12 +426,12 @@ func _show_intro() -> void:
 	add_child(dialogue)
 	dialogue.advance_requested.connect(_advance_intro)
 	dialogue.skip_requested.connect(_finish_intro)
-	dialogue.show_entry({"speaker":"Duck", "text":"Wait, we are playing as the spiders."})
+	dialogue.show_entry({"speaker":"Duck", "text":"Wait, the spiders are only coming from the roof this time."})
 
 func _advance_intro() -> void:
 	intro_index += 1
 	if intro_index == 1:
-		dialogue.show_entry({"speaker":"Daisy", "text":"Apparently someone thought that was a good idea."})
+		dialogue.show_entry({"speaker":"Daisy", "text":"Pick a spider, then send it through one of the roof nests."})
 	else:
 		_finish_intro()
 
@@ -377,11 +507,17 @@ func _label(text: String, size: int, alignment: HorizontalAlignment, color: Colo
 	label.add_theme_color_override("font_color", color)
 	return label
 
-func _panel_style(color: Color) -> StyleBoxFlat:
+func _divider() -> HSeparator:
+	var divider := HSeparator.new()
+	divider.add_theme_constant_override("separation", 5)
+	divider.add_theme_color_override("separator", Color("563248"))
+	return divider
+
+func _panel_style(color: Color, border := Color("1b0d09"), width := 8) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = color
-	style.border_color = Color("1b0d09")
-	style.set_border_width_all(8)
+	style.border_color = border
+	style.set_border_width_all(width)
 	style.corner_radius_top_left = 4
 	style.corner_radius_top_right = 10
 	style.corner_radius_bottom_left = 9
@@ -397,4 +533,10 @@ func _button_style(color: Color, border: Color) -> StyleBoxFlat:
 	style.corner_radius_top_right = 8
 	style.corner_radius_bottom_left = 7
 	style.corner_radius_bottom_right = 2
+	return style
+
+func _round_button_style(color: Color, border: Color) -> StyleBoxFlat:
+	var style := _button_style(color, border)
+	style.set_corner_radius_all(46)
+	style.set_border_width_all(6)
 	return style
