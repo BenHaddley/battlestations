@@ -49,6 +49,9 @@ var _hatched := false
 var attacking_station := false
 var _station_attack_timer := 0.0
 var _hit_feedback_tween: Tween
+var route_target := Vector2.ZERO
+var has_route_target := false
+var assault_speed_multiplier := 1.0
 
 ## Absolute ms timestamp (Time.get_ticks_msec()) the current slow expires at.
 ## Tracking an expiry rather than a bool means a second overlapping pulse can
@@ -87,11 +90,19 @@ func configure_archetype(profile: Dictionary, wave: int, campaign_level: int) ->
 
 func configure_lane(destination_y: float, journey_duration_seconds: float = 25.0) -> void:
 	leak_y = destination_y
+	configure_route(Vector2(global_position.x, destination_y), journey_duration_seconds)
+
+## Shared point-target movement used by Spider Assault entrances. Standard
+## campaign lanes call this with a point directly below the spawn location.
+func configure_route(destination: Vector2, journey_duration_seconds: float = 25.0) -> void:
+	route_target = destination
+	has_route_target = true
+	leak_y = destination.y
 	# Define pacing as travel time rather than fragile world-units/second. A
 	# larger replacement board can move the spawn or station while preserving
 	# the intended 20–30 second unslowed journey.
 	if journey_duration_seconds > 0.0:
-		base_speed = absf(leak_y - global_position.y) / journey_duration_seconds * speed_multiplier
+		base_speed = global_position.distance_to(route_target) / journey_duration_seconds * speed_multiplier
 	lane_configured = true
 
 func configure_difficulty(hit_points: int) -> void:
@@ -149,8 +160,8 @@ func _physics_process(delta: float) -> void:
 			_attack_station()
 		_animate_walk(delta)
 		return
-	if global_position.y >= leak_y:
-		global_position.y = leak_y
+	if (has_route_target and global_position.distance_to(route_target) <= 10.0) or (not has_route_target and global_position.y >= leak_y):
+		global_position = route_target if has_route_target else Vector2(global_position.x, leak_y)
 		attacking_station = true
 		_station_attack_timer = station_attack_windup
 		velocity = Vector2.ZERO
@@ -158,7 +169,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_special_clock += delta
 	_update_special_state()
-	var speed: float = base_speed
+	var speed: float = base_speed * assault_speed_multiplier
 	if Time.get_ticks_msec() < _slow_expires_at:
 		speed *= 0.5
 	if Time.get_ticks_msec() < _rally_expires_at:
@@ -169,7 +180,8 @@ func _physics_process(delta: float) -> void:
 		speed *= 1.55
 	if ability == "jump" and _jumping:
 		speed *= 1.8
-	velocity = Vector2.DOWN * speed
+	var travel_direction := global_position.direction_to(route_target) if has_route_target else Vector2.DOWN
+	velocity = travel_direction * speed
 	move_and_slide()
 	queue_redraw()
 	_animate_walk(delta)
@@ -197,6 +209,24 @@ func take_damage(dmg: int) -> void:
 	health.take_damage(dmg)
 	if not health.is_destroyed:
 		_play_hit_feedback()
+
+func _input_event(_viewport: Viewport, event: InputEvent, _shape_index: int) -> void:
+	if not get_meta("player_deployed", false):
+		return
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		var readout := Label.new()
+		readout.text = "%s. HP %d of %d." % [archetype_id.capitalize(), health.hit_points, health.max_hit_points]
+		readout.global_position = global_position + Vector2(-65, -70)
+		readout.add_theme_color_override("font_color", Color("fff0b5"))
+		readout.add_theme_color_override("font_outline_color", Color("24130d"))
+		readout.add_theme_constant_override("outline_size", 3)
+		readout.add_theme_font_size_override("font_size", 17)
+		readout.z_index = 90
+		get_tree().current_scene.add_child(readout)
+		var tween := readout.create_tween().set_parallel(true)
+		tween.tween_property(readout, "position:y", readout.position.y - 24.0, 1.0)
+		tween.tween_property(readout, "modulate:a", 0.0, 1.0)
+		tween.chain().tween_callback(readout.queue_free)
 
 func _attack_station() -> void:
 	GameEvents.station_attacked.emit(station_attack_damage)

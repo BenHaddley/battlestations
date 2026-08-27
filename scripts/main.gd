@@ -5,6 +5,7 @@ extends Node2D
 
 const TrainConvoyScene := preload("res://scenes/TrainConvoy.tscn")
 const GameOverOverlayScene := preload("res://scenes/ui/GameOverOverlay.tscn")
+const SpiderAssaultControllerScript := preload("res://scripts/spider_assault_controller.gd")
 const NEW_BOARD_CAR_SCALE := Vector2(0.54, 0.54)
 
 @onready var spawner: EnemySpawner = $EnemySpawner
@@ -57,6 +58,7 @@ var level_complete_overlay: LevelCompleteOverlay
 var train_control_panel: TrainControlPanel
 var selected_convoy: TrainConvoy
 var game_over_overlay: GameOverOverlay
+var spider_assault_controller: SpiderAssaultController
 
 func _ready() -> void:
 	get_tree().root.physics_object_picking = true
@@ -97,6 +99,11 @@ func _ready() -> void:
 	train_control_panel.offset_bottom = -4.0
 	train_control_panel.control_changed.connect(_on_train_control_changed)
 	train_control_panel.deselect_requested.connect(_clear_train_selection)
+	if CampaignManager.is_spider_assault():
+		spider_assault_controller = SpiderAssaultControllerScript.new()
+		spider_assault_controller.name = "SpiderAssaultController"
+		$CanvasLayer.add_child(spider_assault_controller)
+		spider_assault_controller.configure(self, spawner, $Station, convoys)
 
 ## Regenerates the railway until it passes validation (every lane reachable,
 ## every route internally connected, at least two usable routes) or the
@@ -145,6 +152,8 @@ func _generate_and_spawn_trains() -> void:
 			convoy.current_speed = convoy.cruise_speed
 			convoy.set_meta("reverse_locked", not bool(CampaignManager.challenge_value("reverse", true)))
 		convoy.set_engine_livery(ENGINE_LIVERIES[livery_indices[route_index % livery_indices.size()]])
+		if CampaignManager.is_spider_assault():
+			_install_assault_blocker(convoy, 36.0)
 		convoys.append(convoy)
 
 ## The first train opens with one free basic car so a first-time player has
@@ -156,6 +165,9 @@ func _generate_and_spawn_trains() -> void:
 ## and buy or attach cars before the first spider spawns.
 func _seed_tabletop() -> void:
 	if convoys.is_empty():
+		return
+	if CampaignManager.is_spider_assault():
+		_seed_spider_assault_defense()
 		return
 	var convoy: Node2D = convoys[0]
 	for index in range(mini(starting_cars, BuildManager.towers.size() * 2)):
@@ -169,6 +181,41 @@ func _seed_tabletop() -> void:
 		_apply_car_palette(car, _car_palette_cursor)
 		_car_palette_cursor += 1
 		convoy.attach_car(car)
+
+func _seed_spider_assault_defense() -> void:
+	var defense_roster := [0, 1, 2, 4, 0, 1]
+	for defense_index in range(defense_roster.size()):
+		var tower_index: int = defense_roster[defense_index]
+		if tower_index >= BuildManager.towers.size():
+			continue
+		var tower: TowerData = BuildManager.towers[tower_index]
+		if tower == null or tower.scene == null:
+			continue
+		var car: Node2D = tower.scene.instantiate()
+		car.set_meta("tower_data", tower)
+		trains.add_child(car)
+		car.scale = NEW_BOARD_CAR_SCALE
+		_apply_car_palette(car, defense_index)
+		# Four cars guard the first circuit; only two guard the second. Finding and
+		# exploiting that weaker route is the scenario's first tactical puzzle.
+		var convoy_index := 0 if defense_index < 4 else 1
+		var convoy: TrainConvoy = convoys[mini(convoy_index, convoys.size() - 1)]
+		if not convoy.attach_car(car):
+			car.queue_free()
+		else:
+			_install_assault_blocker(car, 68.0)
+
+func _install_assault_blocker(host: Node2D, local_radius: float) -> void:
+	var body := StaticBody2D.new()
+	body.name = "SpiderBlocker"
+	body.collision_layer = 1
+	body.collision_mask = 0
+	var collision := CollisionShape2D.new()
+	var shape := CircleShape2D.new()
+	shape.radius = local_radius
+	collision.shape = shape
+	body.add_child(collision)
+	host.add_child(body)
 
 func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> void:
 	if not CampaignManager.challenge_shop_enabled():
@@ -206,6 +253,15 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> voi
 	menu.show_placement_feedback("%s connected to the train." % tower.tower_name, true)
 
 func _on_station_defeated() -> void:
+	if CampaignManager.is_spider_assault():
+		return
+	if game_over_overlay == null or game_over_overlay.visible:
+		return
+	PhaseManager.paused = true
+	$MusicPlayer.stream_paused = true
+	game_over_overlay.show_failure(CampaignManager.is_challenge_active())
+
+func trigger_failure() -> void:
 	if game_over_overlay == null or game_over_overlay.visible:
 		return
 	PhaseManager.paused = true
@@ -213,6 +269,8 @@ func _on_station_defeated() -> void:
 	game_over_overlay.show_failure(CampaignManager.is_challenge_active())
 
 func _unhandled_input(event: InputEvent) -> void:
+	if CampaignManager.is_spider_assault():
+		return
 	if game_over_overlay != null and game_over_overlay.visible:
 		return
 	if upgrade_panel == null or upgrade_panel.visible or menu.dragging_tower >= 0 or menu.removing_mode:

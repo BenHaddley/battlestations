@@ -26,6 +26,7 @@ func _run() -> void:
 	_test_music_playlist_rotation()
 	_test_game_over_modes()
 	await _test_station_attackers()
+	await _test_spider_assault()
 	await _test_main_scene_train_integration()
 	if failures.is_empty():
 		print("GAMEPLAY REGRESSION PASS")
@@ -72,7 +73,7 @@ func _test_convoy_spacing_and_reverse() -> void:
 	convoy.queue_free()
 
 func _test_challenge_job_cards() -> void:
-	_check(CampaignManager.CHALLENGES.size() == 5, "challenge menu should expose five launchable job cards")
+	_check(CampaignManager.CHALLENGES.size() == 6, "challenge menu should expose six launchable job cards")
 	var seen_ids: Dictionary = {}
 	for challenge in CampaignManager.CHALLENGES:
 		var challenge_id := String(challenge.get("id", ""))
@@ -175,6 +176,42 @@ func _test_station_attackers() -> void:
 	await get_tree().process_frame
 	_check(not is_instance_valid(enemy), "station attacker survived lethal train damage")
 	station.queue_free()
+
+func _test_spider_assault() -> void:
+	_check(CampaignManager.start_challenge("spider_assault"), "Spider Assault challenge could not start")
+	_check(CampaignManager.is_spider_assault(), "Spider Assault did not activate reverse-mode rules")
+	var main = MainScene.instantiate()
+	add_child(main)
+	await get_tree().process_frame
+	var assault: SpiderAssaultController = main.spider_assault_controller
+	_check(assault != null, "Spider Assault did not create its deployment controller")
+	_check(main.convoys.size() == 2, "Spider Assault did not create its two-train defense")
+	_check(main.convoys[0].get_node_or_null("SpiderBlocker") != null, "Spider Assault trains do not physically block spiders")
+	_check(PhaseManager.paused, "Spider Assault left the automatic campaign wave clock running")
+	var defensive_cars := 0
+	for convoy in main.convoys:
+		defensive_cars += convoy.car_count()
+	_check(defensive_cars >= 4, "Spider Assault pre-built defense is missing turret cars")
+	assault._finish_intro()
+	var web_before := assault.web
+	assault._deploy_at(SpiderAssaultController.ENTRANCES[0])
+	_check(assault.web == web_before - 1.0, "Spider Assault deployment did not spend Web")
+	var deployed: Node = null
+	for spider in get_tree().get_nodes_in_group("spiders"):
+		if spider.get_meta("player_deployed", false):
+			deployed = spider
+			break
+	_check(deployed != null and deployed.has_route_target, "player-deployed spider did not receive an entrance route")
+	assault._activate_swarm()
+	_check(deployed != null and is_equal_approx(float(deployed.assault_speed_multiplier), 1.6), "SWARM did not accelerate deployed spiders")
+	main.get_node("Station").take_damage(main.get_node("Station").max_health)
+	_check(assault.victory_overlay.visible and get_tree().paused, "destroying the station did not show Spider Assault victory")
+	_check(not main.game_over_overlay.visible, "Spider Assault victory incorrectly opened Challenge Failed")
+	get_tree().paused = false
+	main.queue_free()
+	await get_tree().process_frame
+	CampaignManager.clear_challenge()
+	PhaseManager.reset()
 
 func _test_main_scene_train_integration() -> void:
 	var main = MainScene.instantiate()

@@ -125,8 +125,8 @@ func _show_challenges() -> void:
 		$Modal/Margin/VBox.move_child(button, back_button.get_index())
 	modal.offset_left = -330.0
 	modal.offset_right = 330.0
-	modal.offset_top = -290.0
-	modal.offset_bottom = 290.0
+	modal.offset_top = -335.0
+	modal.offset_bottom = 335.0
 	modal.show()
 	var first_button := $Modal/Margin/VBox.get_node_or_null("ChallengeLastTrain") as Button
 	if first_button:

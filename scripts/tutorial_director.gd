@@ -31,6 +31,10 @@ func _connect_game() -> void:
 	main = get_tree().current_scene
 	if main == null:
 		return
+	# Reverse mode owns its short Duck and Daisy introduction; campaign tutorial
+	# prompts about buying train cars would contradict Spider Assault.
+	if CampaignManager.is_spider_assault():
+		return
 	spawner = main.get_node_or_null("EnemySpawner")
 	menu = main.get_node_or_null("CanvasLayer/Menu")
 	if spawner:

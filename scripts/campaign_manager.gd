@@ -27,6 +27,7 @@ const CHALLENGES: Array[Dictionary] = [
 	{"id":"no_brakes", "name":"NO BRAKES", "tagline":"The loop never stops. Reversing is forbidden.", "waves":5, "currency":350, "track":7, "trains":1, "cars":2, "shop":true, "speed":1.25, "reverse":false, "enemy":""},
 	{"id":"sturdy", "name":"STURDY SITUATION", "tagline":"Direct damage only. The heavy spiders are here.", "waves":4, "currency":500, "track":2, "trains":2, "cars":2, "shop":true, "speed":1.0, "reverse":true, "enemy":"sturdy"},
 	{"id":"budget", "name":"BUDGET RAILWAY", "tagline":"Make every diamond and every car count.", "waves":5, "currency":175, "track":6, "trains":2, "cars":1, "shop":true, "speed":1.0, "reverse":true, "enemy":"", "bounty":0.45},
+	{"id":"spider_assault", "name":"SPIDER ASSAULT", "tagline":"Command the swarm. Destroy the station.", "waves":1, "currency":0, "track":3, "trains":2, "cars":0, "shop":false, "speed":0.72, "reverse":true, "enemy":"", "reverse_mode":true},
 ]
 
 var _endless_level: LevelData
@@ -95,6 +96,9 @@ func challenge_shop_enabled() -> bool:
 
 func challenge_train_edit_enabled() -> bool:
 	return challenge_shop_enabled()
+
+func is_spider_assault() -> bool:
+	return is_challenge_active() and bool(challenge_value("reverse_mode", false))
 
 ## One-based campaign stop where a Train Yard item first becomes available.
 ## Used by locked preview cards so the illustrated cabinet stays populated.

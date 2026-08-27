@@ -109,6 +109,29 @@ func _spawn_enemy() -> void:
 	if enemy.has_method("configure_lane"):
 		enemy.configure_lane(leak_y, _journey_duration_for_wave())
 
+## Player-requested deployment for Spider Assault. This deliberately uses the
+## same scene, roster data, health and station-attack behavior as normal waves.
+func spawn_controlled_spider(profile_id: String, entrance: Vector2, destination: Vector2, swarm_active: bool = false) -> Node2D:
+	if enemy_prefabs.is_empty():
+		return null
+	var profile := EnemyRoster.by_id(profile_id)
+	if profile.is_empty():
+		return null
+	var enemy: Node2D = enemy_prefabs[0].instantiate()
+	get_tree().current_scene.add_child(enemy)
+	enemy.global_position = entrance
+	enemy.scale = Vector2(0.54, 0.54)
+	enemy.set_meta("player_deployed", true)
+	if enemy.has_method("configure_archetype"):
+		enemy.configure_archetype(profile, 1, 2)
+	if enemy.has_method("configure_bounty"):
+		enemy.configure_bounty(0)
+	if enemy.has_method("configure_route"):
+		enemy.configure_route(destination, 22.0)
+	enemy.set("assault_speed_multiplier", 1.6 if swarm_active else 1.0)
+	enemies_alive += 1
+	return enemy
+
 func _hit_points_for_wave() -> int:
 	# The visual roster is also the difficulty ladder: wave one starts with
 	# the forgiving one-dot form, then adds exactly one two-hit stage per wave.
