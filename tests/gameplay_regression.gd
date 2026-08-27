@@ -134,6 +134,15 @@ func _test_main_scene_train_integration() -> void:
 	var main = MainScene.instantiate()
 	add_child(main)
 	await get_tree().process_frame
+	var pause_menu: PauseMenu = main.menu.pause_menu
+	_check(pause_menu != null, "main HUD did not create the pause menu")
+	pause_menu.open()
+	_check(get_tree().paused and pause_menu.visible, "pause menu did not pause gameplay")
+	_check(pause_menu.process_mode == Node.PROCESS_MODE_ALWAYS, "pause menu cannot process input while paused")
+	_check(pause_menu.get_node_or_null("Shade/Card/Margin/Content/RestartButton") != null, "pause menu is missing restart")
+	_check(pause_menu.get_node_or_null("Shade/Card/Margin/Content/TitleButton") != null, "pause menu is missing return to title")
+	pause_menu.close()
+	_check(not get_tree().paused and not pause_menu.visible, "resume did not restore gameplay")
 	_check(main.convoys.size() >= 2, "main scene did not create its train routes")
 	if not main.convoys.is_empty():
 		_check(main.convoys[0].car_count() >= 1, "starter car was rejected or missing")

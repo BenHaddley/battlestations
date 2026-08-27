@@ -53,6 +53,7 @@ const PORTRAIT_STATION := preload("res://assets/sprites/ui/portrait/portrait_sta
 const PORTRAIT_BATTLE := preload("res://assets/sprites/ui/portrait/portrait_battle.png")
 const StationProgressPanelScene := preload("res://scenes/ui/StationProgressPanel.tscn")
 const NEW_UI_TEXTURE := preload("res://assets/the_new_ui.png")
+const PauseMenuScript := preload("res://scripts/pause_menu.gd")
 
 var spawner: EnemySpawner
 var station: Station
@@ -68,6 +69,7 @@ var _hovered_removable: Node2D = null
 var station_progress_panel: StationProgressPanel
 var speed_caption: Label
 var pause_caption: Label
+var pause_menu: PauseMenu
 
 const HOVER_TINT := Color(1.0, 0.42, 0.34, 1.0)
 
@@ -83,6 +85,10 @@ func configure(enemy_spawner: EnemySpawner, defended_station: Station, active_tr
 	PhaseManager.configure(spawner)
 
 func _ready() -> void:
+	pause_menu = PauseMenuScript.new()
+	pause_menu.name = "PauseMenu"
+	add_child(pause_menu)
+	pause_menu.resumed.connect(_on_pause_menu_resumed)
 	_install_new_ui_layout()
 	_install_station_progress_panel()
 	_style_train_yard()
@@ -476,11 +482,20 @@ func _toggle_speed() -> void:
 		speed_caption.text = "1X NORMAL" if Engine.time_scale > 1.5 else "2X SPEED"
 
 func _toggle_pause() -> void:
-	get_tree().paused = not get_tree().paused
-	pause_button.tooltip_text = "Resume" if get_tree().paused else "Pause"
-	pause_button.modulate = Color(1.0, 0.82, 0.38) if get_tree().paused else Color.WHITE
+	if pause_menu.visible:
+		pause_menu.close()
+	else:
+		pause_menu.open()
+	pause_button.tooltip_text = "Resume" if pause_menu.visible else "Pause"
+	pause_button.modulate = Color(1.0, 0.82, 0.38) if pause_menu.visible else Color.WHITE
 	if pause_caption:
-		pause_caption.text = "RESUME" if get_tree().paused else "PAUSE"
+		pause_caption.text = "RESUME" if pause_menu.visible else "PAUSE"
+
+func _on_pause_menu_resumed() -> void:
+	pause_button.tooltip_text = "Pause"
+	pause_button.modulate = Color.WHITE
+	if pause_caption:
+		pause_caption.text = "PAUSE"
 
 func _select_tower(index: int) -> void:
 	BuildManager.set_selected_tower(index)

@@ -16,6 +16,9 @@ func _ready() -> void:
 	if not main.convoys.is_empty() and "--no-select" not in arguments:
 		main._select_convoy(main.convoys[0])
 		await get_tree().create_timer(0.22).timeout
+	if "--pause-menu" in arguments:
+		main.menu.pause_menu.open()
+		await get_tree().process_frame
 	var output := "/tmp/battle-stations-main.png"
 	var flag_index := arguments.find("--capture-path")
 	if flag_index >= 0 and flag_index + 1 < arguments.size():
