@@ -86,10 +86,16 @@ func _ready() -> void:
 	_style_train_yard()
 	for index in range(TOWER_BUTTONS.size()):
 		var button: Button = get(TOWER_BUTTONS[index])
+		var unlocked := CampaignManager.is_tower_unlocked(index)
 		button.pressed.connect(_select_tower.bind(index))
 		button.gui_input.connect(_on_tower_gui_input.bind(index))
-		_set_price_text(button, BuildManager.towers[index].cost if index < BuildManager.towers.size() else 0)
-		button.visible = CampaignManager.is_tower_unlocked(index)
+		button.visible = true
+		button.disabled = not unlocked
+		if unlocked:
+			_set_price_text(button, "%d" % (BuildManager.towers[index].cost if index < BuildManager.towers.size() else 0))
+		else:
+			_set_price_text(button, "STOP %d" % CampaignManager.tower_unlock_level(index))
+			button.tooltip_text = "%s. Unlocks at campaign stop %d." % [BuildManager.towers[index].tower_name, CampaignManager.tower_unlock_level(index)]
 	remove_button.pressed.connect(_toggle_remove_mode)
 	speed_button.pressed.connect(_toggle_speed)
 	pause_button.pressed.connect(_toggle_pause)
@@ -250,10 +256,10 @@ func _train_yard_price_style(index: int) -> StyleBoxFlat:
 	style.content_margin_right = 4
 	return style
 
-func _set_price_text(button: Button, cost: int) -> void:
+func _set_price_text(button: Button, value: String) -> void:
 	var label: Label = button.find_child("PriceLabel", true, false)
 	if label:
-		label.text = "%d" % cost
+		label.text = value
 
 ## Unhandled rather than plain _input — a click the REMOVE button itself
 ## already consumed (e.g. pressing it again to cancel) must not also count
@@ -450,13 +456,31 @@ func show_placement_feedback(message: String, success: bool) -> void:
 ## explains the actual purchase, and disabling here would also block
 ## previewing or pre-selecting a defense while saving up for it.
 func _style_tower_button(button: Button, index: int) -> void:
-	if index >= BuildManager.towers.size() or not normal_style or not selected_style:
+	if index >= BuildManager.towers.size():
 		return
+	var unlocked := CampaignManager.is_tower_unlocked(index)
 	var is_selected: bool = BuildManager.selected_tower == index
+	var affordable := LevelManager.currency >= BuildManager.towers[index].cost
+	var style_state := "locked" if not unlocked else ("selected" if is_selected else ("ready" if affordable else "poor"))
+	if String(button.get_meta("train_yard_style_state", "")) == style_state:
+		return
+	button.set_meta("train_yard_style_state", style_state)
+	if not unlocked:
+		button.disabled = true
+		button.modulate = Color(0.48, 0.48, 0.5, 0.72)
+		button.add_theme_stylebox_override("disabled", _locked_train_yard_style(index))
+		return
+	var style := _train_yard_row_style(index, is_selected)
 	if is_selected:
-		button.add_theme_stylebox_override("normal", selected_style)
-	elif LevelManager.currency < BuildManager.towers[index].cost:
-		button.add_theme_stylebox_override("normal", unaffordable_style if unaffordable_style else normal_style)
-	else:
-		button.add_theme_stylebox_override("normal", normal_style)
-	button.modulate = Color(1, 1, 1, 1) if (is_selected or LevelManager.currency >= BuildManager.towers[index].cost) else Color(1, 1, 1, 0.72)
+		style.border_color = Color("19cfd0")
+		style.set_border_width_all(4)
+	elif not affordable:
+		style.bg_color = style.bg_color.darkened(0.22)
+	button.add_theme_stylebox_override("normal", style)
+	button.modulate = Color(1, 1, 1, 1) if (is_selected or affordable) else Color(1, 1, 1, 0.72)
+
+func _locked_train_yard_style(index: int) -> StyleBoxFlat:
+	var style := _train_yard_row_style(index, false)
+	style.bg_color = Color("80786a")
+	style.border_color = Color("302923")
+	return style

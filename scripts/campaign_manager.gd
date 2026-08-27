@@ -53,6 +53,14 @@ func is_tower_unlocked(tower_index: int) -> bool:
 	var level := current_level()
 	return level != null and tower_index in level.unlocked_tower_indices
 
+## One-based campaign stop where a Train Yard item first becomes available.
+## Used by locked preview cards so the illustrated cabinet stays populated.
+func tower_unlock_level(tower_index: int) -> int:
+	for level_index in range(levels.size()):
+		if tower_index in levels[level_index].unlocked_tower_indices:
+			return level_index + 1
+	return -1
+
 ## Called by EnemySpawner when the current level's final wave clears.
 ## Pauses PhaseManager so the station timer can't auto-start a wave the
 ## just-unlocked roster hasn't been shown for yet.

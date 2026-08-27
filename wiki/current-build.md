@@ -121,7 +121,9 @@ kept alongside them.
 
 - The Train Yard list can attach all seven cars documented in the infowiki (Gunner Car,
   Chaingunner Car, Ballast Blaster, Coal Cannon, Passenger Coach, Brake Van, Tender —
-  see [Infowiki unit cards](infowiki-cards.md)). There is no per-car upgrade system — it was
+  see [Infowiki unit cards](infowiki-cards.md)). Future cars remain visible as dimmed
+  illustrated previews labelled with the campaign stop that unlocks them, so the new
+  cabinet stays populated without bypassing progression. There is no per-car upgrade system — it was
   removed entirely (it was dead code left over from the click-to-place Plot design
   that predates the drag/drop train convoy, and had no reachable UI). REMOVE now
   detaches whichever car is clicked, anywhere in the train, not just the tail; there
