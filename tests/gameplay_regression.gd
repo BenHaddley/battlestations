@@ -141,6 +141,10 @@ func _test_game_over_modes() -> void:
 	_check(mission.visible and get_tree().paused, "mission failure did not freeze gameplay and show its overlay")
 	_check(mission._banner.texture.resource_path.ends_with("speed up.png"), "normal level loss did not use the Mission Failed banner")
 	_check(mission._primary_button.get_meta("failure_action") == "restart_level", "normal level loss did not offer Restart Level")
+	_check(not mission._character.get_rect().intersects(mission._message.get_rect()), "failure character overlaps its message")
+	_check(not mission._primary_button.get_rect().intersects(mission._menu_button.get_rect()), "failure action buttons overlap")
+	var panel_rect := Rect2(Vector2(410, 70), mission._panel.size)
+	_check(panel_rect.encloses(mission._primary_button.get_rect()) and panel_rect.encloses(mission._menu_button.get_rect()), "failure buttons extend outside the industrial panel")
 	get_tree().paused = false
 	mission.queue_free()
 
