@@ -3,6 +3,8 @@ extends AudioStreamPlayer
 ## order with no immediate repeats, then reshuffles and keeps going —
 ## instead of looping a single song for the whole session.
 
+const SPIDER_ASSAULT_TRACK := preload("res://assets/audio/songs/Spider Assault - The Fun House.mp3")
+
 @export var tracks: Array[AudioStream] = []
 
 var _queue: Array[int] = []
@@ -10,10 +12,12 @@ var _last_played: int = -1
 var play_history: Array[int] = [] ## Exposed for lightweight playlist regression tests.
 
 func _ready() -> void:
+	if CampaignManager.is_spider_assault():
+		tracks = [SPIDER_ASSAULT_TRACK]
 	for track in tracks:
 		var mp3 := track as AudioStreamMP3
 		if mp3:
-			mp3.loop = false
+			mp3.loop = CampaignManager.is_spider_assault()
 	finished.connect(_play_next)
 	_play_next()
 

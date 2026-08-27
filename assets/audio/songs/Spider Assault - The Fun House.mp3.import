@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://brpevomr2pe7m"
+path="res://.godot/imported/Spider Assault - The Fun House.mp3-392ead16852d3b787a274cf6ee907120.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/songs/Spider Assault - The Fun House.mp3"
+dest_files=["res://.godot/imported/Spider Assault - The Fun House.mp3-392ead16852d3b787a274cf6ee907120.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

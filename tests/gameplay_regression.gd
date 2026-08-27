@@ -185,6 +185,10 @@ func _test_spider_assault() -> void:
 	await get_tree().process_frame
 	var assault: SpiderAssaultController = main.spider_assault_controller
 	_check(assault != null, "Spider Assault did not create its deployment controller")
+	var assault_music := main.get_node("MusicPlayer") as AudioStreamPlayer
+	_check(assault_music.tracks.size() == 1, "Spider Assault did not replace the shuffled music playlist")
+	_check(assault_music.stream.resource_path.ends_with("Spider Assault - The Fun House.mp3"), "Spider Assault loaded the wrong level song")
+	_check((assault_music.stream as AudioStreamMP3).loop, "Spider Assault level song is not configured to loop")
 	_check(main.convoys.size() == 2, "Spider Assault did not create its two-train defense")
 	_check(main.convoys[0].get_node_or_null("SpiderBlocker") != null, "Spider Assault trains do not physically block spiders")
 	_check(PhaseManager.paused, "Spider Assault left the automatic campaign wave clock running")
