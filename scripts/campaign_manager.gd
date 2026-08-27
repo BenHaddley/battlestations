@@ -22,7 +22,7 @@ var tutorial_requested: bool = false
 var active_challenge_id: String = ""
 
 const CHALLENGES: Array[Dictionary] = [
-	{"id":"last_train", "name":"LAST TRAIN STANDING", "tagline":"One engine. One Gunner. No shopping.", "waves":5, "currency":0, "track":0, "trains":1, "cars":1, "shop":false, "speed":1.0, "reverse":true, "enemy":""},
+	{"id":"last_train", "name":"LAST TRAIN STANDING", "tagline":"One engine. One Gunner. No shopping.", "waves":5, "currency":0, "track":0, "special_track":"bottom_figure_eight", "trains":1, "cars":1, "shop":false, "speed":1.0, "reverse":true, "enemy":""},
 	{"id":"heavy_haul", "name":"HEAVY HAUL", "tagline":"A loaded train with a very tired engine.", "waves":5, "currency":150, "track":3, "trains":1, "cars":5, "shop":true, "speed":0.48, "reverse":true, "enemy":""},
 	{"id":"no_brakes", "name":"NO BRAKES", "tagline":"The loop never stops. Reversing is forbidden.", "waves":5, "currency":350, "track":7, "trains":1, "cars":2, "shop":true, "speed":1.25, "reverse":false, "enemy":""},
 	{"id":"sturdy", "name":"STURDY SITUATION", "tagline":"Direct damage only. The heavy spiders are here.", "waves":4, "currency":500, "track":2, "trains":2, "cars":2, "shop":true, "speed":1.0, "reverse":true, "enemy":"sturdy"},

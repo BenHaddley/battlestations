@@ -81,6 +81,31 @@ func generate_campaign_layout(layout_index: int) -> Array[PackedVector2Array]:
 	_render_all()
 	return routes
 
+## A single compact crossing loop for Last Train Standing. The center cell is
+## intentionally visited twice, once horizontally and once vertically, so the
+## renderer layers two straight rail tiles into a proper tabletop crossing.
+## It occupies only the bottom three battlefield rows and leaves the upper
+## board entirely to the approaching spiders.
+func generate_bottom_figure_eight() -> Array[PackedVector2Array]:
+	for child in get_children():
+		child.queue_free()
+	_build_grid()
+	var cells: Array[Vector2i] = [
+		Vector2i(4, 9),
+		Vector2i(3, 9), Vector2i(2, 9), Vector2i(1, 9),
+		Vector2i(1, 10), Vector2i(2, 10), Vector2i(3, 10), Vector2i(4, 10),
+		Vector2i(4, 9),
+		Vector2i(4, 8), Vector2i(5, 8), Vector2i(6, 8), Vector2i(7, 8),
+		Vector2i(7, 9), Vector2i(7, 10), Vector2i(6, 10), Vector2i(5, 10),
+		Vector2i(5, 9),
+	]
+	var figure_eight := PackedVector2Array()
+	for cell in cells:
+		figure_eight.append(Vector2(columns[cell.x], rows[cell.y]))
+	routes = [figure_eight]
+	_render_all()
+	return routes
+
 ## Authored from the ten supplied diagrams. A polygon helper expands corner
 ## vertices into one-cell steps, keeping closed-route validation identical to
 ## generated tracks. This data is deliberately code-native, not image sampled.

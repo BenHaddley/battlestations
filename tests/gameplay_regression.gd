@@ -85,6 +85,18 @@ func _test_challenge_job_cards() -> void:
 func _test_campaign_track_library() -> void:
 	var renderer := TrackRenderer.new()
 	add_child(renderer)
+	var figure_eight := renderer.generate_bottom_figure_eight()
+	_check(figure_eight.size() == 1, "Last Train Standing should have exactly one route")
+	_check(figure_eight[0].size() == 18, "Last Train Standing figure eight has an unexpected rail length")
+	_check(renderer.routes_are_traversable(), "Last Train Standing figure eight is not a closed traversable route")
+	var crossing := Vector2(renderer.columns[4], renderer.rows[9])
+	var crossing_visits := 0
+	for point in figure_eight[0]:
+		if point.is_equal_approx(crossing):
+			crossing_visits += 1
+	_check(crossing_visits == 2, "Last Train Standing route does not cross itself at the center")
+	for point in figure_eight[0]:
+		_check(point.y >= renderer.rows[8], "Last Train Standing rails escaped the bottom of the board")
 	for layout_index in range(TrackRenderer.REFERENCE_LAYOUT_NAMES.size()):
 		var layout := renderer.generate_campaign_layout(layout_index)
 		_check(not layout.is_empty(), "campaign track %d produced no routes" % layout_index)

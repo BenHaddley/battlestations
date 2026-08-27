@@ -102,8 +102,11 @@ func _ready() -> void:
 func _generate_and_spawn_trains() -> void:
 	var routes: Array[PackedVector2Array] = []
 	var level := CampaignManager.current_level()
+	var special_track := String(CampaignManager.challenge_value("special_track", ""))
 	var uses_campaign_track := level != null and level.track_layout_index >= 0
-	if uses_campaign_track:
+	if special_track == "bottom_figure_eight":
+		routes = track.generate_bottom_figure_eight()
+	elif uses_campaign_track:
 		routes = track.generate_campaign_layout(level.track_layout_index)
 	else:
 		for attempt in range(max_generation_attempts):
