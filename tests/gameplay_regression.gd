@@ -21,6 +21,7 @@ func _run() -> void:
 	await get_tree().process_frame
 	_test_convoy_spacing_and_reverse()
 	_test_campaign_track_library()
+	_test_music_playlist_rotation()
 	await _test_station_attackers()
 	await _test_main_scene_train_integration()
 	if failures.is_empty():
@@ -70,6 +71,21 @@ func _test_campaign_track_library() -> void:
 				_check(not unique.has(point), "campaign track %d repeats a cell within one route" % layout_index)
 				unique[point] = true
 	renderer.queue_free()
+
+func _test_music_playlist_rotation() -> void:
+	var playlist := preload("res://scripts/music_playlist.gd").new()
+	playlist.tracks = [AudioStreamMP3.new(), AudioStreamMP3.new(), AudioStreamMP3.new()]
+	# Consume two full shuffled cycles without requiring an audio device.
+	for index in range(6):
+		playlist._take_next_index()
+	_check(playlist.play_history.size() == 6, "music playlist did not advance through both shuffle cycles")
+	for index in range(1, playlist.play_history.size()):
+		_check(playlist.play_history[index] != playlist.play_history[index - 1], "music playlist repeated a track back to back")
+	var first_cycle: Dictionary = {}
+	for index in range(3):
+		first_cycle[playlist.play_history[index]] = true
+	_check(first_cycle.size() == 3, "music playlist repeated before playing every track")
+	playlist.queue_free()
 
 func _test_station_attackers() -> void:
 	var station: Station = StationScene.instantiate()

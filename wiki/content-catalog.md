@@ -81,8 +81,12 @@ are not wired into gameplay.
 
 ## Audio
 
-One track survives: `assets/audio/Train 45.mp3`. Its authorship, intended use, and
-whether it is the placeholder “banjo music” mentioned in conversation remain
+The game now has a shuffled nine-track gameplay playlist: `Train 45.mp3` plus the
+eight recordings under `assets/audio/songs/`. The title screen retains its separate
+`opening screen musicMountain Banjo.mp3` theme. Gameplay exhausts a shuffled cycle
+before repeating and prevents the same song playing across a reshuffle boundary.
+The recordings' authorship, intended use, and whether any are the placeholder
+“banjo music” mentioned in conversation remain
 unverified. Do not assume it is cleared for release until provenance is confirmed.
 
 ## Archive

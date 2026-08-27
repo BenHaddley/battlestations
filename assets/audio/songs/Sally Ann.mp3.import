@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bb3w0yjkktmfx"
+path="res://.godot/imported/Sally Ann.mp3-a0074f66653bae7d00c38e0d7c96d994.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/songs/Sally Ann.mp3"
+dest_files=["res://.godot/imported/Sally Ann.mp3-a0074f66653bae7d00c38e0d7c96d994.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

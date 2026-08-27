@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://r3g8c0iw80q0"
+path="res://.godot/imported/I'll Fly Away.mp3-202a528a6442b43e8d05c70a4d78e0b5.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/songs/I'll Fly Away.mp3"
+dest_files=["res://.godot/imported/I'll Fly Away.mp3-202a528a6442b43e8d05c70a4d78e0b5.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

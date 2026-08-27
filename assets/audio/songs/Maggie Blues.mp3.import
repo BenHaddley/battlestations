@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dx0yc1kvd8rxv"
+path="res://.godot/imported/Maggie Blues.mp3-3bc3710d0d57e2d9635e2f88111355b7.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/songs/Maggie Blues.mp3"
+dest_files=["res://.godot/imported/Maggie Blues.mp3-3bc3710d0d57e2d9635e2f88111355b7.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

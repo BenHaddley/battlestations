@@ -23,7 +23,7 @@ question is resolved, then update the affected design page.
 | Question | Why it matters | Current evidence |
 |---|---|---|
 | Is the existing spider art temporary? | Determines when an art pass is worthwhile. | A collaborator planned to remake it after gameplay was established. |
-| Is `Train 45.mp3` original, licensed, and final? | Release and attribution risk. | One file survives; conversation mentions placeholder banjo music. |
+| Are the soundtrack recordings original, licensed, and final? | Release and attribution risk. | `Train 45`, eight gameplay songs, and a separate title theme now exist; provenance still needs confirmation. |
 | What was the game’s Twitter/X handle and branding? | Could recover public history and visual identity. | The account was discussed but never linked in the searched DM. |
 | Who owns each surviving asset? | Needed before public release. | Repository filenames do not establish authorship or license. |
 

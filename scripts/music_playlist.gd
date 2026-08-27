@@ -7,6 +7,7 @@ extends AudioStreamPlayer
 
 var _queue: Array[int] = []
 var _last_played: int = -1
+var play_history: Array[int] = [] ## Exposed for lightweight playlist regression tests.
 
 func _ready() -> void:
 	for track in tracks:
@@ -19,12 +20,17 @@ func _ready() -> void:
 func _play_next() -> void:
 	if tracks.is_empty():
 		return
+	var index := _take_next_index()
+	stream = tracks[index]
+	play()
+
+func _take_next_index() -> int:
 	if _queue.is_empty():
 		_reshuffle()
 	var index: int = _queue.pop_back()
 	_last_played = index
-	stream = tracks[index]
-	play()
+	play_history.append(index)
+	return index
 
 ## Reshuffles the play order. When there's more than one track, retries
 ## until the new order's next pick doesn't match whatever just finished, so

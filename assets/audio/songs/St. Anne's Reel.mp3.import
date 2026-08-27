@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cnqfr5gnb46au"
+path="res://.godot/imported/St. Anne's Reel.mp3-6edfbdd95017fdfc5c3e1a5a3a2c495a.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/songs/St. Anne's Reel.mp3"
+dest_files=["res://.godot/imported/St. Anne's Reel.mp3-6edfbdd95017fdfc5c3e1a5a3a2c495a.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
