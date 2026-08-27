@@ -105,7 +105,11 @@ func configure(game: Node, enemy_spawner: EnemySpawner, target_station: Station,
 	call_deferred("_position_entrances")
 
 func _hide_normal_hud() -> void:
-	for path in ["LeftPanel", "HpRail", "RightPanel"]:
+	# Normal play uses `the_new_ui.png` as a full-screen illustrated overlay on
+	# top of the shared `the_new_map.png` world. Spider Assault supplies its own
+	# faction panels, so hide both the live normal controls and that baked UI
+	# overlay; the clean authored map remains visible underneath.
+	for path in ["NewIllustratedUi", "LeftPanel", "HpRail", "RightPanel"]:
 		var normal_panel: CanvasItem = main.menu.get_node_or_null(path) as CanvasItem
 		if normal_panel:
 			normal_panel.visible = false

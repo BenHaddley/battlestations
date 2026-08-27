@@ -191,6 +191,8 @@ func _test_spider_assault() -> void:
 	_check(assault.entrance_buttons.size() == 5, "Spider Assault did not render all five roof entrances")
 	_check(assault.spider_buttons.size() == 5, "Spider Nest does not show all five spider roles")
 	_check(not main.menu.get_node("LeftPanel").visible and not main.menu.get_node("HpRail").visible and not main.menu.get_node("RightPanel").visible, "normal HUD overlaps the Spider Assault faction UI")
+	_check(not main.menu.get_node("NewIllustratedUi").visible, "normal-play illustrated UI remains behind Spider Assault")
+	_check(main.get_node("Board").texture.resource_path == "res://assets/the_new_map.png", "Spider Assault is not using the clean new map background")
 	var nest_rect: Rect2 = assault.get_node("SpiderNest").get_rect()
 	_check(nest_rect.end.x <= 350.0, "Spider Nest overlaps the center board, rect is %s" % nest_rect)
 	_check(assault.get_node("AssaultStatus").get_rect().position.x >= 1030.0, "Spider Assault status panel overlaps the center board")
@@ -239,6 +241,8 @@ func _test_main_scene_train_integration() -> void:
 	var main = MainScene.instantiate()
 	add_child(main)
 	await get_tree().process_frame
+	_check(main.menu.get_node("NewIllustratedUi").visible, "normal play lost its illustrated UI background")
+	_check(main.get_node("Board").texture.resource_path == "res://assets/the_new_map.png", "normal play lost the shared new map background")
 	var pause_menu: PauseMenu = main.menu.pause_menu
 	_check(pause_menu != null, "main HUD did not create the pause menu")
 	pause_menu.open()
