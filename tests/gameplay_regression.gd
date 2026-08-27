@@ -199,7 +199,8 @@ func _test_spider_assault() -> void:
 	_check(assault_music.stream.resource_path.ends_with("Spider Assault - The Fun House.mp3"), "Spider Assault loaded the wrong level song")
 	_check((assault_music.stream as AudioStreamMP3).loop, "Spider Assault level song is not configured to loop")
 	_check(main.convoys.size() == 2, "Spider Assault did not create its two-train defense")
-	_check(main.convoys[0].get_node_or_null("SpiderBlocker") != null, "Spider Assault trains do not physically block spiders")
+	var engine_blocker: Node = main.convoys[0].get_node_or_null("SpiderBlocker")
+	_check(engine_blocker is AnimatableBody2D, "Spider Assault train blocker is not synchronised with the moving train")
 	_check(PhaseManager.paused, "Spider Assault left the automatic campaign wave clock running")
 	var defensive_cars := 0
 	for convoy in main.convoys:
@@ -214,7 +215,15 @@ func _test_spider_assault() -> void:
 		if spider.get_meta("player_deployed", false):
 			deployed = spider
 			break
-	_check(deployed != null and deployed.has_route_target, "player-deployed spider did not receive an entrance route")
+	_check(deployed != null and deployed.has_route_target, "player-deployed spider did not receive an entrance lane")
+	_check(deployed != null and is_equal_approx(float(deployed.route_target.x), float(SpiderAssaultController.ENTRANCES[0].world.x)), "Spider Assault spider cut diagonally out of its selected lane")
+	_check(deployed != null and is_equal_approx(float(deployed.get_meta("assault_lane_x")), float(deployed.global_position.x)), "Spider Assault did not retain the selected normal-game lane")
+	var blocked_cars := 0
+	for convoy in main.convoys:
+		for car in convoy.followers:
+			if car.get_node_or_null("SpiderBlocker") is AnimatableBody2D:
+				blocked_cars += 1
+	_check(blocked_cars == defensive_cars, "one or more Spider Assault turret cars allow spiders to pass through")
 	assault._activate_swarm()
 	_check(deployed != null and is_equal_approx(float(deployed.assault_speed_multiplier), 1.6), "SWARM did not accelerate deployed spiders")
 	main.get_node("Station").take_damage(main.get_node("Station").max_health)

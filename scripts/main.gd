@@ -206,10 +206,15 @@ func _seed_spider_assault_defense() -> void:
 			_install_assault_blocker(car, 68.0)
 
 func _install_assault_blocker(host: Node2D, local_radius: float) -> void:
-	var body := StaticBody2D.new()
+	# Trains and their turret cars are repositioned every physics tick. An
+	# AnimatableBody2D keeps its collision transform synchronised with that
+	# movement; StaticBody2D is for immobile scenery and let fast-moving train
+	# art visibly pass through lane-bound spiders between physics updates.
+	var body := AnimatableBody2D.new()
 	body.name = "SpiderBlocker"
 	body.collision_layer = 1
 	body.collision_mask = 0
+	body.sync_to_physics = true
 	var collision := CollisionShape2D.new()
 	var shape := CircleShape2D.new()
 	shape.radius = local_radius

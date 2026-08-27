@@ -110,7 +110,9 @@ func _spawn_enemy() -> void:
 		enemy.configure_lane(leak_y, _journey_duration_for_wave())
 
 ## Player-requested deployment for Spider Assault. This deliberately uses the
-## same scene, roster data, health and station-attack behavior as normal waves.
+## same scene, roster data, lane movement, health and station-attack behavior
+## as normal waves. `destination.x` is intentionally ignored: spiders remain
+## in the top lane the player chose instead of cutting diagonally across lanes.
 func spawn_controlled_spider(profile_id: String, entrance: Vector2, destination: Vector2, swarm_active: bool = false) -> Node2D:
 	if enemy_prefabs.is_empty():
 		return null
@@ -126,8 +128,9 @@ func spawn_controlled_spider(profile_id: String, entrance: Vector2, destination:
 		enemy.configure_archetype(profile, 1, 2)
 	if enemy.has_method("configure_bounty"):
 		enemy.configure_bounty(0)
-	if enemy.has_method("configure_route"):
-		enemy.configure_route(destination, 22.0)
+	if enemy.has_method("configure_lane"):
+		enemy.configure_lane(destination.y, journey_duration_seconds)
+	enemy.set_meta("assault_lane_x", entrance.x)
 	enemy.set("assault_speed_multiplier", 1.6 if swarm_active else 1.0)
 	enemies_alive += 1
 	return enemy
