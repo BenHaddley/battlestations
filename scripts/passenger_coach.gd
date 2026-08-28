@@ -3,8 +3,8 @@ class_name PassengerCoach
 ## Non-combat car: generates passive income while coupled to the train.
 
 @export var weight: float = 1.0
-@export var income_amount: int = 50
-@export var income_interval: float = 10.0
+@export var income_amount: int = 32
+@export var income_interval: float = 8.0
 
 var _elapsed: float = 0.0
 

@@ -1,7 +1,7 @@
 extends Control
 class_name TrainControlPanel
-## Custom-drawn locomotive control stand. It emits driver intentions only;
-## TrainConvoy remains the authority for velocity, acceleration and reversing.
+## Tiny read-only selected-engine indicator. Driving is handled with Up/Down,
+## leaving the battlefield visible at the moment controls matter most.
 
 signal control_changed(direction: int, throttle_notch: int)
 signal deselect_requested
@@ -26,7 +26,7 @@ var _dragging_throttle := false
 var _animation: Tween
 
 func _ready() -> void:
-	custom_minimum_size = Vector2(500, 100)
+	custom_minimum_size = Vector2(292, 38)
 	size = custom_minimum_size
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	queue_redraw()
@@ -55,17 +55,14 @@ func _process(_delta: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	var collapsed := Rect2(108, 66, 284, 31)
-	var expanded := Rect2(0, 0, 500, 100)
-	var housing := Rect2(collapsed.position.lerp(expanded.position, _expansion), collapsed.size.lerp(expanded.size, _expansion))
-	_draw_housing(housing)
-	if _expansion < 0.55:
-		_draw_centered_text("SELECT A LOCOMOTIVE", Vector2(250, 87), 16, CREAM)
+	if _expansion < 0.05 or not is_instance_valid(_convoy):
 		return
-	_draw_selected_plate()
-	_draw_reverser()
-	_draw_throttle()
-	_draw_speed_gauge()
+	var housing := Rect2(0, 0, 292, 38)
+	_draw_housing(housing)
+	var direction := "→" if _convoy.current_speed >= 0.0 else "←"
+	var ratio := absf(_convoy.current_speed) / maxf(_convoy.cruise_speed, 1.0)
+	var pace := "SLOW" if ratio < 0.72 else ("FAST" if ratio > 1.28 else "NORMAL")
+	_draw_centered_text("ENGINE %d   %s %s   ↑/↓ DRIVE" % [_train_number, direction, pace], Vector2(146, 25), 15, CREAM)
 
 func _draw_housing(rect: Rect2) -> void:
 	draw_style_box(_housing_style(), rect)
@@ -154,42 +151,12 @@ func _gui_input(event: InputEvent) -> void:
 			deselect_requested.emit()
 			accept_event()
 			return
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
-			_set_throttle(_throttle_notch + 1)
-			accept_event()
-			return
-		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
-			_set_throttle(_throttle_notch - 1)
-			accept_event()
-			return
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			if event.pressed and Rect2(15, 30, 127, 62).has_point(event.position):
-				_set_reverser(_nearest_reverser(event.position.x))
-				accept_event()
-			elif event.pressed and Rect2(151, 30, 234, 62).has_point(event.position):
-				_dragging_throttle = true
-				_set_throttle(_nearest_throttle(event.position.x))
-				accept_event()
-			elif not event.pressed and _dragging_throttle:
-				_dragging_throttle = false
-				_set_throttle(_nearest_throttle(event.position.x))
-				accept_event()
-	elif event is InputEventMouseMotion and _dragging_throttle:
-		_set_throttle(_nearest_throttle(event.position.x))
-		accept_event()
+
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if not is_instance_valid(_convoy) or not event.pressed or event.echo:
+	if not is_instance_valid(_convoy) or not event.pressed:
 		return
 	match event.physical_keycode:
-		KEY_W, KEY_UP:
-			_set_throttle(_throttle_notch + 1)
-		KEY_S, KEY_DOWN:
-			_set_throttle(_throttle_notch - 1)
-		KEY_A, KEY_LEFT:
-			_set_reverser(_requested_direction - 1)
-		KEY_D, KEY_RIGHT:
-			_set_reverser(_requested_direction + 1)
 		KEY_ESCAPE:
 			deselect_requested.emit()
 

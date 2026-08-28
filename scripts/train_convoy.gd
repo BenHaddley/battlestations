@@ -15,10 +15,11 @@ class_name TrainConvoy
 ## and — per its card's third paragraph — trims accel/coast time.
 
 @export_group("Movement")
-@export var cruise_speed: float = 62.0
-@export var max_speed: float = 105.0
-@export var acceleration: float = 34.0
-@export var deceleration: float = 48.0
+@export var cruise_speed: float = 46.0
+@export var max_speed: float = 82.0
+@export var minimum_speed: float = 14.0
+@export var acceleration: float = 28.0
+@export var deceleration: float = 34.0
 @export var reverse_acceleration: float = 28.0
 @export var occupancy_distance: float = 64.0
 @export var occupancy_debug: bool = false
@@ -55,6 +56,9 @@ var drag_active: bool = false
 var selected: bool = false
 var movement_blocked: bool = false
 var _brake_time_multiplier: float = 1.0
+var manual_axis: int = 0
+var manual_hold_time: float = 0.0
+const REVERSE_HOLD_SECONDS := 1.15
 
 func set_engine_livery(texture: Texture2D) -> void:
 	if texture:
@@ -89,12 +93,18 @@ func _process(delta: float) -> void:
 
 func _update_speed(delta: float) -> void:
 	var target_speed := cruise_speed * cruise_direction
-	if throttle_notch == 0:
-		target_speed = 0.0
+	if manual_axis > 0:
+		target_speed = max_speed
+	elif manual_axis < 0:
+		# Down first gives useful low-speed positioning. Holding it is the
+		# deliberate gesture that takes the engine through a reversal.
+		target_speed = minimum_speed if manual_hold_time < REVERSE_HOLD_SECONDS else -cruise_speed
+	elif throttle_notch == 0:
+		# Legacy callers asking for BRAKE get very slow movement, never parking.
+		target_speed = minimum_speed * cruise_direction
 	elif requested_direction != 0 and throttle_notch >= 2:
 		var power_fraction := float(throttle_notch - 1) / 4.0
-		var powered_speed := lerpf(cruise_speed, max_speed, power_fraction)
-		target_speed = powered_speed * requested_direction
+		target_speed = lerpf(cruise_speed, max_speed, power_fraction) * requested_direction
 	var current_sign := signi(current_speed)
 	var target_sign := signi(target_speed)
 	var rate := acceleration
@@ -107,8 +117,17 @@ func _update_speed(delta: float) -> void:
 	elif target_sign < 0:
 		rate = reverse_acceleration
 	current_speed = move_toward(current_speed, target_speed, rate * delta)
-	if is_zero_approx(current_speed) and requested_direction != 0 and throttle_notch >= 2:
-		cruise_direction = requested_direction
+	if target_sign != 0 and signi(current_speed) == target_sign:
+		cruise_direction = target_sign
+
+func set_manual_axis(axis: int, delta: float = 0.0) -> void:
+	manual_axis = clampi(axis, -1, 1)
+	if manual_axis < 0:
+		manual_hold_time += maxf(delta, 0.0)
+	else:
+		manual_hold_time = 0.0
+	requested_direction = manual_axis
+	throttle_notch = 5 if manual_axis > 0 else (0 if manual_axis < 0 else 1)
 
 ## Compatibility helper for older callers and tests. New UI should use
 ## set_driver_controls() so direction and power remain separate intentions.
@@ -121,7 +140,16 @@ func set_driver_controls(direction: int, notch: int) -> void:
 	throttle_notch = clampi(notch, 0, 5)
 
 func release_driver_controls() -> void:
+	manual_axis = 0
+	manual_hold_time = 0.0
 	set_driver_controls(0, 1)
+
+func place_at_route_distance(distance_on_route: float) -> bool:
+	if route_length <= 0.0 or not _positions_valid_at(distance_on_route, followers.size()):
+		return false
+	route_distance = fposmod(distance_on_route, route_length)
+	_apply_consist_positions()
+	return true
 
 func set_selected(value: bool) -> void:
 	selected = value

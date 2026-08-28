@@ -15,6 +15,7 @@ const NEW_BOARD_CAR_SCALE := Vector2(0.54, 0.54)
 
 ## One TrainConvoy instance per generated route, in generation order.
 var convoys: Array[Node2D] = []
+var track_routes: Array[PackedVector2Array] = []
 
 @export_range(2, 4) var starting_trains: int = 2
 @export_range(0, 6) var starting_cars: int = 1
@@ -75,6 +76,7 @@ func _ready() -> void:
 		menu.train_drag_started.connect(convoy.set_drag_active.bind(true))
 		menu.train_drag_ended.connect(convoy.set_drag_active.bind(false))
 	menu.train_drop_requested.connect(_on_train_drop_requested)
+	menu.engine_drop_requested.connect(_on_engine_drop_requested)
 	menu.remove_requested.connect(_on_remove_requested)
 	_seed_tabletop()
 	upgrade_panel = UnitUpgradePanel.new()
@@ -91,12 +93,12 @@ func _ready() -> void:
 	$CanvasLayer.add_child(train_control_panel)
 	train_control_panel.anchor_left = 0.5
 	train_control_panel.anchor_right = 0.5
-	train_control_panel.anchor_top = 1.0
-	train_control_panel.anchor_bottom = 1.0
-	train_control_panel.offset_left = -250.0
-	train_control_panel.offset_right = 250.0
-	train_control_panel.offset_top = -104.0
-	train_control_panel.offset_bottom = -4.0
+	train_control_panel.anchor_top = 0.0
+	train_control_panel.anchor_bottom = 0.0
+	train_control_panel.offset_left = -146.0
+	train_control_panel.offset_right = 146.0
+	train_control_panel.offset_top = 6.0
+	train_control_panel.offset_bottom = 44.0
 	train_control_panel.control_changed.connect(_on_train_control_changed)
 	train_control_panel.deselect_requested.connect(_clear_train_selection)
 	if CampaignManager.is_spider_assault():
@@ -136,12 +138,14 @@ func _generate_and_spawn_trains() -> void:
 
 	if CampaignManager.is_challenge_active() and routes.size() > starting_trains:
 		routes.resize(starting_trains)
+	track_routes = routes
 	for child in trains.get_children():
 		child.queue_free()
 	convoys = []
 	var livery_indices := range(ENGINE_LIVERIES.size())
 	livery_indices.shuffle()
-	for route_index in range(routes.size()):
+	var initial_engine_count := mini(starting_trains, routes.size()) if CampaignManager.is_challenge_active() else mini(1, routes.size())
+	for route_index in range(initial_engine_count):
 		var convoy: Node2D = TrainConvoyScene.instantiate()
 		trains.add_child(convoy)
 		convoy.configure_path(routes[route_index])
@@ -155,6 +159,70 @@ func _generate_and_spawn_trains() -> void:
 		if CampaignManager.is_spider_assault():
 			_install_assault_blocker(convoy, 36.0)
 		convoys.append(convoy)
+
+func _process(delta: float) -> void:
+	if not is_instance_valid(selected_convoy):
+		return
+	var axis := int(Input.is_key_pressed(KEY_UP)) - int(Input.is_key_pressed(KEY_DOWN))
+	if selected_convoy.get_meta("reverse_locked", false) and axis < 0:
+		axis = 0
+	selected_convoy.set_manual_axis(axis, delta)
+
+func _on_engine_drop_requested(screen_position: Vector2) -> void:
+	if not CampaignManager.challenge_shop_enabled():
+		menu.show_placement_feedback("This job card forbids purchasing engines.", false)
+		return
+	var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * screen_position
+	var placement := _nearest_free_rail_placement(world_position)
+	if placement.is_empty():
+		menu.show_placement_feedback("Place the locomotive on an empty stretch of rail.", false)
+		return
+	if not LevelManager.spend_currency(Menu.ENGINE_COST):
+		menu.show_placement_feedback("Not enough funds for a locomotive.", false)
+		return
+	var convoy: TrainConvoy = TrainConvoyScene.instantiate()
+	trains.add_child(convoy)
+	convoy.configure_path(track_routes[int(placement.route)])
+	convoy.set_engine_livery(ENGINE_LIVERIES[convoys.size() % ENGINE_LIVERIES.size()])
+	if not convoy.place_at_route_distance(float(placement.distance)):
+		LevelManager.increase_currency(Menu.ENGINE_COST)
+		convoy.queue_free()
+		menu.show_placement_feedback("That rail cannot hold a locomotive here.", false)
+		return
+	convoys.append(convoy)
+	menu.trains = convoys
+	menu.train_drag_started.connect(convoy.set_drag_active.bind(true))
+	menu.train_drag_ended.connect(convoy.set_drag_active.bind(false))
+	_select_convoy(convoy)
+	menu.show_placement_feedback("Engine %d added to the railway." % convoys.size(), true)
+
+func _nearest_free_rail_placement(world_position: Vector2) -> Dictionary:
+	var best := {}
+	var best_distance := 44.0
+	for route_index in range(track_routes.size()):
+		var route := track_routes[route_index]
+		var along := 0.0
+		for point_index in range(route.size()):
+			var start := route[point_index]
+			var finish := route[(point_index + 1) % route.size()]
+			var segment := finish - start
+			var weight := clampf((world_position - start).dot(segment) / maxf(segment.length_squared(), 0.001), 0.0, 1.0)
+			var candidate := start + segment * weight
+			var pointer_distance := candidate.distance_to(world_position)
+			if pointer_distance < best_distance and _engine_space_is_free(candidate):
+				best_distance = pointer_distance
+				best = {"route": route_index, "distance": along + segment.length() * weight}
+			along += segment.length()
+	return best
+
+func _engine_space_is_free(candidate: Vector2) -> bool:
+	for convoy in convoys:
+		if convoy.global_position.distance_to(candidate) < convoy.occupancy_distance * 1.35:
+			return false
+		for car in convoy.followers:
+			if is_instance_valid(car) and car.global_position.distance_to(candidate) < convoy.occupancy_distance * 1.35:
+				return false
+	return true
 
 ## The first train opens with one free basic car so a first-time player has
 ## something to watch fight immediately; every other starting train opens

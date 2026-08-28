@@ -8,6 +8,7 @@ class_name Menu
 signal train_drag_started
 signal train_drag_ended
 signal train_drop_requested(tower_index: int, screen_position: Vector2)
+signal engine_drop_requested(screen_position: Vector2)
 signal remove_requested(screen_position: Vector2)
 
 @onready var currency_label: Label = $LeftPanel/Margin/VBox/CurrencyRow/HBox/CurrencyLabel
@@ -45,6 +46,8 @@ signal remove_requested(screen_position: Vector2)
 @export var unaffordable_style: StyleBox
 
 const TOWER_BUTTONS := ["gunner_button", "chaingunner_button", "ballast_button", "passenger_button", "coal_cannon_button", "brake_van_button", "tender_button"]
+const ENGINE_COST := 325
+const ENGINE_ICON := preload("res://assets/sprites/engines/Steam Engine Black.png")
 
 const SCHEDULE_STATION_COLOR := Color(0.32, 0.58, 0.86, 1)
 const SCHEDULE_BATTLE_COLOR := Color(0.72, 0.16, 0.1, 1)
@@ -90,6 +93,7 @@ func _ready() -> void:
 	add_child(pause_menu)
 	pause_menu.resumed.connect(_on_pause_menu_resumed)
 	_install_new_ui_layout()
+	_install_engine_shop_row()
 	_install_station_progress_panel()
 	_style_train_yard()
 	for index in range(TOWER_BUTTONS.size()):
@@ -330,12 +334,15 @@ func _set_price_text(button: Button, value: String) -> void:
 ## already consumed (e.g. pressing it again to cancel) must not also count
 ## as a "click a car" attempt.
 func _input(event: InputEvent) -> void:
-	if dragging_tower < 0:
+	if dragging_tower == -1:
 		return
 	if event is InputEventMouseMotion:
 		_position_drag_preview(event.position)
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
-		train_drop_requested.emit(dragging_tower, event.position)
+		if dragging_tower == -2:
+			engine_drop_requested.emit(event.position)
+		else:
+			train_drop_requested.emit(dragging_tower, event.position)
 		dragging_tower = -1
 		drag_preview.visible = false
 		train_drag_ended.emit()
@@ -506,6 +513,28 @@ func _on_tower_gui_input(event: InputEvent, index: int) -> void:
 		dragging_tower = index
 		var tower := BuildManager.get_selected_tower()
 		drag_preview.texture = tower.icon if tower else null
+		drag_preview.visible = true
+		_position_drag_preview(event.global_position)
+		train_drag_started.emit()
+
+func _install_engine_shop_row() -> void:
+	var shop_list: VBoxContainer = $LeftPanel/Margin/VBox/ScrollContainer/ShopList
+	var button := Button.new()
+	button.name = "EngineRow"
+	button.text = "LOCOMOTIVE                         Δ%d" % ENGINE_COST
+	button.tooltip_text = "Drag onto an empty stretch of railway to start an independent train."
+	button.custom_minimum_size.y = 65
+	button.add_theme_font_size_override("font_size", 16)
+	button.add_theme_stylebox_override("normal", _train_yard_row_style(7, false))
+	button.add_theme_stylebox_override("hover", _train_yard_row_style(7, true))
+	button.gui_input.connect(_on_engine_gui_input)
+	shop_list.add_child(button)
+	shop_list.move_child(button, 0)
+
+func _on_engine_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		dragging_tower = -2
+		drag_preview.texture = ENGINE_ICON
 		drag_preview.visible = true
 		_position_drag_preview(event.global_position)
 		train_drag_started.emit()

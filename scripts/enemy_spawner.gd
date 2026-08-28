@@ -23,9 +23,9 @@ signal wave_cleared(wave_number: int)
 @export var enemies_per_second_cap: float = 15.0
 ## Scaled up alongside the infowiki's car costs so early-wave payouts still
 ## feel proportionate to what things actually cost now.
-@export var early_bounty: int = 120 ## Paid per kill through wave 3, so players can freely experiment.
-@export var wave_bonus_base: int = 75 ## Flat currency awarded on top of the per-wave scaling bonus below.
-@export var wave_bonus_per_wave: int = 30
+@export var early_bounty: int = 18 ## Kills are bonus income; coaches fund sustained expansion.
+@export var wave_bonus_base: int = 35
+@export var wave_bonus_per_wave: int = 12
 ## Set by Main from CampaignManager's current level. 0 means endless — no
 ## level-complete trigger, waves just keep climbing as before.
 @export var wave_target: int = 0

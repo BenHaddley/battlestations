@@ -252,17 +252,31 @@ func _test_main_scene_train_integration() -> void:
 	_check(pause_menu.get_node_or_null("Shade/Card/Margin/Content/TitleButton") != null, "pause menu is missing return to title")
 	pause_menu.close()
 	_check(not get_tree().paused and not pause_menu.visible, "resume did not restore gameplay")
-	_check(main.convoys.size() >= 2, "main scene did not create its train routes")
+	_check(main.convoys.size() == 1, "normal level should begin with exactly one free locomotive")
+	_check(main.track_routes.size() >= 2, "normal level should retain routes for purchased locomotives")
 	if not main.convoys.is_empty():
 		_check(main.convoys[0].car_count() >= 1, "starter car was rejected or missing")
 		main._select_convoy(main.convoys[0])
 		await get_tree().create_timer(0.2).timeout
 		_check(main.train_control_panel._expansion > 0.9, "engine selection did not expand train controls")
-		_check(main.train_control_panel.find_children("*", "Button", true, false).is_empty(), "train stand still contains generic Godot buttons")
-		main.train_control_panel._set_reverser(-1)
-		main.train_control_panel._set_throttle(3)
-		_check(main.convoys[0].requested_direction == -1 and main.convoys[0].throttle_notch == 3, "physical reverser/throttle controls did not reach selected train")
-		_check(main.train_control_panel._nearest_throttle(166.0) == 0 and main.train_control_panel._nearest_throttle(368.5) == 5, "throttle click targets do not snap to end notches")
+		_check(main.train_control_panel.size.y <= 44.0, "selected-engine indicator obscures too much battlefield")
+		var selected: TrainConvoy = main.convoys[0]
+		var cruise_before := selected.cruise_speed
+		selected.set_manual_axis(1, 0.2)
+		selected._update_speed(0.5)
+		_check(selected.current_speed > cruise_before, "Up override did not accelerate the selected engine")
+		selected.current_speed = selected.cruise_speed
+		selected.set_manual_axis(-1, 0.2)
+		selected._update_speed(0.5)
+		_check(selected.current_speed > 0.0 and selected.current_speed < selected.cruise_speed, "short Down override did not slow without parking")
+		selected.set_manual_axis(-1, selected.REVERSE_HOLD_SECONDS)
+		for step in range(5): selected._update_speed(0.5)
+		_check(selected.current_speed < 0.0, "held Down override did not reverse the selected engine")
+		var placement: Dictionary = main._nearest_free_rail_placement(main.track_routes[1][2])
+		_check(not placement.is_empty(), "empty railway rejected purchased-engine placement")
+		LevelManager.currency = Menu.ENGINE_COST
+		main._on_engine_drop_requested(main.get_viewport().get_canvas_transform() * main.track_routes[1][2])
+		_check(main.convoys.size() == 2 and LevelManager.currency == 0, "purchased locomotive was not placed using the shared convoy system")
 		main._clear_train_selection()
 		await get_tree().create_timer(0.2).timeout
 		_check(main.train_control_panel._expansion < 0.1, "train controls did not collapse after deselection")

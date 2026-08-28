@@ -6,7 +6,7 @@ class_name Health
 signal hit_points_changed(current: int, max_hit_points: int)
 
 @export var hit_points: int = 15
-@export var currency_worth: int = 75
+@export var currency_worth: int = 12
 
 var is_destroyed: bool = false
 var max_hit_points: int

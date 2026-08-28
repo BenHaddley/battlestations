@@ -6,8 +6,8 @@
 [node name="PassengerCoach" type="Node2D"]
 script = ExtResource("1")
 weight = 125.0
-income_amount = 50
-income_interval = 10.0
+income_amount = 32
+income_interval = 8.0
 z_index = 20
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
