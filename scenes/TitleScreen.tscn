@@ -89,7 +89,6 @@ grow_vertical = 2
 mouse_default_cursor_shape = 2
 texture_normal = ExtResource("6")
 ignore_texture_size = true
-tooltip_text = "Start Game"
 script = ExtResource("5")
 
 [node name="LevelSelectButton" type="TextureButton" parent="."]
@@ -103,7 +102,6 @@ grow_vertical = 2
 mouse_default_cursor_shape = 2
 texture_normal = ExtResource("7")
 ignore_texture_size = true
-tooltip_text = "Level Select"
 script = ExtResource("5")
 
 [node name="ChallengesButton" type="TextureButton" parent="."]
@@ -117,7 +115,6 @@ grow_vertical = 2
 mouse_default_cursor_shape = 2
 texture_normal = ExtResource("8")
 ignore_texture_size = true
-tooltip_text = "Challenges"
 script = ExtResource("5")
 
 [node name="AlmanacButton" type="TextureButton" parent="."]
@@ -131,7 +128,6 @@ grow_vertical = 2
 mouse_default_cursor_shape = 2
 texture_normal = ExtResource("9")
 ignore_texture_size = true
-tooltip_text = "Almanac"
 script = ExtResource("5")
 
 [node name="AchievementsButton" type="TextureButton" parent="."]
@@ -145,7 +141,6 @@ grow_vertical = 2
 mouse_default_cursor_shape = 2
 texture_normal = ExtResource("10")
 ignore_texture_size = true
-tooltip_text = "Achievements"
 script = ExtResource("5")
 
 [node name="OptionsButton" type="TextureButton" parent="."]
@@ -159,7 +154,6 @@ grow_vertical = 2
 mouse_default_cursor_shape = 2
 texture_normal = ExtResource("11")
 ignore_texture_size = true
-tooltip_text = "Settings"
 script = ExtResource("5")
 
 [node name="ProfileButton" type="TextureButton" parent="."]
@@ -173,7 +167,6 @@ grow_vertical = 2
 mouse_default_cursor_shape = 2
 texture_normal = ExtResource("12")
 ignore_texture_size = true
-tooltip_text = "Profile"
 script = ExtResource("5")
 
 [node name="QuitButton" type="TextureButton" parent="."]
@@ -187,7 +180,6 @@ grow_vertical = 2
 mouse_default_cursor_shape = 2
 texture_normal = ExtResource("13")
 ignore_texture_size = true
-tooltip_text = "Quit"
 script = ExtResource("5")
 
 [node name="Modal" type="PanelContainer" parent="."]

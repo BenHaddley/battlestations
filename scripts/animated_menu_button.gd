@@ -12,10 +12,8 @@ func _ready() -> void:
 	resized.connect(_update_pivot)
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
-	focus_entered.connect(_on_focus_entered)
-	focus_exited.connect(_on_focus_exited)
 	button_down.connect(func() -> void: _animate_to(pressed_scale))
-	button_up.connect(func() -> void: _animate_to(hover_scale if _hovered or has_focus() else 1.0))
+	button_up.connect(func() -> void: _animate_to(hover_scale if _hovered else 1.0))
 	_update_pivot()
 
 func _update_pivot() -> void:
@@ -28,18 +26,8 @@ func _on_mouse_entered() -> void:
 
 func _on_mouse_exited() -> void:
 	_hovered = false
-	if not has_focus():
-		z_index = 0
-		_animate_to(1.0)
-
-func _on_focus_entered() -> void:
-	z_index = 5
-	_animate_to(hover_scale)
-
-func _on_focus_exited() -> void:
-	if not _hovered:
-		z_index = 0
-		_animate_to(1.0)
+	z_index = 0
+	_animate_to(1.0)
 
 func _animate_to(target_scale: float) -> void:
 	if _tween and _tween.is_valid():
