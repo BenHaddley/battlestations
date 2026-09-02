@@ -5,9 +5,12 @@ const StartGameDialogueScript := preload("res://scripts/start_game_dialogue.gd")
 const TUTORIAL_SAVE_PATH := "user://battle_stations_tutorial.cfg"
 
 @onready var start_button: Button = $StartButton
-@onready var press_start_button: Button = $PressStartButton
+@onready var level_select_button: Button = $LevelSelectButton
 @onready var challenges_button: Button = $ChallengesButton
+@onready var almanac_button: Button = $AlmanacButton
+@onready var achievements_button: Button = $AchievementsButton
 @onready var options_button: Button = $OptionsButton
+@onready var profile_button: Button = $ProfileButton
 @onready var quit_button: Button = $QuitButton
 @onready var modal: PanelContainer = $Modal
 @onready var modal_title: Label = $Modal/Margin/VBox/Title
@@ -29,9 +32,12 @@ func _ready() -> void:
 	get_tree().paused = false
 	_play_music_looped()
 	start_button.pressed.connect(_on_start_pressed)
-	press_start_button.pressed.connect(_on_start_pressed)
+	level_select_button.pressed.connect(_show_level_select)
 	challenges_button.pressed.connect(_show_challenges)
+	almanac_button.pressed.connect(_show_almanac)
+	achievements_button.pressed.connect(_show_achievements)
 	options_button.pressed.connect(_show_options)
+	profile_button.pressed.connect(_show_profiles)
 	quit_button.pressed.connect(_quit_game)
 	$Modal/Margin/VBox/BackButton.pressed.connect(func() -> void: modal.hide())
 	continue_button.pressed.connect(_on_continue_pressed)
@@ -102,16 +108,44 @@ func _launch_game() -> void:
 		return
 	starting = true
 	start_button.disabled = true
-	press_start_button.disabled = true
 	music_player.stop()
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
+
+func _show_level_select() -> void:
+	_show_info_modal("LEVEL SELECT", "Replay unlocked stations and return for any objectives you missed.\n\nLevel selection is coming in a later update.")
+
+func _show_almanac() -> void:
+	_show_info_modal("ALMANAC", "Review discovered trains, cars, spiders, and railway notes.\n\nThe almanac is coming in a later update.")
+
+func _show_achievements() -> void:
+	_show_info_modal("ACHIEVEMENTS", "Complete special tasks to earn medals for this cabinet.\n\nAchievements are coming in a later update.")
+
+func _show_profiles() -> void:
+	_show_info_modal("PROFILES", "Three separate railway profiles are planned.\n\nProfile switching is coming in a later update.")
+
+func _show_info_modal(title: String, copy: String) -> void:
+	_clear_challenge_buttons()
+	modal_title.text = title
+	modal_copy.text = copy
+	_reset_modal_size()
+	modal.show()
+	$Modal/Margin/VBox/BackButton.grab_focus()
+
+func _clear_challenge_buttons() -> void:
+	for old_button in $Modal/Margin/VBox.get_children():
+		if old_button is Button and old_button.name.begins_with("Challenge"):
+			old_button.queue_free()
+
+func _reset_modal_size() -> void:
+	modal.offset_left = -250.0
+	modal.offset_right = 250.0
+	modal.offset_top = -145.0
+	modal.offset_bottom = 145.0
 
 func _show_challenges() -> void:
 	modal_title.text = "CHALLENGE JOB CARDS"
 	modal_copy.text = "Pick one strange railway job. Challenge runs do not overwrite campaign progress."
-	for old_button in $Modal/Margin/VBox.get_children():
-		if old_button is Button and old_button.name.begins_with("Challenge"):
-			old_button.queue_free()
+	_clear_challenge_buttons()
 	var back_button: Button = $Modal/Margin/VBox/BackButton
 	for challenge in CampaignManager.CHALLENGES:
 		var button := Button.new()
@@ -138,10 +172,7 @@ func _launch_challenge(challenge_id: String) -> void:
 		_launch_game()
 
 func _show_options() -> void:
-	modal_title.text = "OPTIONS"
-	modal_copy.text = "Use the illustrated controls in battle to pause or run at double speed.\n\nMore sound and display options are coming soon."
-	modal.show()
-	$Modal/Margin/VBox/BackButton.grab_focus()
+	_show_info_modal("SETTINGS", "Use the illustrated controls in battle to pause or run at double speed.\n\nMore sound and display options are coming soon.")
 
 func _quit_game() -> void:
 	if OS.has_feature("web"):
