@@ -4,14 +4,14 @@ extends Control
 const StartGameDialogueScript := preload("res://scripts/start_game_dialogue.gd")
 const TUTORIAL_SAVE_PATH := "user://battle_stations_tutorial.cfg"
 
-@onready var start_button: Button = $StartButton
-@onready var level_select_button: Button = $LevelSelectButton
-@onready var challenges_button: Button = $ChallengesButton
-@onready var almanac_button: Button = $AlmanacButton
-@onready var achievements_button: Button = $AchievementsButton
-@onready var options_button: Button = $OptionsButton
-@onready var profile_button: Button = $ProfileButton
-@onready var quit_button: Button = $QuitButton
+@onready var start_button: TextureButton = $StartButton
+@onready var level_select_button: TextureButton = $LevelSelectButton
+@onready var challenges_button: TextureButton = $ChallengesButton
+@onready var almanac_button: TextureButton = $AlmanacButton
+@onready var achievements_button: TextureButton = $AchievementsButton
+@onready var options_button: TextureButton = $OptionsButton
+@onready var profile_button: TextureButton = $ProfileButton
+@onready var quit_button: TextureButton = $QuitButton
 @onready var modal: PanelContainer = $Modal
 @onready var modal_title: Label = $Modal/Margin/VBox/Title
 @onready var modal_copy: Label = $Modal/Margin/VBox/Copy

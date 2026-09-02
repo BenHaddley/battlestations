@@ -1,9 +1,18 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scripts/title_screen.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/main-menu-concept-v2.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/background.png" id="2"]
 [ext_resource type="FontFile" path="res://assets/fonts/ArchitectsDaughter-Regular.ttf" id="3"]
 [ext_resource type="AudioStream" path="res://assets/audio/opening screen musicMountain Banjo.mp3" id="4"]
+[ext_resource type="Script" path="res://scripts/animated_menu_button.gd" id="5"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/start_game.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/level_select.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/challenges.png" id="8"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/almanac.png" id="9"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/achievements.png" id="10"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/settings.png" id="11"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/profile.png" id="12"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/quit.png" id="13"]
 
 [sub_resource type="StyleBoxFlat" id="HitNormal"]
 bg_color = Color(1, 1, 1, 0.015)
@@ -69,117 +78,117 @@ texture = ExtResource("2")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="StartButton" type="Button" parent="."]
+[node name="StartButton" type="TextureButton" parent="."]
 layout_mode = 1
 anchor_left = 0.625
 anchor_top = 0.085
-anchor_right = 0.981
-anchor_bottom = 0.38
+anchor_right = 0.978
+anchor_bottom = 0.383
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-theme_override_styles/normal = SubResource("HitNormal")
-theme_override_styles/hover = SubResource("HitHover")
-theme_override_styles/focus = SubResource("HitHover")
+texture_normal = ExtResource("6")
+ignore_texture_size = true
 tooltip_text = "Start Game"
+script = ExtResource("5")
 
-[node name="LevelSelectButton" type="Button" parent="."]
+[node name="LevelSelectButton" type="TextureButton" parent="."]
 layout_mode = 1
 anchor_left = 0.578
 anchor_top = 0.416
 anchor_right = 0.775
-anchor_bottom = 0.592
+anchor_bottom = 0.6
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-theme_override_styles/normal = SubResource("HitNormal")
-theme_override_styles/hover = SubResource("HitHover")
-theme_override_styles/focus = SubResource("HitHover")
+texture_normal = ExtResource("7")
+ignore_texture_size = true
 tooltip_text = "Level Select"
+script = ExtResource("5")
 
-[node name="ChallengesButton" type="Button" parent="."]
+[node name="ChallengesButton" type="TextureButton" parent="."]
 layout_mode = 1
 anchor_left = 0.781
-anchor_top = 0.416
-anchor_right = 0.977
-anchor_bottom = 0.592
+anchor_top = 0.414
+anchor_right = 0.978
+anchor_bottom = 0.6
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-theme_override_styles/normal = SubResource("HitNormal")
-theme_override_styles/hover = SubResource("HitHover")
-theme_override_styles/focus = SubResource("HitHover")
+texture_normal = ExtResource("8")
+ignore_texture_size = true
 tooltip_text = "Challenges"
+script = ExtResource("5")
 
-[node name="AlmanacButton" type="Button" parent="."]
+[node name="AlmanacButton" type="TextureButton" parent="."]
 layout_mode = 1
-anchor_left = 0.547
-anchor_top = 0.617
+anchor_left = 0.544
+anchor_top = 0.611
 anchor_right = 0.757
-anchor_bottom = 0.788
+anchor_bottom = 0.792
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-theme_override_styles/normal = SubResource("HitNormal")
-theme_override_styles/hover = SubResource("HitHover")
-theme_override_styles/focus = SubResource("HitHover")
+texture_normal = ExtResource("9")
+ignore_texture_size = true
 tooltip_text = "Almanac"
+script = ExtResource("5")
 
-[node name="AchievementsButton" type="Button" parent="."]
+[node name="AchievementsButton" type="TextureButton" parent="."]
 layout_mode = 1
-anchor_left = 0.754
-anchor_top = 0.617
-anchor_right = 0.97
-anchor_bottom = 0.788
+anchor_left = 0.751
+anchor_top = 0.611
+anchor_right = 0.969
+anchor_bottom = 0.792
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-theme_override_styles/normal = SubResource("HitNormal")
-theme_override_styles/hover = SubResource("HitHover")
-theme_override_styles/focus = SubResource("HitHover")
+texture_normal = ExtResource("10")
+ignore_texture_size = true
 tooltip_text = "Achievements"
+script = ExtResource("5")
 
-[node name="OptionsButton" type="Button" parent="."]
+[node name="OptionsButton" type="TextureButton" parent="."]
 layout_mode = 1
-anchor_left = 0.511
-anchor_top = 0.793
-anchor_right = 0.61
-anchor_bottom = 0.975
+anchor_left = 0.508
+anchor_top = 0.781
+anchor_right = 0.616
+anchor_bottom = 0.983
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-theme_override_styles/normal = SubResource("HitNormal")
-theme_override_styles/hover = SubResource("HitHover")
-theme_override_styles/focus = SubResource("HitHover")
+texture_normal = ExtResource("11")
+ignore_texture_size = true
 tooltip_text = "Settings"
+script = ExtResource("5")
 
-[node name="ProfileButton" type="Button" parent="."]
+[node name="ProfileButton" type="TextureButton" parent="."]
 layout_mode = 1
-anchor_left = 0.608
-anchor_top = 0.793
-anchor_right = 0.855
-anchor_bottom = 0.975
+anchor_left = 0.604
+anchor_top = 0.781
+anchor_right = 0.858
+anchor_bottom = 0.983
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-theme_override_styles/normal = SubResource("HitNormal")
-theme_override_styles/hover = SubResource("HitHover")
-theme_override_styles/focus = SubResource("HitHover")
+texture_normal = ExtResource("12")
+ignore_texture_size = true
 tooltip_text = "Profile"
+script = ExtResource("5")
 
-[node name="QuitButton" type="Button" parent="."]
+[node name="QuitButton" type="TextureButton" parent="."]
 layout_mode = 1
 anchor_left = 0.858
-anchor_top = 0.793
-anchor_right = 0.96
-anchor_bottom = 0.975
+anchor_top = 0.781
+anchor_right = 0.966
+anchor_bottom = 0.983
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-theme_override_styles/normal = SubResource("HitNormal")
-theme_override_styles/hover = SubResource("HitHover")
-theme_override_styles/focus = SubResource("HitHover")
+texture_normal = ExtResource("13")
+ignore_texture_size = true
 tooltip_text = "Quit"
+script = ExtResource("5")
 
 [node name="Modal" type="PanelContainer" parent="."]
 visible = false
