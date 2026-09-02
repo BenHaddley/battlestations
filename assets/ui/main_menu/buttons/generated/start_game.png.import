@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://diccykbgjm1vr"
-path="res://.godot/imported/challenges_generated.png-acae29356c2902814ccac2ac714dd5fb.ctex"
+uid="uid://cqibfbwn31cq7"
+path="res://.godot/imported/start_game.png-3068c5b246cc46a1d282ed806a32ef91.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/main_menu/buttons/generated/challenges_generated.png"
-dest_files=["res://.godot/imported/challenges_generated.png-acae29356c2902814ccac2ac714dd5fb.ctex"]
+source_file="res://assets/ui/main_menu/buttons/generated/start_game.png"
+dest_files=["res://.godot/imported/start_game.png-3068c5b246cc46a1d282ed806a32ef91.ctex"]
 
 [params]
 

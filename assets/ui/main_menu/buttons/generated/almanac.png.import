@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://py516lv3l1su"
-path="res://.godot/imported/exit_generated.png-0958d9b36ed798654031d735fdf3bc76.ctex"
+uid="uid://c3jdm63uqjq2c"
+path="res://.godot/imported/almanac.png-e418819b1a972bea1b427f3f5e62296d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/main_menu/buttons/generated/exit_generated.png"
-dest_files=["res://.godot/imported/exit_generated.png-0958d9b36ed798654031d735fdf3bc76.ctex"]
+source_file="res://assets/ui/main_menu/buttons/generated/almanac.png"
+dest_files=["res://.godot/imported/almanac.png-e418819b1a972bea1b427f3f5e62296d.ctex"]
 
 [params]
 

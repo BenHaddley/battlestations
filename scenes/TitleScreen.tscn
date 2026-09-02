@@ -5,14 +5,14 @@
 [ext_resource type="FontFile" path="res://assets/fonts/ArchitectsDaughter-Regular.ttf" id="3"]
 [ext_resource type="AudioStream" path="res://assets/audio/opening screen musicMountain Banjo.mp3" id="4"]
 [ext_resource type="Script" path="res://scripts/animated_menu_button.gd" id="5"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/start_game_generated.png" id="6"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/level_select_generated.png" id="7"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/challenges_generated.png" id="8"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/almanac_generated.png" id="9"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/achievements_generated.png" id="10"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/settings_generated.png" id="11"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/profile_generated.png" id="12"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/exit_generated.png" id="13"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/start_game.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/level_select.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/challenges.png" id="8"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/almanac.png" id="9"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/achievements.png" id="10"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/settings_gear.png" id="11"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/profile.png" id="12"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/close_x.png" id="13"]
 
 [sub_resource type="StyleBoxFlat" id="HitNormal"]
 bg_color = Color(1, 1, 1, 0.015)
@@ -80,10 +80,10 @@ stretch_mode = 6
 
 [node name="StartButton" type="Button" parent="."]
 layout_mode = 1
-anchor_left = 0.625
-anchor_top = 0.085
-anchor_right = 0.978
-anchor_bottom = 0.383
+anchor_left = 0.630273
+anchor_top = 0.071744
+anchor_right = 0.988213
+anchor_bottom = 0.381898
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
@@ -92,10 +92,10 @@ button_texture = ExtResource("6")
 
 [node name="LevelSelectButton" type="Button" parent="."]
 layout_mode = 1
-anchor_left = 0.578
-anchor_top = 0.416
-anchor_right = 0.775
-anchor_bottom = 0.6
+anchor_left = 0.584367
+anchor_top = 0.409492
+anchor_right = 0.782258
+anchor_bottom = 0.592715
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
@@ -104,10 +104,10 @@ button_texture = ExtResource("7")
 
 [node name="ChallengesButton" type="Button" parent="."]
 layout_mode = 1
-anchor_left = 0.781
-anchor_top = 0.414
-anchor_right = 0.978
-anchor_bottom = 0.6
+anchor_left = 0.785980
+anchor_top = 0.409492
+anchor_right = 0.985732
+anchor_bottom = 0.593819
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
@@ -116,10 +116,10 @@ button_texture = ExtResource("8")
 
 [node name="AlmanacButton" type="Button" parent="."]
 layout_mode = 1
-anchor_left = 0.544
-anchor_top = 0.611
-anchor_right = 0.757
-anchor_bottom = 0.792
+anchor_left = 0.547146
+anchor_top = 0.605960
+anchor_right = 0.758065
+anchor_bottom = 0.781457
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
@@ -128,10 +128,10 @@ button_texture = ExtResource("9")
 
 [node name="AchievementsButton" type="Button" parent="."]
 layout_mode = 1
-anchor_left = 0.751
-anchor_top = 0.611
-anchor_right = 0.969
-anchor_bottom = 0.792
+anchor_left = 0.758065
+anchor_top = 0.609272
+anchor_right = 0.980769
+anchor_bottom = 0.796910
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
@@ -140,10 +140,10 @@ button_texture = ExtResource("10")
 
 [node name="OptionsButton" type="Button" parent="."]
 layout_mode = 1
-anchor_left = 0.508
-anchor_top = 0.781
-anchor_right = 0.616
-anchor_bottom = 0.983
+anchor_left = 0.517990
+anchor_top = 0.785872
+anchor_right = 0.619107
+anchor_bottom = 0.940397
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
@@ -152,10 +152,10 @@ button_texture = ExtResource("11")
 
 [node name="ProfileButton" type="Button" parent="."]
 layout_mode = 1
-anchor_left = 0.604
-anchor_top = 0.781
-anchor_right = 0.858
-anchor_bottom = 0.983
+anchor_left = 0.615385
+anchor_top = 0.792494
+anchor_right = 0.861042
+anchor_bottom = 0.968000
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
@@ -164,10 +164,10 @@ button_texture = ExtResource("12")
 
 [node name="QuitButton" type="Button" parent="."]
 layout_mode = 1
-anchor_left = 0.858
-anchor_top = 0.781
-anchor_right = 0.966
-anchor_bottom = 0.983
+anchor_left = 0.866005
+anchor_top = 0.812362
+anchor_right = 0.975806
+anchor_bottom = 0.974614
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2

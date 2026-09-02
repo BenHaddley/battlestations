@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c5i4a8g8w2x0m"
-path="res://.godot/imported/achievements_generated.png-c2b381619006d47272791113f0fa1a1c.ctex"
+uid="uid://dau2tglbp8w50"
+path="res://.godot/imported/challenges.png-1fad88720a2f33864e2657dbf5082972.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/main_menu/buttons/generated/achievements_generated.png"
-dest_files=["res://.godot/imported/achievements_generated.png-c2b381619006d47272791113f0fa1a1c.ctex"]
+source_file="res://assets/ui/main_menu/buttons/generated/challenges.png"
+dest_files=["res://.godot/imported/challenges.png-1fad88720a2f33864e2657dbf5082972.ctex"]
 
 [params]
 
