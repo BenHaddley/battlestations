@@ -78,7 +78,7 @@ texture = ExtResource("2")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="StartButton" type="TextureButton" parent="."]
+[node name="StartButton" type="Button" parent="."]
 layout_mode = 1
 anchor_left = 0.625
 anchor_top = 0.085
@@ -87,11 +87,10 @@ anchor_bottom = 0.383
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-texture_normal = ExtResource("6")
-ignore_texture_size = true
 script = ExtResource("5")
+button_texture = ExtResource("6")
 
-[node name="LevelSelectButton" type="TextureButton" parent="."]
+[node name="LevelSelectButton" type="Button" parent="."]
 layout_mode = 1
 anchor_left = 0.578
 anchor_top = 0.416
@@ -100,11 +99,10 @@ anchor_bottom = 0.6
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-texture_normal = ExtResource("7")
-ignore_texture_size = true
 script = ExtResource("5")
+button_texture = ExtResource("7")
 
-[node name="ChallengesButton" type="TextureButton" parent="."]
+[node name="ChallengesButton" type="Button" parent="."]
 layout_mode = 1
 anchor_left = 0.781
 anchor_top = 0.414
@@ -113,11 +111,10 @@ anchor_bottom = 0.6
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-texture_normal = ExtResource("8")
-ignore_texture_size = true
 script = ExtResource("5")
+button_texture = ExtResource("8")
 
-[node name="AlmanacButton" type="TextureButton" parent="."]
+[node name="AlmanacButton" type="Button" parent="."]
 layout_mode = 1
 anchor_left = 0.544
 anchor_top = 0.611
@@ -126,11 +123,10 @@ anchor_bottom = 0.792
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-texture_normal = ExtResource("9")
-ignore_texture_size = true
 script = ExtResource("5")
+button_texture = ExtResource("9")
 
-[node name="AchievementsButton" type="TextureButton" parent="."]
+[node name="AchievementsButton" type="Button" parent="."]
 layout_mode = 1
 anchor_left = 0.751
 anchor_top = 0.611
@@ -139,11 +135,10 @@ anchor_bottom = 0.792
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-texture_normal = ExtResource("10")
-ignore_texture_size = true
 script = ExtResource("5")
+button_texture = ExtResource("10")
 
-[node name="OptionsButton" type="TextureButton" parent="."]
+[node name="OptionsButton" type="Button" parent="."]
 layout_mode = 1
 anchor_left = 0.508
 anchor_top = 0.781
@@ -152,11 +147,10 @@ anchor_bottom = 0.983
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-texture_normal = ExtResource("11")
-ignore_texture_size = true
 script = ExtResource("5")
+button_texture = ExtResource("11")
 
-[node name="ProfileButton" type="TextureButton" parent="."]
+[node name="ProfileButton" type="Button" parent="."]
 layout_mode = 1
 anchor_left = 0.604
 anchor_top = 0.781
@@ -165,11 +159,10 @@ anchor_bottom = 0.983
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-texture_normal = ExtResource("12")
-ignore_texture_size = true
 script = ExtResource("5")
+button_texture = ExtResource("12")
 
-[node name="QuitButton" type="TextureButton" parent="."]
+[node name="QuitButton" type="Button" parent="."]
 layout_mode = 1
 anchor_left = 0.858
 anchor_top = 0.781
@@ -178,9 +171,8 @@ anchor_bottom = 0.983
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-texture_normal = ExtResource("13")
-ignore_texture_size = true
 script = ExtResource("5")
+button_texture = ExtResource("13")
 
 [node name="Modal" type="PanelContainer" parent="."]
 visible = false
