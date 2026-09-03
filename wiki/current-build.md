@@ -119,6 +119,10 @@ kept alongside them.
 
 ## Known gaps and risks
 
+The failure presentation now slightly darkens the live battlefield and fades in the
+supplied `GAME_OVER_TEXT` artwork. Restart/retry and Main Menu remain interactive
+actions beneath the title treatment.
+
 - The Train Yard list can attach all seven cars documented in the infowiki (Gunner Car,
   Chaingunner Car, Ballast Blaster, Coal Cannon, Passenger Coach, Brake Van, Tender —
   see [Infowiki unit cards](infowiki-cards.md)). Future cars remain visible as dimmed

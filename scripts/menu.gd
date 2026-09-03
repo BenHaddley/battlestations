@@ -7,7 +7,7 @@ class_name Menu
 
 signal train_drag_started
 signal train_drag_ended
-signal train_drop_requested(tower_index: int, screen_position: Vector2)
+signal train_drop_requested(tower_index: int, screen_position: Vector2, facing: int)
 signal engine_drop_requested(screen_position: Vector2)
 signal remove_requested(screen_position: Vector2)
 
@@ -46,7 +46,7 @@ signal remove_requested(screen_position: Vector2)
 @export var unaffordable_style: StyleBox
 
 const TOWER_BUTTONS := ["gunner_button", "chaingunner_button", "ballast_button", "passenger_button", "coal_cannon_button", "brake_van_button", "tender_button"]
-const ENGINE_COST := 325
+static var ENGINE_COST: int = (preload("res://resources/game_balance.tres") as GameBalance).locomotive_cost
 const ENGINE_ICON := preload("res://assets/sprites/engines/Steam Engine Black.png")
 
 const SCHEDULE_STATION_COLOR := Color(0.32, 0.58, 0.86, 1)
@@ -63,6 +63,7 @@ var station: Station
 var trains: Array[Node2D] = []
 var station_lost: bool = false
 var dragging_tower: int = -1
+var drag_facing: int = 1
 var drag_preview: TextureRect
 var removing_mode: bool = false
 
@@ -73,6 +74,11 @@ var station_progress_panel: StationProgressPanel
 var speed_caption: Label
 var pause_caption: Label
 var pause_menu: PauseMenu
+var wave_banner: Label
+var _wave_banner_tween: Tween
+var placement_banner: PanelContainer
+var placement_banner_label: Label
+var _placement_banner_tween: Tween
 
 const HOVER_TINT := Color(1.0, 0.42, 0.34, 1.0)
 
@@ -80,9 +86,10 @@ func configure(enemy_spawner: EnemySpawner, defended_station: Station, active_tr
 	spawner = enemy_spawner
 	station = defended_station
 	trains = active_trains
-	spawner.wave_started.connect(func(_wave: int) -> void:
+	spawner.wave_started.connect(func(wave: int) -> void:
 		_wave_start_health = station.current_health if station else -1
 		_wave_start_enemy_count = spawner.enemies_remaining()
+		_show_wave_start_cue(wave)
 	)
 	station.defeated.connect(func() -> void: station_lost = true)
 	PhaseManager.configure(spawner)
@@ -95,6 +102,8 @@ func _ready() -> void:
 	_install_new_ui_layout()
 	_install_engine_shop_row()
 	_install_station_progress_panel()
+	_install_wave_banner()
+	_install_placement_banner()
 	_style_train_yard()
 	for index in range(TOWER_BUTTONS.size()):
 		var button: Button = get(TOWER_BUTTONS[index])
@@ -123,6 +132,72 @@ func _ready() -> void:
 	PhaseManager.phase_changed.connect(_on_phase_changed)
 	_create_drag_preview()
 	_on_phase_changed(PhaseManager.phase_label().to_lower())
+
+func _install_wave_banner() -> void:
+	wave_banner = Label.new()
+	wave_banner.name = "WaveStartBanner"
+	wave_banner.position = Vector2(430, 230)
+	wave_banner.size = Vector2(420, 100)
+	wave_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	wave_banner.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	wave_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wave_banner.z_index = 500
+	wave_banner.add_theme_font_size_override("font_size", 48)
+	wave_banner.add_theme_color_override("font_color", Color("fff0c2"))
+	wave_banner.add_theme_color_override("font_outline_color", Color("3a100c"))
+	wave_banner.add_theme_constant_override("outline_size", 8)
+	wave_banner.modulate.a = 0.0
+	add_child(wave_banner)
+
+func _show_wave_start_cue(wave: int) -> void:
+	if wave_banner == null:
+		return
+	if _wave_banner_tween and _wave_banner_tween.is_valid():
+		_wave_banner_tween.kill()
+	wave_banner.text = "WAVE %d — DEFEND!" % wave
+	wave_banner.modulate.a = 0.0
+	wave_banner.scale = Vector2(0.88, 0.88)
+	wave_banner.pivot_offset = wave_banner.size * 0.5
+	_wave_banner_tween = create_tween()
+	_wave_banner_tween.tween_property(wave_banner, "modulate:a", 1.0, 0.16)
+	_wave_banner_tween.parallel().tween_property(wave_banner, "scale", Vector2.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_wave_banner_tween.tween_interval(0.72)
+	_wave_banner_tween.tween_property(wave_banner, "modulate:a", 0.0, 0.28)
+
+func _install_placement_banner() -> void:
+	# Placement feedback belongs over the playfield, not squeezed into the shop.
+	feedback_label.visible = false
+	feedback_label.custom_minimum_size = Vector2.ZERO
+	placement_banner = PanelContainer.new()
+	placement_banner.name = "PlacementBanner"
+	placement_banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	placement_banner.anchor_left = 0.5
+	placement_banner.anchor_right = 0.5
+	placement_banner.offset_left = -300.0
+	placement_banner.offset_top = 18.0
+	placement_banner.offset_right = 300.0
+	placement_banner.offset_bottom = 64.0
+	placement_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	placement_banner.z_index = 510
+	placement_banner.modulate.a = 0.0
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.07, 0.055, 0.045, 0.84)
+	style.border_color = Color("e8c66d")
+	style.set_border_width_all(2)
+	style.corner_radius_top_left = 7
+	style.corner_radius_top_right = 7
+	style.corner_radius_bottom_left = 7
+	style.corner_radius_bottom_right = 7
+	placement_banner.add_theme_stylebox_override("panel", style)
+	placement_banner_label = Label.new()
+	placement_banner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	placement_banner_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	placement_banner_label.add_theme_font_size_override("font_size", 19)
+	placement_banner_label.add_theme_color_override("font_color", Color("fff3ca"))
+	placement_banner_label.add_theme_color_override("font_outline_color", Color("1d0b08"))
+	placement_banner_label.add_theme_constant_override("outline_size", 5)
+	placement_banner.add_child(placement_banner_label)
+	add_child(placement_banner)
 
 ## The supplied UI is a transparent illustrated frame. It sits behind live
 ## Controls, while the old opaque web panels are cleared so the authored
@@ -338,13 +413,22 @@ func _input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseMotion:
 		_position_drag_preview(event.position)
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		# The two fixed-direction gun cars can be flipped without releasing the
+		# left-button drag. The preview pivots in place, so placement stays stable.
+		if dragging_tower == 0 or dragging_tower == 1:
+			drag_facing *= -1
+			drag_preview.scale.x = float(drag_facing)
+			show_placement_feedback("Facing %s — right-click again to flip." % ("left" if drag_facing < 0 else "right"), true)
+			get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 		if dragging_tower == -2:
 			engine_drop_requested.emit(event.position)
 		else:
-			train_drop_requested.emit(dragging_tower, event.position)
+			train_drop_requested.emit(dragging_tower, event.position, drag_facing)
 		dragging_tower = -1
 		drag_preview.visible = false
+		drag_preview.scale = Vector2.ONE
 		train_drag_ended.emit()
 		get_viewport().set_input_as_handled()
 
@@ -482,6 +566,7 @@ func _set_hovered_removable(car: Node2D) -> void:
 		_hovered_removable.modulate = HOVER_TINT
 
 func _toggle_speed() -> void:
+	AudioFX.play_cue(&"ui")
 	Engine.time_scale = 2.0 if Engine.time_scale < 1.5 else 1.0
 	speed_button.tooltip_text = "Return to normal speed" if Engine.time_scale > 1.5 else "Run at double speed"
 	speed_button.modulate = Color(1.0, 0.82, 0.38) if Engine.time_scale > 1.5 else Color.WHITE
@@ -489,6 +574,7 @@ func _toggle_speed() -> void:
 		speed_caption.text = "1X NORMAL" if Engine.time_scale > 1.5 else "2X SPEED"
 
 func _toggle_pause() -> void:
+	AudioFX.play_cue(&"ui")
 	if pause_menu.visible:
 		pause_menu.close()
 	else:
@@ -513,6 +599,8 @@ func _on_tower_gui_input(event: InputEvent, index: int) -> void:
 		dragging_tower = index
 		var tower := BuildManager.get_selected_tower()
 		drag_preview.texture = tower.icon if tower else null
+		drag_facing = 1
+		drag_preview.scale = Vector2.ONE
 		drag_preview.visible = true
 		_position_drag_preview(event.global_position)
 		train_drag_started.emit()
@@ -534,7 +622,9 @@ func _install_engine_shop_row() -> void:
 func _on_engine_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		dragging_tower = -2
+		drag_facing = 1
 		drag_preview.texture = ENGINE_ICON
+		drag_preview.scale = Vector2.ONE
 		drag_preview.visible = true
 		_position_drag_preview(event.global_position)
 		train_drag_started.emit()
@@ -543,6 +633,7 @@ func _create_drag_preview() -> void:
 	drag_preview = TextureRect.new()
 	drag_preview.custom_minimum_size = Vector2(72, 72)
 	drag_preview.size = Vector2(72, 72)
+	drag_preview.pivot_offset = drag_preview.size * 0.5
 	drag_preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	drag_preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	drag_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -555,8 +646,20 @@ func _position_drag_preview(screen_position: Vector2) -> void:
 	drag_preview.position = screen_position - drag_preview.size * 0.5
 
 func show_placement_feedback(message: String, success: bool) -> void:
-	feedback_label.text = message
-	feedback_label.modulate = Color(0.1, 0.45, 0.2) if success else Color(0.55, 0.12, 0.08)
+	if placement_banner == null or placement_banner_label == null:
+		return
+	placement_banner_label.text = message
+	var style := placement_banner.get_theme_stylebox("panel") as StyleBoxFlat
+	if style:
+		style.border_color = Color("77d496") if success else Color("e46f59")
+	if _placement_banner_tween and _placement_banner_tween.is_valid():
+		_placement_banner_tween.kill()
+	placement_banner.modulate.a = 0.0
+	_placement_banner_tween = create_tween()
+	_placement_banner_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_placement_banner_tween.tween_property(placement_banner, "modulate:a", 1.0, 0.12)
+	_placement_banner_tween.tween_interval(2.2)
+	_placement_banner_tween.tween_property(placement_banner, "modulate:a", 0.0, 0.28)
 
 ## Selection is shown as a glowing style rather than the disabled state.
 ## Buttons stay clickable even when unaffordable — Plot already blocks and

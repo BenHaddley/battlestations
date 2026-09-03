@@ -49,6 +49,19 @@ still **inferred** from names and art alone. Coal Cannon reuses the generic hit-
 sprite for its impact rather than its own 3 coal-break frames, which remain unused.
 Ballast Blaster's five ballast-chunk frames are used, for its firing-spray animation.
 
+### Documented future content
+
+- **Barrier Car** — planned as a heavy, two-tile divider/wall. No finished asset or
+  stats are currently documented.
+- **Ramming engine** — a possible engine limited to one carried car but fast enough
+  to damage spiders on impact. No asset or stats exist yet.
+- **Redrawn armed cars** — Gubgub considers the current firing-unit art outdated and
+  plans versions that visually support one-direction-only weapons.
+- **Updated Steam Engine** — an updated-color redraw was in progress on 2026-08-29.
+- **Discovery gallery** — planned to fill with every unit the player has encountered,
+  with a name and short description for each. Gubgub will provide the art and copy;
+  implementation is deferred until those assets are finished.
+
 ## Reference material (not game assets)
 
 `assets/audio/infowiki/` holds eight trading-card-style unit spec sheets — despite
@@ -73,16 +86,18 @@ archetypes. Their implemented roles are recorded in
 
 ## Effects and UI
 
-- Effects: hit effect, Puff, and two additional puff frames.
-- UI: left and right menu art, pause, speed up, and `gifmaker_me_4.png`.
-
-The active build uses only a plain Godot currency label; these effect and UI images
-are not wired into gameplay.
+- Effects include hit and puff art, five break frames, and animated GIF source art.
+- Runtime UI includes the illustrated HUD, control icons, HP art, portraits, tutorial
+  frames, and the game-over composition.
+- `assets/sprites/ui/game over ai placeholder/` is actively used despite its legacy
+  directory name. Renaming it requires updating the preloads in `game_over_overlay.gd`.
+- The identical `BREAK 1.png` through `BREAK 5.png` files in `board/` and `effects/`
+  are retained for now because their intended ownership is unresolved.
 
 ## Audio
 
-The game now has a shuffled nine-track gameplay playlist: `Train 45.mp3` plus the
-eight recordings under `assets/audio/songs/`. The title screen retains its separate
+The game now has a shuffled 20-track gameplay playlist from `assets/audio/songs/`.
+The title screen retains its separate
 `opening screen musicMountain Banjo.mp3` theme. Gameplay exhausts a shuffled cycle
 before repeating and prevents the same song playing across a reshuffle boundary.
 The recordings' authorship, intended use, and whether any are the placeholder

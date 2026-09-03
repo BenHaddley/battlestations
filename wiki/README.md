@@ -9,12 +9,13 @@ as settled design.
 
 | Page | What it covers |
 |---|---|
-| [Game overview](game-overview.md) | The premise, player loop, and current design boundaries |
+| [Game overview](game-overview.md) | One-page design brief: objective, loop, roster, progression, and boundaries |
 | [Current build](current-build.md) | What is implemented, how the code fits together, and how to run it |
 | [Systems and balance](systems-and-balance.md) | Verified mechanics, defaults, formulas, and worked values |
 | [Content catalog](content-catalog.md) | Available board, train, weapon, spider, effect, UI, and audio content |
 | [Infowiki unit cards](infowiki-cards.md) | Authoritative per-car design specs (cost, range, weight, bio) from `assets/audio/infowiki/`, and how they diverge from the shipped build |
 | [History and sources](history-and-sources.md) | Project timeline, evidence, provenance, and missing leads |
+| [Asset provenance](asset-provenance.md) | Release-rights register and evidence still required for art, audio, and fonts |
 | [Future rails and navigation](future-runtime-rails-and-navigation.md) | Prepared architecture and validation rules for later rail editing and obstacle-aware spiders |
 | [Open questions](open-questions.md) | Decisions and missing information still needing an answer |
 | [Roadmap](../roadmap.md) | The implementation plan |
@@ -33,4 +34,4 @@ When a mechanic changes, update the relevant wiki page in the same change. Inclu
 file link for implementation claims, keep proposals out of the implemented sections,
 and add newly recovered source material to [History and sources](history-and-sources.md).
 
-Last repository audit: **2026-08-26**.
+Last repository audit: **2026-08-31**.

@@ -20,13 +20,18 @@ func _ready() -> void:
 func reset_currency(amount: int) -> void:
 	starting_currency = amount
 	currency = amount
+	currency_changed.emit(currency, 0, "reset")
 
-func increase_currency(amount: int) -> void:
+func increase_currency(amount: int, reason: String = "income") -> void:
 	currency += amount
+	currency_changed.emit(currency, amount, reason)
 
-func spend_currency(amount: int) -> bool:
+func spend_currency(amount: int, reason: String = "purchase", warn_on_failure: bool = true) -> bool:
 	if amount <= currency:
 		currency -= amount
+		currency_changed.emit(currency, -amount, reason)
 		return true
-	push_warning("You do not have enough to purchase this item")
+	if warn_on_failure:
+		push_warning("You do not have enough to purchase this item")
 	return false
+signal currency_changed(balance: int, delta: int, reason: String)

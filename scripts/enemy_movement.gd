@@ -178,8 +178,10 @@ func _physics_process(delta: float) -> void:
 		speed *= 2.1
 	if ability == "enrage" and health.hit_points <= health.max_hit_points / 2:
 		speed *= 1.55
-	if ability == "jump" and _jumping:
-		speed *= 1.8
+	if ability == "jump":
+		# Jump Spiders advance only during the visible hop window. Grounded time
+		# is a deliberate pause, not ordinary walking at base speed.
+		speed = speed * 1.8 if _jumping else 0.0
 	var travel_direction := global_position.direction_to(route_target) if has_route_target else Vector2.DOWN
 	velocity = travel_direction * speed
 	move_and_slide()
@@ -196,6 +198,16 @@ func _animate_walk(delta: float) -> void:
 ## call while already slowed — only extends the effect, never shortens it.
 func apply_slow(duration: float) -> void:
 	_slow_expires_at = max(_slow_expires_at, Time.get_ticks_msec() + int(duration * 1000.0))
+
+## Pushes a spider away from its destination without changing its route.
+## Coal Cannon uses one board tile (90 units) by default.
+func apply_knockback(distance: float) -> void:
+	if distance <= 0.0 or not lane_configured or attacking_station:
+		return
+	var toward_destination := global_position.direction_to(route_target) if has_route_target else Vector2.DOWN
+	global_position -= toward_destination * distance
+	velocity = Vector2.ZERO
+	queue_redraw()
 
 func take_damage(dmg: int) -> void:
 	if ability == "armor":
@@ -219,7 +231,7 @@ func _input_event(_viewport: Viewport, event: InputEvent, _shape_index: int) -> 
 		readout.global_position = global_position + Vector2(-65, -70)
 		readout.add_theme_color_override("font_color", Color("fff0b5"))
 		readout.add_theme_color_override("font_outline_color", Color("24130d"))
-		readout.add_theme_constant_override("outline_size", 3)
+		readout.add_theme_constant_override("outline_size", 5)
 		readout.add_theme_font_size_override("font_size", 17)
 		readout.z_index = 90
 		get_tree().current_scene.add_child(readout)

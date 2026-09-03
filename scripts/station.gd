@@ -20,6 +20,7 @@ func _ready() -> void:
 func take_damage(amount: int = 1) -> void:
 	if current_health <= 0:
 		return
+	AudioFX.play_cue(&"station_hit")
 	current_health = max(0, current_health - maxi(amount, 0))
 	var tween := create_tween()
 	for offset in [Vector2(10, 0), Vector2(-9, 0), Vector2(6, 0), Vector2.ZERO]:

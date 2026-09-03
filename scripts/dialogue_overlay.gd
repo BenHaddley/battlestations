@@ -42,7 +42,7 @@ func _ready() -> void:
 	dialogue_label.clip_text = true
 	dialogue_label.add_theme_color_override("font_color", Color("fff7e4"))
 	dialogue_label.add_theme_color_override("font_outline_color", Color("050505"))
-	dialogue_label.add_theme_constant_override("outline_size", 3)
+	dialogue_label.add_theme_constant_override("outline_size", 5)
 	dialogue_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	dialogue_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	dialogue_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -57,7 +57,7 @@ func _ready() -> void:
 	continue_label.text = "CLICK TO CONTINUE  ▶"
 	continue_label.add_theme_color_override("font_color", Color("9bdcff"))
 	continue_label.add_theme_color_override("font_outline_color", Color("050505"))
-	continue_label.add_theme_constant_override("outline_size", 2)
+	continue_label.add_theme_constant_override("outline_size", 4)
 	continue_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	add_child(continue_label)
 
@@ -73,7 +73,7 @@ func _ready() -> void:
 	skip_button.add_theme_color_override("font_color", Color(1, 0.94, 0.82, 0.82))
 	skip_button.add_theme_color_override("font_hover_color", Color("ffffff"))
 	skip_button.add_theme_color_override("font_outline_color", Color("16100b"))
-	skip_button.add_theme_constant_override("outline_size", 3)
+	skip_button.add_theme_constant_override("outline_size", 5)
 	skip_button.pressed.connect(func() -> void: skip_requested.emit())
 	add_child(skip_button)
 

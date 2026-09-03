@@ -7,6 +7,8 @@ class_name EnemySpawner
 signal wave_started(wave_number: int)
 signal wave_cleared(wave_number: int)
 
+@export var balance: GameBalance = preload("res://resources/game_balance.tres")
+
 @export var enemy_prefabs: Array[PackedScene] = []
 @export var lane_x_positions: PackedFloat32Array = PackedFloat32Array([-262.0, -196.5, -131.0, -65.5, 0.0, 65.5, 131.0, 196.5, 262.0])
 @export var spawn_y: float = -425.0
@@ -36,9 +38,25 @@ var enemies_alive: int = 0
 var enemies_left_to_spawn: int = 0
 var eps: float = 0.0 ## enemies per second, current wave
 var is_spawning: bool = false
+var telemetry: Dictionary = {}
 
 func _ready() -> void:
+	_apply_balance()
 	GameEvents.enemy_destroyed.connect(_on_enemy_destroyed)
+	LevelManager.currency_changed.connect(_on_currency_changed)
+
+func _apply_balance() -> void:
+	if balance == null:
+		return
+	base_enemies = balance.base_enemies
+	enemies_per_second = balance.base_spawn_rate
+	difficulty_scaling_factor = balance.enemy_count_exponent
+	spawn_rate_scaling_factor = balance.spawn_rate_exponent
+	enemies_per_second_cap = balance.spawn_rate_cap
+	journey_duration_seconds = balance.journey_duration
+	early_bounty = balance.early_generic_bounty
+	wave_bonus_base = balance.wave_bonus_base
+	wave_bonus_per_wave = balance.wave_bonus_per_wave
 
 func _process(delta: float) -> void:
 	if not is_spawning:
@@ -66,6 +84,13 @@ func start_next_wave() -> void:
 	time_since_last_spawn = 0.0
 	enemies_left_to_spawn = _enemies_per_wave()
 	eps = _enemies_per_second()
+	telemetry = {
+		"wave": current_wave,
+		"starting_delta": LevelManager.currency,
+		"kills": 0,
+		"spending": 0,
+		"income": 0,
+	}
 	wave_started.emit(current_wave)
 
 func enemies_remaining() -> int:
@@ -73,14 +98,36 @@ func enemies_remaining() -> int:
 
 func _on_enemy_destroyed() -> void:
 	enemies_alive -= 1
+	if not telemetry.is_empty():
+		telemetry.kills = int(telemetry.get("kills", 0)) + 1
+
+func _on_currency_changed(_balance: int, delta: int, _reason: String) -> void:
+	if telemetry.is_empty() or not is_spawning:
+		return
+	if delta < 0:
+		telemetry.spending = int(telemetry.get("spending", 0)) - delta
+	elif delta > 0:
+		telemetry.income = int(telemetry.get("income", 0)) + delta
 
 func _end_wave() -> void:
 	is_spawning = false
 	var payout_scale := float(CampaignManager.challenge_value("bounty", 1.0))
-	LevelManager.increase_currency(roundi((wave_bonus_base + wave_bonus_per_wave * current_wave) * payout_scale))
+	LevelManager.increase_currency(roundi((wave_bonus_base + wave_bonus_per_wave * current_wave) * payout_scale), "wave_bonus")
+	telemetry.ending_delta = LevelManager.currency
+	telemetry.net_delta = LevelManager.currency - int(telemetry.get("starting_delta", LevelManager.currency))
+	if OS.is_debug_build():
+		print("WAVE TELEMETRY %s" % telemetry)
 	wave_cleared.emit(current_wave)
 	if wave_target > 0 and current_wave >= wave_target:
 		CampaignManager.complete_current_level()
+
+## Debug-only jump used for balance passes. The requested wave becomes the next
+## wave started, preserving the normal start signal and formula setup.
+func debug_select_next_wave(wave_number: int) -> bool:
+	if not OS.is_debug_build() or is_spawning or wave_number < 1:
+		return false
+	current_wave = wave_number - 1
+	return true
 
 func _spawn_enemy() -> void:
 	if enemy_prefabs.is_empty() or lane_x_positions.is_empty():

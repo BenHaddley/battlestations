@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/tower_data.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/BrakeVan.tscn" id="2"]
-[ext_resource type="Texture2D" path="res://assets/sprites/units/BRAKE VAN.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/unit static/BRAKE_VAN.png" id="3"]
 
 [resource]
 script = ExtResource("1")

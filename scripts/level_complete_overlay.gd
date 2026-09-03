@@ -65,7 +65,7 @@ func _build_ui() -> void:
 	_title_label.add_theme_font_size_override("font_size", 30)
 	_title_label.add_theme_color_override("font_color", Color(0.06, 0.05, 0.03, 1))
 	_title_label.add_theme_color_override("font_outline_color", Color(0.42, 0.1, 0.06, 0.85))
-	_title_label.add_theme_constant_override("outline_size", 2)
+	_title_label.add_theme_constant_override("outline_size", 4)
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(_title_label)
 
@@ -110,7 +110,7 @@ func _build_ui() -> void:
 	_continue_button.add_theme_font_size_override("font_size", 20)
 	_continue_button.add_theme_color_override("font_color", Color(1, 0.94, 0.88, 1))
 	_continue_button.add_theme_color_override("font_outline_color", Color(0.06, 0.02, 0.015, 0.9))
-	_continue_button.add_theme_constant_override("outline_size", 2)
+	_continue_button.add_theme_constant_override("outline_size", 4)
 	var button_style := StyleBoxFlat.new()
 	button_style.bg_color = Color(0.43, 0.055, 0.045, 1)
 	button_style.border_width_left = 4

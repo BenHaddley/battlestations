@@ -29,6 +29,8 @@ not a conventional dark game dashboard.
 - Spider lanes are communicated lightly; they must not look like additional rails.
 - Combat feedback should use intentionally imperfect inked arrows, flashes, smoke,
   and symbols rather than polished web-style effects.
+- Preserve the current spider death effects' strong impact; Gubgub specifically
+  praised their added “pop” in the 2026-08-28 playtest.
 - Flat color fields should carry restrained paper flecks and paint streaks; functional
   controls may be crooked, but their hit targets and gameplay behavior stay stable.
 
@@ -50,3 +52,9 @@ not a conventional dark game dashboard.
 The reference contains more car types, currencies, challenges, tutorial panels, and
 track interactions than the current prototype supports. The interface may preview
 those destinations, but controls must not imply functional systems until implemented.
+
+The expanded engine control stand currently violates the battlefield-readability
+goal by covering the bottom of the board during the moment spiders reach the station.
+The documented direction is a much smaller interface, potentially just Up/Down
+keyboard control, so train input never conceals the combat state it is meant to
+influence.

@@ -7,8 +7,18 @@ Unity to Godot 4.
 
 - [Wiki home](wiki/README.md) — the consolidated source of truth
 - [Roadmap](roadmap.md) — planned development phases
+- [Roadmap blockers](docs/roadmap-blockers.md) — external evidence and decisions still required
 - [Run the current project](wiki/current-build.md#running-the-project)
 - [Original Discord research](discord-gubgub-notes.md) — preserved source notes
 
 The active project is the Godot project at the repository root. The original Unity
 snapshot is retained under [`legacy_unity/`](legacy_unity/) for provenance.
+
+## Validation
+
+Run the headless gameplay and content-catalog regression suite from the repository
+root:
+
+```sh
+godot --headless --path . tests/GameplayRegression.tscn
+```

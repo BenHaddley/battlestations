@@ -92,7 +92,7 @@ func _build_ui() -> void:
 	title_label = Label.new()
 	title_label.add_theme_color_override("font_color", Color("fff0cf"))
 	title_label.add_theme_color_override("font_outline_color", Color("35150e"))
-	title_label.add_theme_constant_override("outline_size", 3)
+	title_label.add_theme_constant_override("outline_size", 5)
 	title_label.add_theme_font_size_override("font_size", 28)
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -152,7 +152,7 @@ func _make_branch(branch_index: int) -> Control:
 	heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	heading.add_theme_color_override("font_color", Color("fff2d4"))
 	heading.add_theme_color_override("font_outline_color", Color("22150d"))
-	heading.add_theme_constant_override("outline_size", 2)
+	heading.add_theme_constant_override("outline_size", 4)
 	heading.add_theme_font_size_override("font_size", 18)
 	heading.add_theme_stylebox_override("normal", _style(branch.color, Color("24160d"), 3, 3))
 	box.add_child(heading)
@@ -191,6 +191,7 @@ func _buy_selected() -> void:
 	levels[selected_branch] = selected_level + 1
 	unit.set_meta("upgrade_levels", levels)
 	_apply_upgrade(selected_branch, selected_level)
+	AudioFX.play_cue(&"upgrade")
 	_refresh()
 
 func _apply_upgrade(branch: int, level: int) -> void:
@@ -253,7 +254,7 @@ func _action_button(label: String, color: Color) -> Button:
 	button.text = label
 	button.add_theme_color_override("font_color", Color("fff0cf"))
 	button.add_theme_color_override("font_outline_color", Color("24160d"))
-	button.add_theme_constant_override("outline_size", 2)
+	button.add_theme_constant_override("outline_size", 4)
 	button.add_theme_font_size_override("font_size", 19)
 	button.add_theme_stylebox_override("normal", _style(color, Color("24160d"), 4, 5))
 	return button

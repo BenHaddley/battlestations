@@ -2,11 +2,18 @@ extends Node2D
 class_name PassengerCoach
 ## Non-combat car: generates passive income while coupled to the train.
 
+@export var balance: GameBalance = preload("res://resources/game_balance.tres")
+
 @export var weight: float = 1.0
 @export var income_amount: int = 32
 @export var income_interval: float = 8.0
 
 var _elapsed: float = 0.0
+
+func _ready() -> void:
+	if balance:
+		income_amount = balance.passenger_income
+		income_interval = balance.passenger_income_interval
 
 func _process(delta: float) -> void:
 	_elapsed += delta

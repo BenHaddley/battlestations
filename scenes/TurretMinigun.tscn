@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/turret_minigun.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Minigun Base.png" id="2"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Minigun Top.png" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/MinigunBullet.tscn" id="4"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/unit static/CHAINGUN_CAR.png" id="5"]
 
 [sub_resource type="CircleShape2D" id="RangeShape"]
 radius = 315.0
@@ -14,6 +15,9 @@ bullet_scene = ExtResource("4")
 targeting_range = 315.0
 bps = 0.25
 weight = 200.0
+fixed_direction_enabled = true
+fixed_direction_texture = ExtResource("5")
+fixed_direction_scale = Vector2(0.17, 0.17)
 z_index = 20
 
 [node name="Base" type="Sprite2D" parent="."]

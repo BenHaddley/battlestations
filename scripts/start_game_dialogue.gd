@@ -43,7 +43,7 @@ func _ready() -> void:
 	dialogue_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	dialogue_label.add_theme_color_override("font_color", Color("fff7e4"))
 	dialogue_label.add_theme_color_override("font_outline_color", Color("050505"))
-	dialogue_label.add_theme_constant_override("outline_size", 3)
+	dialogue_label.add_theme_constant_override("outline_size", 5)
 	add_child(dialogue_label)
 
 	continue_button = _make_choice_button("CONTINUE GAME", Color("497b4d"))
@@ -71,7 +71,7 @@ func _ready() -> void:
 	back_button.flat = true
 	back_button.add_theme_color_override("font_color", Color("fff1d0"))
 	back_button.add_theme_color_override("font_outline_color", Color("17100b"))
-	back_button.add_theme_constant_override("outline_size", 3)
+	back_button.add_theme_constant_override("outline_size", 5)
 	back_button.pressed.connect(close)
 	add_child(back_button)
 
@@ -101,7 +101,7 @@ func _make_choice_button(label: String, fill: Color) -> Button:
 	button.add_theme_color_override("font_color", Color("fff3d6"))
 	button.add_theme_color_override("font_disabled_color", Color(0.75, 0.72, 0.65, 0.58))
 	button.add_theme_color_override("font_outline_color", Color("21130c"))
-	button.add_theme_constant_override("outline_size", 3)
+	button.add_theme_constant_override("outline_size", 5)
 	var style := StyleBoxFlat.new()
 	style.bg_color = fill
 	style.border_color = Color("21130c")

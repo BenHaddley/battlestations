@@ -15,6 +15,7 @@ class_name TrainConvoy
 ## and — per its card's third paragraph — trims accel/coast time.
 
 @export_group("Movement")
+@export var balance: GameBalance = preload("res://resources/game_balance.tres")
 @export var cruise_speed: float = 46.0
 @export var max_speed: float = 82.0
 @export var minimum_speed: float = 14.0
@@ -59,6 +60,21 @@ var _brake_time_multiplier: float = 1.0
 var manual_axis: int = 0
 var manual_hold_time: float = 0.0
 const REVERSE_HOLD_SECONDS := 1.15
+
+func _ready() -> void:
+	if balance == null:
+		return
+	cruise_speed = balance.cruise_speed
+	max_speed = balance.maximum_speed
+	minimum_speed = balance.minimum_speed
+	acceleration = balance.acceleration
+	deceleration = balance.deceleration
+	reverse_acceleration = balance.reverse_acceleration
+	carry_capacity = balance.carry_capacity
+	tender_capacity_bonus = balance.tender_capacity_bonus
+	car_spacing = balance.car_spacing
+	occupancy_distance = balance.minimum_consist_clearance
+	attachment_radius = balance.attachment_radius
 
 func set_engine_livery(texture: Texture2D) -> void:
 	if texture:

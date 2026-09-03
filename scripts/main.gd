@@ -190,6 +190,7 @@ func _on_engine_drop_requested(screen_position: Vector2) -> void:
 		menu.show_placement_feedback("That rail cannot hold a locomotive here.", false)
 		return
 	convoys.append(convoy)
+	AudioFX.play_cue(&"purchase")
 	menu.trains = convoys
 	menu.train_drag_started.connect(convoy.set_drag_active.bind(true))
 	menu.train_drag_ended.connect(convoy.set_drag_active.bind(false))
@@ -290,7 +291,7 @@ func _install_assault_blocker(host: Node2D, local_radius: float) -> void:
 	body.add_child(collision)
 	host.add_child(body)
 
-func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> void:
+func _on_train_drop_requested(tower_index: int, screen_position: Vector2, facing: int = 1) -> void:
 	if not CampaignManager.challenge_shop_enabled():
 		menu.show_placement_feedback("This job card forbids purchasing new cars.", false)
 		return
@@ -315,6 +316,8 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> voi
 	var car: Node2D = tower.scene.instantiate()
 	car.set_meta("tower_data", tower)
 	trains.add_child(car)
+	if car.has_method("set_fixed_facing"):
+		car.set_fixed_facing(facing)
 	car.scale = NEW_BOARD_CAR_SCALE
 	_apply_car_palette(car, _car_palette_cursor)
 	_car_palette_cursor += 1
@@ -323,6 +326,7 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2) -> voi
 		car.queue_free()
 		menu.show_placement_feedback("That train cannot take another car.", false)
 		return
+	AudioFX.play_cue(&"purchase")
 	menu.show_placement_feedback("%s connected to the train." % tower.tower_name, true)
 
 func _on_station_defeated() -> void:
@@ -349,6 +353,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if upgrade_panel == null or upgrade_panel.visible or menu.dragging_tower >= 0 or menu.removing_mode:
 		return
 	if level_complete_overlay != null and level_complete_overlay.visible:
+		return
+	if OS.is_debug_build() and event is InputEventKey and event.pressed and event.keycode == KEY_F8:
+		var target_wave := 10
+		if spawner.debug_select_next_wave(target_wave) and spawner.can_start_next_wave():
+			spawner.start_next_wave()
+			menu.show_placement_feedback("DEBUG: started wave %d." % target_wave, true)
+		get_viewport().set_input_as_handled()
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * event.position

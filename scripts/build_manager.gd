@@ -26,8 +26,9 @@ func get_selected_tower() -> TowerData:
 		return null
 	return towers[selected_tower]
 
-func set_selected_tower(index: int) -> void:
+func set_selected_tower(index: int, warn_on_failure: bool = true) -> void:
 	if index < 0 or index >= towers.size():
-		push_warning("Tower selection index %d is out of range" % index)
+		if warn_on_failure:
+			push_warning("Tower selection index %d is out of range" % index)
 		return
 	selected_tower = index

@@ -3,6 +3,11 @@
 This page records architectural preparation only. Runtime rail editing and
 obstacle-aware spider pathfinding are not part of the current build.
 
+Gubgub has since confirmed the high-level design intent: players should be able to
+add rails and expand the railway **between waves**, but the feature is explicitly
+deferred until later. Costs, inventory, removal rules, and whether existing rails may
+be edited are not yet specified.
+
 ## Runtime rail editing
 
 The current `TrackRenderer` already owns route generation, validation and visual
@@ -40,7 +45,14 @@ rules include:
 - reserve the spider spawn and station rows,
 - replan only when obstacle revisions change, not every frame,
 - distinguish passable rail art from a genuinely blocking unit,
-- specify whether a blocked spider attacks the obstacle or waits.
+- let a spider evade an ordinary oncoming train by moving one tile backward or
+  sideways instead of taking collision damage,
+- support the documented Barrier Car: a heavy two-tile wall that a spider bites when
+  no route around the blocking train exists within three blocks,
+- define precisely how the “within three blocks” search is measured and how multiple
+  equally short detours are selected,
+- give cars damage/health handling so sustained bites can destroy one car without
+  corrupting convoy state.
 
 Those rules should be proven in a separate navigation test scene before replacing
 the current lane movement.

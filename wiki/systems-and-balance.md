@@ -5,6 +5,10 @@
 Values on this page are **implemented defaults** from the active GDScript and scenes,
 not claims of final balance.
 
+Shared wave, economy, and train tuning lives in the inspectable
+`resources/game_balance.tres` resource. Individual car and spider catalog entries
+retain their mechanic-specific values.
+
 ## Economy
 
 The currency is named **Delta** (`Δ`) throughout the HUD, per the
@@ -12,17 +16,26 @@ The currency is named **Delta** (`Δ`) throughout the HUD, per the
 
 | Parameter | Default |
 |---|---:|
-| Starting currency | 450 |
-| Generic spider bounty | 75 |
-| Early-wave bounty (waves 1–3) | 120 |
+| Campaign starting currency | 300–600, by level |
+| Generic early-wave bounty (waves 1–3) | 18 |
+| Specialist bounty | 8–45, plus 8 per campaign level |
+| Passenger Coach income | 32 every 8 seconds while coupled |
+| Wave completion bonus | 35 + 12 × wave number |
 
 Dropping a shop car on a valid rail spends its `TowerData.cost`, but only after
 `TrainConvoy.attach_car()` also confirms the target train has capacity — see
 [Train weight and momentum](#train-weight-and-momentum). Invalid, off-track, or
-over-capacity drops spend nothing. There is no upgrade system — cars are bought once
-at a fixed cost and either sit in the train or get removed via the REMOVE button; see
-[Removing cars](#removing-cars) below. Currency's only sinks are car purchases; its
+over-capacity drops spend nothing. Coupled cars can also be selected for the active
+upgrade/sell panel. Currency sinks are purchases and upgrades; its
 only sources are spider bounties, wave-completion bonuses, and Passenger Coach income.
+
+### Documented balance direction
+
+Gubgub's 2026-08-28 playtest found that spider bounties make Delta excessively
+abundant in larger waves, eventually making car prices inconsequential. The intended
+retune is to reduce kill income and make the player rely more heavily on Passenger
+Coach income. Exact replacement values have not been supplied, so the implemented
+values are an intentional first playtest baseline, not recovered canon or final approval.
 
 ## Placeable cars
 
@@ -80,8 +93,8 @@ each of them.
 
 **Passenger Coach** (`scripts/passenger_coach.gd`) — no weapon and no targeting. While
 attached and visible, it accumulates delta time and calls
-`LevelManager.increase_currency(50)` every `income_interval = 10` seconds, with a
-floating `+Δ50` popup on each payout.
+`LevelManager.increase_currency(32)` every `income_interval = 8` seconds, with a
+floating `+Δ32` popup on each payout.
 
 **Brake Van** (`scripts/brake_van.gd`) — no weapon. `weight = 0.0`, so it never counts
 toward its train's carry capacity. The moment one is attached, `TrainConvoy.attach_car()`
@@ -109,12 +122,12 @@ used to describe. A train's total weight is the sum of every attached car's `wei
 
 | Parameter | Default |
 |---|---:|
-| Cruise / boosted max speed | 62 / 105 world units/second |
+| Cruise / boosted max speed | 46 / 82 world units/second |
 | Carry capacity | 1000 |
 | Tender capacity bonus (directly behind the engine only) | +500 |
-| Forward acceleration | 34 world units/second² |
+| Forward acceleration | 28 world units/second² |
 | Reverse acceleration | 28 world units/second² |
-| Deceleration | 48 world units/second² |
+| Deceleration | 34 world units/second² |
 | Brake Van braking multiplier | ×0.85 time factor |
 | Car spacing | 94 world units |
 | Minimum consist clearance | 64 world units |
@@ -133,6 +146,14 @@ separate acceleration, deceleration and reverse-acceleration values; an opposite
 direction always brakes through zero instead of flipping instantly. The stand reads
 actual velocity for its speed bars and movement-direction lamp, independently of
 the requested controls.
+
+Gubgub's latest **documented** direction differs from that implementation. The full
+control stand obscures combat at the bottom of the board and should be condensed;
+the suggested input is Up to increase forward speed and Down for reverse. Manual
+engine control is meant primarily to exceed normal cruise speed. An engine should
+be able to slow dramatically but probably never stop completely, because parking a
+train in one ideal position undermines the movement strategy. Both the control
+scheme and exact minimum/maximum speeds still require a final specification.
 
 Cars don't have independent physics. The engine and every car sample the closed
 route at fixed distance offsets. Before advancing, the convoy validates all sampled
@@ -162,6 +183,28 @@ loops, four independent circuits, offset irregular circuits, and finally the den
 outer-and-comb layout. Each closed circuit receives one train. The post-campaign
 **Open Rails** level keeps calling `generate_layout()`, so the existing automatic
 track generator remains playable and available for later modes.
+
+The acquisition model is implemented: campaign levels grant one starting engine,
+and a locomotive can be dragged from the Train Yard onto an empty rail stretch for
+Δ325. Each purchased engine is an independent train that can be selected and driven.
+
+## Documented combat movement direction
+
+Gubgub considers the current swivelling armed cars outdated. Future conventional
+shooting cars should fire in one fixed direction, giving the player a reason to move
+and orient engines around the board. Revised unit drawings are pending, so the
+current rotating-turret implementation remains an intentional placeholder.
+
+Ordinary trains should not deal collision damage. A spider threatened by a normal-
+speed train moves one tile backward or sideways before impact. A distinct future
+engine concept may carry only one car and travel fast enough to damage spiders by
+ramming; it has no finished assets or detailed stats.
+
+A planned **Barrier Car** is a heavy, two-tile-long divider that behaves as a wall.
+If a train blocks a spider and no route around it exists within three blocks, the
+spider attacks the train by biting it; enough damage destroys an individual car.
+Health, bite cadence, path-search interpretation, placement restrictions, and what
+happens to a consist after a middle car is destroyed remain unspecified.
 
 ## Removing cars
 
@@ -200,6 +243,21 @@ The selection pool is weighted toward the baseline spider and unlocks by campaig
 level. This keeps the first level readable and adds counters gradually rather than
 placing every special enemy into the opening wave.
 
+### Specialist counterplay
+
+| Threat | Readable tell | Available counterplay |
+|---|---|---|
+| Baby / Charger | Small fast body; Charger shows speed streaks before its burst | Broad route coverage, Chaingunner bursts, and short-range Ballast groups |
+| Rally | Green circular aura | Prioritize the Rally spider with direct fire or splash clustered followers |
+| Roller | `BLOCK` appears every third hit | Coal Cannon's heavy hit and Ballast group damage reduce wasted pellet cadence |
+| Sturdy | Large slow body | Concentrated Gunner/Coal fire; low speed gives more circuit passes |
+| Wolf | Angry artwork below half HP | Burst damage around enrage; manage engine speed to retain coverage |
+| Jump | Enlarged jump state and `BLOCK` on airborne hits | Sustained or burst fire resumes when its short jump ends |
+| Egg | Break frame at half HP, followed by fast Baby animation | Focus it before hatching or maintain downstream rapid-fire coverage |
+
+Every specialist enters after the baseline Gunner is taught, while campaign car
+unlocks progressively add burst, area, splash, economy, and capacity options.
+
 The active generic spider has 15 HP and a bounty of 25 (see the Economy table above —
 this is deliberately lower than Passenger Coach's passive income). Its unslowed speed is derived
 from the configured lane length so it takes about 25 seconds to travel from spawn to the station,
@@ -223,29 +281,36 @@ wave cannot clear while attackers remain at the station. Station HP defaults to 
 | Parameter | Default |
 |---|---:|
 | First wave | 1 |
-| Base enemies | 8 |
-| Base spawn rate | 0.5/second |
-| Delay between waves | 5 seconds |
-| Scaling exponent | 0.75 |
+| Base enemies | 3 |
+| Base spawn rate | 0.4/second |
+| Station/build interval | 45 seconds |
+| Count exponent | 1.15 |
+| Spawn-rate exponent | 0.75 |
 | Spawn-rate cap | 15/second |
 
 For wave `W`:
 
 ```text
-enemy count = round(8 × W^0.75)
-spawn rate  = min(0.5 × W^0.75, 15) enemies/second
+enemy count = 3 + round(2 × max(W - 1, 0)^1.15)
+spawn rate  = min(0.4 × W^0.75, 15) enemies/second
 ```
 
 | Wave | Enemies | Spawn rate/sec |
 |---:|---:|---:|
-| 1 | 8 | 0.50 |
-| 2 | 13 | 0.84 |
-| 5 | 27 | 1.67 |
-| 10 | 45 | 2.81 |
-| 20 | 76 | 4.73 |
+| 1 | 3 | 0.40 |
+| 2 | 5 | 0.67 |
+| 3 | 7 | 0.91 |
+| 4 | 10 | 1.13 |
+| 5 | 13 | 1.34 |
+| 6 | 16 | 1.53 |
+| 7 | 19 | 1.72 |
+| 8 | 22 | 1.90 |
+| 9 | 25 | 2.08 |
+| 10 | 28 | 2.25 |
 
-Enemy scenes are selected uniformly at random from the configured prefab array. Only
-the generic enemy is configured today.
+Enemy archetypes come from the campaign-unlocked weighted roster. In debug builds,
+F8 starts wave 10 when the spawner is idle. Completed waves print `WAVE TELEMETRY`
+with starting/ending Delta, income, spending, net change, and kills.
 
 ## Provenance
 

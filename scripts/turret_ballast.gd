@@ -14,7 +14,8 @@ const CHUNK_TEXTURES: Array[Texture2D] = [
 func _shoot() -> void:
 	if not is_instance_valid(target):
 		return
-	AudioFX.play(preload("res://assets/audio/sfx/turret_shoot.wav"), -2.0)
+	AudioFX.play(preload("res://assets/audio/sfx/turret_shoot_ballast.wav"), -2.0)
+	_play_recoil(8.0)
 	for body in targeting_area.get_overlapping_bodies():
 		if body.has_method("take_damage") and global_position.distance_to(body.global_position) <= targeting_range:
 			body.take_damage(BLAST_DAMAGE)

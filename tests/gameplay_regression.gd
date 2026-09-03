@@ -1,12 +1,15 @@
 extends Node
 ## Headless regression coverage for convoy spacing/reverse motion and persistent
-## station attackers. Run with: godot --headless --path . --script tests/gameplay_regression.gd
+## station attackers. Run with:
+## godot --headless --path . tests/GameplayRegression.tscn
 
 const ConvoyScene := preload("res://scenes/TrainConvoy.tscn")
 const EnemyScene := preload("res://scenes/Enemy.tscn")
 const StationScene := preload("res://scenes/Station.tscn")
 const MainScene := preload("res://scenes/Main.tscn")
 const GameOverScene := preload("res://scenes/ui/GameOverOverlay.tscn")
+const MinigunScene := preload("res://scenes/TurretMinigun.tscn")
+const MinigunBulletScript := preload("res://scripts/bullet.gd")
 
 var failures: Array[String] = []
 
@@ -22,18 +25,73 @@ func _run() -> void:
 	await get_tree().process_frame
 	_test_convoy_spacing_and_reverse()
 	_test_campaign_track_library()
+	_test_content_catalogs()
+	_test_wallet_wave_and_selection_rules()
 	_test_challenge_job_cards()
 	_test_music_playlist_rotation()
 	_test_game_over_modes()
+	await _test_reported_combat_regressions()
 	await _test_station_attackers()
 	await _test_spider_assault()
 	await _test_main_scene_train_integration()
+	# Let short procedural/audio one-shots finish and release their players before
+	# ObjectDB performs its exit leak check.
+	await get_tree().create_timer(0.25).timeout
 	if failures.is_empty():
 		print("GAMEPLAY REGRESSION PASS")
 		get_tree().quit(0)
 	else:
 		print("GAMEPLAY REGRESSION FAIL: %s" % [failures])
 		get_tree().quit(1)
+
+func _test_reported_combat_regressions() -> void:
+	var jump_spider: EnemyMovement = EnemyScene.instantiate()
+	add_child(jump_spider)
+	jump_spider.global_position = Vector2(100, 100)
+	jump_spider.configure_route(Vector2(100, 600), 10.0)
+	jump_spider.ability = "jump"
+	jump_spider._jumping = false
+	var grounded_position := jump_spider.global_position
+	jump_spider._physics_process(0.25)
+	_check(jump_spider.global_position.is_equal_approx(grounded_position), "grounded Jump Spider moved between hops")
+	jump_spider._jumping = true
+	jump_spider._special_clock = 4.0
+	jump_spider._physics_process(0.25)
+	_check(jump_spider.global_position.y > grounded_position.y, "Jump Spider did not advance during its hop")
+	var before_knockback := jump_spider.global_position
+	jump_spider.apply_knockback(90.0)
+	_check(jump_spider.global_position.y < before_knockback.y, "Coal Cannon knockback did not move a spider away from its destination")
+	jump_spider.queue_free()
+
+	var minigun: Turret = MinigunScene.instantiate()
+	add_child(minigun)
+	_check(minigun.fixed_direction_enabled, "Chaingunner did not enable the new static-facing prototype")
+	_check(minigun._fixed_art != null and minigun._fixed_art.visible, "Chaingunner static sprite is missing")
+	var initial_fire_direction := minigun._fixed_fire_direction()
+	minigun.set_fixed_facing(-1)
+	_check(minigun._fixed_fire_direction().dot(initial_fire_direction) < -0.99, "directional gun flip did not reverse its firing side")
+	minigun.set_fixed_facing(1)
+	var target_node := Node2D.new()
+	# Default convoy travel is down, so facing +1 fires toward screen-left.
+	target_node.position = Vector2(-200, 0)
+	add_child(target_node)
+	minigun.target = target_node
+	var bullets_before := _count_minigun_bullets()
+	minigun._shoot()
+	_check(_count_minigun_bullets() == bullets_before + 1, "Chaingunner emitted more than one bullet on its initial burst frame")
+	await get_tree().create_timer(minigun.get("burst_interval") * 1.2).timeout
+	_check(_count_minigun_bullets() == bullets_before + 2, "Chaingunner rounds are not arriving sequentially")
+	await get_tree().create_timer(minigun.get("burst_interval") * 6.2).timeout
+	_check(_count_minigun_bullets() == bullets_before + 7, "Chaingunner burst did not emit exactly seven rounds")
+	minigun.queue_free()
+	target_node.queue_free()
+
+func _count_minigun_bullets() -> int:
+	var count := 0
+	for child in get_tree().current_scene.get_children():
+		if child.get_script() == MinigunBulletScript:
+			count += 1
+	return count
 
 func _test_convoy_spacing_and_reverse() -> void:
 	var convoy: TrainConvoy = ConvoyScene.instantiate()
@@ -111,6 +169,81 @@ func _test_campaign_track_library() -> void:
 				unique[point] = true
 	renderer.queue_free()
 
+func _test_content_catalogs() -> void:
+	var balance := load("res://resources/game_balance.tres") as GameBalance
+	_check(balance != null, "shared game balance resource failed to load")
+	if balance:
+		_check(balance.base_enemies > 0 and balance.base_spawn_rate > 0.0, "shared wave balance is invalid")
+		_check(balance.minimum_speed > 0.0 and balance.minimum_speed < balance.cruise_speed, "shared train speeds do not preserve a minimum crawl")
+		_check(balance.cruise_speed < balance.maximum_speed, "shared train maximum must exceed cruise speed")
+		_check(balance.passenger_income > 0 and balance.passenger_income_interval > 0.0, "shared Passenger Coach economy is invalid")
+	var tower_paths: Array[String] = [
+		"res://resources/basic_turret.tres",
+		"res://resources/minigun_turret.tres",
+		"res://resources/ballast_turret.tres",
+		"res://resources/coal_cannon_turret.tres",
+		"res://resources/passenger_coach.tres",
+		"res://resources/brake_van.tres",
+		"res://resources/tender_car.tres",
+	]
+	var tower_names: Dictionary = {}
+	for path in tower_paths:
+		var tower := load(path) as TowerData
+		_check(tower != null, "tower catalog entry failed to load: %s" % path)
+		if tower == null:
+			continue
+		_check(not tower.tower_name.is_empty(), "tower catalog entry has no name: %s" % path)
+		_check(not tower_names.has(tower.tower_name), "tower name is duplicated: %s" % tower.tower_name)
+		tower_names[tower.tower_name] = true
+		_check(tower.cost >= 0, "%s has a negative cost" % tower.tower_name)
+		_check(tower.weight >= 0.0, "%s has a negative weight" % tower.tower_name)
+		_check(tower.scene != null, "%s has no scene" % tower.tower_name)
+		_check(tower.icon != null, "%s has no shop icon" % tower.tower_name)
+
+	var enemy_ids: Dictionary = {}
+	for profile in EnemyRoster.PROFILES:
+		var profile_id := String(profile.get("id", ""))
+		_check(not profile_id.is_empty(), "enemy profile has no id")
+		_check(not enemy_ids.has(profile_id), "enemy id is duplicated: %s" % profile_id)
+		enemy_ids[profile_id] = true
+		for numeric_key in ["weight", "hp", "speed", "bounty", "scale"]:
+			_check(float(profile.get(numeric_key, 0)) > 0.0, "%s has invalid %s" % [profile_id, numeric_key])
+		for texture_key in ["walk_a", "walk_b", "death"]:
+			_check(profile.get(texture_key) is Texture2D, "%s has no %s texture" % [profile_id, texture_key])
+
+func _test_wallet_wave_and_selection_rules() -> void:
+	var original_currency := LevelManager.currency
+	LevelManager.reset_currency(100)
+	_check(LevelManager.spend_currency(100), "wallet rejected an exactly affordable purchase")
+	_check(LevelManager.currency == 0, "wallet deducted the wrong amount")
+	_check(not LevelManager.spend_currency(1, "test", false), "wallet allowed an unaffordable purchase")
+	_check(LevelManager.currency == 0, "failed purchase changed the wallet balance")
+	LevelManager.increase_currency(25)
+	_check(LevelManager.currency == 25, "wallet income was not credited")
+	LevelManager.reset_currency(original_currency)
+
+	var original_selection := BuildManager.selected_tower
+	BuildManager.set_selected_tower(0)
+	BuildManager.set_selected_tower(-1, false)
+	_check(BuildManager.selected_tower == 0, "invalid negative shop selection replaced the valid selection")
+	BuildManager.set_selected_tower(BuildManager.towers.size(), false)
+	_check(BuildManager.selected_tower == 0, "out-of-range shop selection replaced the valid selection")
+	BuildManager.selected_tower = original_selection
+
+	var spawner := EnemySpawner.new()
+	spawner.base_enemies = 3
+	spawner.difficulty_scaling_factor = 1.15
+	spawner.enemies_per_second = 0.4
+	spawner.spawn_rate_scaling_factor = 0.75
+	spawner.enemies_per_second_cap = 15.0
+	for wave in range(1, 11):
+		spawner.current_wave = wave
+		var expected_count := 3 + roundi(2.0 * pow(maxf(wave - 1, 0), 1.15))
+		_check(spawner._enemies_per_wave() == expected_count, "wave %d enemy count drifted from its documented formula" % wave)
+		_check(spawner._enemies_per_second() > 0.0 and spawner._enemies_per_second() <= 15.0, "wave %d spawn rate is invalid" % wave)
+		_check(spawner._journey_duration_for_wave() >= spawner.journey_duration_seconds, "wave %d journey duration is too short" % wave)
+	spawner.queue_free()
+
 func _test_music_playlist_rotation() -> void:
 	var playlist := preload("res://scripts/music_playlist.gd").new()
 	playlist.tracks = [AudioStreamMP3.new(), AudioStreamMP3.new(), AudioStreamMP3.new()]
@@ -140,19 +273,17 @@ func _test_game_over_modes() -> void:
 	add_child(mission)
 	mission.show_failure(false)
 	_check(mission.visible and get_tree().paused, "mission failure did not freeze gameplay and show its overlay")
-	_check(mission._banner.texture.resource_path.ends_with("speed up.png"), "normal level loss did not use the Mission Failed banner")
+	_check(mission._title_art.texture.resource_path.ends_with("GAME_OVER_TEXT.webp"), "normal level loss did not use the supplied GAME OVER artwork")
 	_check(mission._primary_button.get_meta("failure_action") == "restart_level", "normal level loss did not offer Restart Level")
-	_check(not mission._character.get_rect().intersects(mission._message.get_rect()), "failure character overlaps its message")
 	_check(not mission._primary_button.get_rect().intersects(mission._menu_button.get_rect()), "failure action buttons overlap")
-	var panel_rect := Rect2(Vector2(410, 70), mission._panel.size)
-	_check(panel_rect.encloses(mission._primary_button.get_rect()) and panel_rect.encloses(mission._menu_button.get_rect()), "failure buttons extend outside the industrial panel")
+	_check(is_equal_approx(mission._dim.color.a, 0.0), "failure overlay should begin its dimmer fade from transparent")
 	get_tree().paused = false
 	mission.queue_free()
 
 	var challenge: GameOverOverlay = GameOverScene.instantiate()
 	add_child(challenge)
 	challenge.show_failure(true)
-	_check(challenge._banner.texture.resource_path.contains("9176d68e"), "challenge loss did not use the Challenge Failed banner")
+	_check(challenge._title_art.texture.resource_path.ends_with("GAME_OVER_TEXT.webp"), "challenge loss did not use the supplied GAME OVER artwork")
 	_check(challenge._primary_button.get_meta("failure_action") == "retry_challenge", "challenge loss did not offer Retry Challenge")
 	_check(challenge._menu_button.texture_normal.resource_path.contains("951252df"), "failure overlay did not use the supplied Main Menu button")
 	get_tree().paused = false
@@ -243,6 +374,11 @@ func _test_main_scene_train_integration() -> void:
 	await get_tree().process_frame
 	_check(main.menu.get_node("NewIllustratedUi").visible, "normal play lost its illustrated UI background")
 	_check(main.get_node("Board").texture.resource_path == "res://assets/the_new_map.png", "normal play lost the shared new map background")
+	_check(main.menu.wave_banner != null, "HUD did not create the wave-start banner")
+	main.menu._show_wave_start_cue(3)
+	_check(main.menu.wave_banner.text == "WAVE 3 — DEFEND!", "wave-start cue did not identify the active wave")
+	if main.menu._wave_banner_tween and main.menu._wave_banner_tween.is_valid():
+		main.menu._wave_banner_tween.kill()
 	var pause_menu: PauseMenu = main.menu.pause_menu
 	_check(pause_menu != null, "main HUD did not create the pause menu")
 	pause_menu.open()
@@ -250,12 +386,26 @@ func _test_main_scene_train_integration() -> void:
 	_check(pause_menu.process_mode == Node.PROCESS_MODE_ALWAYS, "pause menu cannot process input while paused")
 	_check(pause_menu.get_node_or_null("Shade/Card/Margin/Content/RestartButton") != null, "pause menu is missing restart")
 	_check(pause_menu.get_node_or_null("Shade/Card/Margin/Content/TitleButton") != null, "pause menu is missing return to title")
+	_check(pause_menu.volume_slider != null and pause_menu.mute_check != null, "pause menu is missing audio settings")
+	_check(pause_menu.fullscreen_check != null, "pause menu is missing display settings")
+	_check(main.get_node_or_null("TutorialDirector") is TutorialDirector, "main campaign scene is missing first-run instructions")
 	pause_menu.close()
 	_check(not get_tree().paused and not pause_menu.visible, "resume did not restore gameplay")
 	_check(main.convoys.size() == 1, "normal level should begin with exactly one free locomotive")
 	_check(main.track_routes.size() >= 2, "normal level should retain routes for purchased locomotives")
 	if not main.convoys.is_empty():
 		_check(main.convoys[0].car_count() >= 1, "starter car was rejected or missing")
+		var starter_car: Node2D = main.convoys[0].followers[0]
+		var starter_data := BuildManager.towers[0]
+		var fire_rate_before := float(starter_car.get("bps"))
+		LevelManager.currency = UnitUpgradePanel.COSTS[0]
+		main.upgrade_panel.open_for(starter_car, main.convoys[0], starter_data)
+		main.upgrade_panel._select_node(0, 0)
+		main.upgrade_panel._buy_selected()
+		_check(LevelManager.currency == 0, "upgrade purchase did not spend its listed cost")
+		_check(is_equal_approx(float(starter_car.get("bps")), fire_rate_before * 1.25), "Rapid Fire upgrade did not apply its documented multiplier")
+		_check(main.upgrade_panel._levels()[0] == 1, "purchased upgrade level was not persisted on the car")
+		main.upgrade_panel.close_panel()
 		main._select_convoy(main.convoys[0])
 		await get_tree().create_timer(0.2).timeout
 		_check(main.train_control_panel._expansion > 0.9, "engine selection did not expand train controls")

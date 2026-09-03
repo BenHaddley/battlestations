@@ -20,6 +20,8 @@
 | 2024-02-02 | A collaborator planned a level theme and replacement Spider art after gameplay existed. Existing music was described as a banjo placeholder. | Documented |
 | 2024-02-12 | Moving trains on rails was an active development goal. | Documented |
 | 2024-03-07 | Alternatives to Unity were discussed. This is the last known mention in the searched DM. | Documented |
+| 2026-08-28 | Gubgub playtested the current build and requested less-obstructive engine controls, lower engine speeds/no full stop, reduced spider bounty, stronger Passenger Coach dependence, and placeable/purchasable engines. Spider death feedback was praised. | Documented |
+| 2026-08-29 | Gubgub documented fixed-direction armed cars, ordinary-spider train evasion, a possible ramming engine, the two-tile Barrier Car and spider biting behavior, a future discovery gallery, and art redraws in progress. | Documented |
 | Repository history | The Unity project was snapshotted, then scaffolded into Godot 4. | Implemented/archived |
 
 ## Lost concept sheet
@@ -53,6 +55,10 @@ the raw notes for identification, but not repeated here as a usable reference.
 
 - [Discord conversation research](../discord-gubgub-notes.md) — search scope,
   excerpts, broken link, and caveats.
+- [2026-08-28–29 playtest and design notes](sources/2026-08-28-29-playtest-and-design-notes.md)
+  — supplied Discord conversation covering balance, engine controls/acquisition,
+  fixed-direction weapons, spider/train interaction, Barrier Car, rail expansion,
+  gallery plans, and pending art.
 - [`legacy_unity/`](../legacy_unity/) — original Unity snapshot.
 - [`scripts/`](../scripts/) and [`scenes/`](../scenes/) — active implementation.
 

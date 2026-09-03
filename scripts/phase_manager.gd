@@ -20,6 +20,12 @@ var paused: bool = false
 
 var _spawner: EnemySpawner
 
+func _ready() -> void:
+	var balance: GameBalance = load("res://resources/game_balance.tres")
+	if balance:
+		station_duration = balance.station_phase_duration
+		phase_timer = station_duration
+
 func configure(spawner: EnemySpawner) -> void:
 	_spawner = spawner
 	_spawner.wave_started.connect(_on_wave_started)

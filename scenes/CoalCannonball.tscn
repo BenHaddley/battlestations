@@ -14,6 +14,7 @@ bullet_speed = 480.0
 direct_damage = 3
 splash_damage = 1
 splash_radius = 140.0
+knockback_distance = 90.0
 z_index = 40
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

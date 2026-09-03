@@ -7,6 +7,7 @@ class_name CoalCannonball
 @export var direct_damage: int = 3
 @export var splash_damage: int = 1
 @export var splash_radius: float = 140.0
+@export var knockback_distance: float = 90.0
 
 var target: Node2D = null
 
@@ -25,6 +26,8 @@ func _on_body_entered(body: Node2D) -> void:
 	AudioFX.play(preload("res://assets/audio/sfx/spider_hit.wav"), -2.0)
 	if body.has_method("take_damage"):
 		body.take_damage(direct_damage)
+	if is_instance_valid(body) and body.has_method("apply_knockback"):
+		body.apply_knockback(knockback_distance)
 	_splash_damage(global_position, body)
 	queue_free()
 
