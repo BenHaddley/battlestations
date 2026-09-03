@@ -10,6 +10,7 @@ const MainScene := preload("res://scenes/Main.tscn")
 const GameOverScene := preload("res://scenes/ui/GameOverOverlay.tscn")
 const TitleScene := preload("res://scenes/TitleScreen.tscn")
 const MinigunScene := preload("res://scenes/TurretMinigun.tscn")
+const BasicBulletScene := preload("res://scenes/Bullet.tscn")
 const MinigunBulletScript := preload("res://scripts/bullet.gd")
 
 var failures: Array[String] = []
@@ -47,6 +48,10 @@ func _run() -> void:
 		get_tree().quit(1)
 
 func _test_reported_combat_regressions() -> void:
+	var basic_bullet: Bullet = BasicBulletScene.instantiate()
+	_check(basic_bullet.bullet_damage >= int(EnemyRoster.PROFILES[0].hp), "basic Gunner shot does not one-hit the level-one spider")
+	basic_bullet.queue_free()
+
 	var jump_spider: EnemyMovement = EnemyScene.instantiate()
 	add_child(jump_spider)
 	jump_spider.global_position = Vector2(100, 100)
