@@ -178,14 +178,24 @@ func _generate_and_spawn_trains() -> void:
 func _process(delta: float) -> void:
 	if menu.dragging_tower >= 0:
 		_on_train_drag_updated(menu.dragging_tower, get_viewport().get_mouse_position(), menu.drag_facing)
-	if not is_instance_valid(selected_convoy):
-		return
 	var forward_held := Input.is_key_pressed(KEY_UP) or Input.is_key_pressed(KEY_W)
 	var reverse_held := Input.is_key_pressed(KEY_DOWN) or Input.is_key_pressed(KEY_S)
 	var axis := int(forward_held) - int(reverse_held)
-	if selected_convoy.get_meta("reverse_locked", false) and axis < 0:
+	if is_instance_valid(selected_convoy):
+		_apply_keyboard_axis(selected_convoy, axis, delta)
+	else:
+		# Keyboard driving should work immediately without making the player
+		# find and click a small moving locomotive first. With no explicit
+		# selection, the command is shared by every player train.
+		for convoy_node in convoys:
+			var convoy := convoy_node as TrainConvoy
+			if is_instance_valid(convoy):
+				_apply_keyboard_axis(convoy, axis, delta)
+
+func _apply_keyboard_axis(convoy: TrainConvoy, axis: int, delta: float) -> void:
+	if convoy.get_meta("reverse_locked", false) and axis < 0:
 		axis = 0
-	selected_convoy.set_manual_axis(axis, delta)
+	convoy.set_manual_axis(axis, delta)
 
 func _on_train_drag_updated(tower_index: int, screen_position: Vector2, facing: int) -> void:
 	if car_placement_ghost == null or tower_index < 0 or tower_index >= BuildManager.towers.size():
