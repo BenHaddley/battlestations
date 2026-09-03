@@ -98,6 +98,7 @@ func _test_reported_combat_regressions() -> void:
 	add_child(minigun)
 	_check(minigun.fixed_direction_enabled, "Chaingunner did not enable the new static-facing prototype")
 	_check(minigun._fixed_art != null and minigun._fixed_art.visible, "Chaingunner static sprite is missing")
+	_check(minigun.fixed_line_half_width <= 24.0, "directional targeting corridor is wider than its projectile can hit")
 	minigun.set_convoy_transform(Vector2.ZERO, Vector2.DOWN)
 	_check(minigun._fixed_fire_direction().is_equal_approx(Vector2.RIGHT), "unflipped directional gun art points right but fires left")
 	var initial_fire_direction := minigun._fixed_fire_direction()
