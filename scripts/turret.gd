@@ -53,6 +53,14 @@ func _process(delta: float) -> void:
 	_patrol_track(delta)
 	if not is_instance_valid(target):
 		target = _find_target()
+		# A fixed-direction lane is narrow and its cadence timer can otherwise
+		# land well after a spider has already walked through it. Firing the
+		# instant something enters the lane guarantees every crossing is
+		# actually shot at, instead of only whichever ones happen to overlap
+		# the next scheduled burst.
+		if is_instance_valid(target) and fixed_direction_enabled:
+			_shoot()
+			time_until_fire = 0.0
 		return
 
 	_rotate_towards_target(delta)
