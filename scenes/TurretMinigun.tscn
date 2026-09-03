@@ -14,6 +14,7 @@ script = ExtResource("1")
 bullet_scene = ExtResource("4")
 targeting_range = 315.0
 bps = 0.25
+base_projectile_damage = 4
 weight = 200.0
 fixed_direction_enabled = true
 fixed_direction_texture = ExtResource("5")

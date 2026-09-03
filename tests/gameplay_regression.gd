@@ -9,6 +9,7 @@ const StationScene := preload("res://scenes/Station.tscn")
 const MainScene := preload("res://scenes/Main.tscn")
 const GameOverScene := preload("res://scenes/ui/GameOverOverlay.tscn")
 const TitleScene := preload("res://scenes/TitleScreen.tscn")
+const BasicTurretScene := preload("res://scenes/Turret.tscn")
 const MinigunScene := preload("res://scenes/TurretMinigun.tscn")
 const BasicBulletScene := preload("res://scenes/Bullet.tscn")
 const MinigunBulletScript := preload("res://scripts/bullet.gd")
@@ -51,6 +52,22 @@ func _test_reported_combat_regressions() -> void:
 	var basic_bullet: Bullet = BasicBulletScene.instantiate()
 	_check(basic_bullet.bullet_damage == 20, "basic Gunner did not receive its 4x damage increase")
 	basic_bullet.queue_free()
+	var basic_turret: Turret = BasicTurretScene.instantiate()
+	add_child(basic_turret)
+	var basic_target := Node2D.new()
+	basic_target.position = Vector2.RIGHT * 200.0
+	add_child(basic_target)
+	basic_turret.target = basic_target
+	basic_turret._shoot()
+	var fired_basic_bullet: Bullet
+	for child in get_tree().current_scene.get_children():
+		if child is Bullet and child != basic_bullet:
+			fired_basic_bullet = child
+	_check(fired_basic_bullet != null and fired_basic_bullet.bullet_damage == 20, "live Gunner shot fell back below 20 damage")
+	if fired_basic_bullet:
+		fired_basic_bullet.free()
+	basic_target.free()
+	basic_turret.free()
 	var minigun_bullet: Bullet = preload("res://scenes/MinigunBullet.tscn").instantiate()
 	_check(minigun_bullet.bullet_damage == 4, "Chaingunner rounds did not receive their 4x damage increase")
 	minigun_bullet.queue_free()

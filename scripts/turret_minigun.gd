@@ -32,7 +32,7 @@ func _fire_burst_round(index: int) -> void:
 	var spread := float(index - 3) * 10.0
 	var bullet: Node2D = bullet_scene.instantiate()
 	if bullet.get("bullet_damage") != null:
-		bullet.set("bullet_damage", maxi(1, int(round(float(bullet.get("bullet_damage")) * float(get_meta("damage_multiplier", 1.0))))))
+		bullet.set("bullet_damage", maxi(1, int(round(float(base_projectile_damage) * float(get_meta("damage_multiplier", 1.0))))))
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = firing_point.global_position + across * spread
 	if fixed_direction_enabled and bullet.has_method("set_direction"):

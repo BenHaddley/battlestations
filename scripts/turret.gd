@@ -14,6 +14,7 @@ class_name Turret
 @export var targeting_range: float = 5.0
 @export var rotation_speed: float = 5.0
 @export var bps: float = 1.0 ## bullets per second
+@export var base_projectile_damage: int = 20
 
 @export_group("Rail Patrol")
 @export var patrol_speed: float = 95.0
@@ -135,7 +136,7 @@ func _shoot() -> void:
 	_play_recoil(6.0)
 	var bullet: Node2D = bullet_scene.instantiate()
 	if bullet.get("bullet_damage") != null:
-		bullet.set("bullet_damage", maxi(1, int(round(float(bullet.get("bullet_damage")) * float(get_meta("damage_multiplier", 1.0))))))
+		bullet.set("bullet_damage", maxi(1, int(round(float(base_projectile_damage) * float(get_meta("damage_multiplier", 1.0))))))
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = firing_point.global_position
 	if fixed_direction_enabled and bullet.has_method("set_direction"):
