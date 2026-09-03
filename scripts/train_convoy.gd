@@ -304,6 +304,17 @@ func can_attach_at(world_position: Vector2) -> bool:
 			return true
 	return false
 
+## Exact transform the next car will receive if it is attached now. Placement
+## previews use this rather than guessing from the cursor or nearest rail tile.
+func next_car_preview_transform() -> Dictionary:
+	if route_length <= 0.0:
+		return {}
+	var sample := _sample_route(route_distance - car_spacing * (followers.size() + 1))
+	return {
+		"position": sample.position,
+		"direction": sample.direction * cruise_direction,
+	}
+
 func set_drag_active(active: bool) -> void:
 	drag_active = active
 	var tint := Color(1.0, 0.85, 0.35, 1.0) if active else Color.WHITE

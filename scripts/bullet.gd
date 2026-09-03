@@ -1,16 +1,29 @@
 extends Area2D
 class_name Bullet
-## Homes toward its locked target, deals damage on contact, self-destructs.
+## Supports both legacy homing shots and fixed-direction rail-gun shots.
 
 @export var bullet_speed: float = 5.0
 @export var bullet_damage: int = 1
 
 var target: Node2D = null
+var travel_direction := Vector2.ZERO
+var _straight_lifetime := 0.0
 
 func set_target(t: Node2D) -> void:
 	target = t
 
+func set_direction(direction: Vector2) -> void:
+	travel_direction = direction.normalized()
+	target = null
+
 func _physics_process(delta: float) -> void:
+	if not travel_direction.is_zero_approx():
+		global_position += travel_direction * bullet_speed * delta
+		_straight_lifetime += delta
+		var bounds := get_viewport_rect().grow(120.0)
+		if _straight_lifetime > 4.0 or not bounds.has_point(global_position):
+			queue_free()
+		return
 	if not is_instance_valid(target):
 		queue_free()
 		return

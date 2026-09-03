@@ -7,6 +7,7 @@ class_name Menu
 
 signal train_drag_started
 signal train_drag_ended
+signal train_drag_updated(tower_index: int, screen_position: Vector2, facing: int)
 signal train_drop_requested(tower_index: int, screen_position: Vector2, facing: int)
 signal engine_drop_requested(screen_position: Vector2)
 signal remove_requested(screen_position: Vector2)
@@ -413,12 +414,15 @@ func _input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseMotion:
 		_position_drag_preview(event.position)
+		if dragging_tower >= 0:
+			train_drag_updated.emit(dragging_tower, event.position, drag_facing)
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		# The two fixed-direction gun cars can be flipped without releasing the
 		# left-button drag. The preview pivots in place, so placement stays stable.
 		if dragging_tower == 0 or dragging_tower == 1:
 			drag_facing *= -1
 			drag_preview.scale.x = float(drag_facing)
+			train_drag_updated.emit(dragging_tower, event.position, drag_facing)
 			show_placement_feedback("Facing %s — right-click again to flip." % ("left" if drag_facing < 0 else "right"), true)
 			get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
@@ -604,6 +608,7 @@ func _on_tower_gui_input(event: InputEvent, index: int) -> void:
 		drag_preview.visible = true
 		_position_drag_preview(event.global_position)
 		train_drag_started.emit()
+		train_drag_updated.emit(dragging_tower, event.global_position, drag_facing)
 
 func _install_engine_shop_row() -> void:
 	var shop_list: VBoxContainer = $LeftPanel/Margin/VBox/ScrollContainer/ShopList
@@ -644,6 +649,10 @@ func _create_drag_preview() -> void:
 
 func _position_drag_preview(screen_position: Vector2) -> void:
 	drag_preview.position = screen_position - drag_preview.size * 0.5
+
+func set_drag_preview_snapped(snapped: bool) -> void:
+	if dragging_tower >= 0:
+		drag_preview.visible = not snapped
 
 func show_placement_feedback(message: String, success: bool) -> void:
 	if placement_banner == null or placement_banner_label == null:

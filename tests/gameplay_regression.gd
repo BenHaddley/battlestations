@@ -73,6 +73,22 @@ func _test_reported_combat_regressions() -> void:
 	minigun.set_fixed_facing(-1)
 	_check(minigun._fixed_fire_direction().dot(initial_fire_direction) < -0.99, "directional gun flip did not reverse its firing side")
 	minigun.set_fixed_facing(1)
+	var barrel_origin: Vector2 = minigun.firing_point.global_position
+	var distant_inline := Node2D.new()
+	distant_inline.global_position = barrel_origin + Vector2.RIGHT * 5000.0
+	add_child(distant_inline)
+	_check(minigun._is_in_fixed_firing_line(distant_inline), "directional gun retained a circular distance limit")
+	var angled_target := Node2D.new()
+	angled_target.global_position = barrel_origin + Vector2(500.0, minigun.fixed_line_half_width + 5.0)
+	add_child(angled_target)
+	_check(not minigun._is_in_fixed_firing_line(angled_target), "directional gun accepted a target outside its straight corridor")
+	var behind_target := Node2D.new()
+	behind_target.global_position = barrel_origin + Vector2.LEFT * 100.0
+	add_child(behind_target)
+	_check(not minigun._is_in_fixed_firing_line(behind_target), "directional gun accepted a target behind its barrel")
+	distant_inline.queue_free()
+	angled_target.queue_free()
+	behind_target.queue_free()
 	var target_node := Node2D.new()
 	# Default static artwork and facing +1 point toward screen-right.
 	target_node.position = Vector2(200, 0)
@@ -81,6 +97,8 @@ func _test_reported_combat_regressions() -> void:
 	var bullets_before := _count_minigun_bullets()
 	minigun._shoot()
 	_check(_count_minigun_bullets() == bullets_before + 1, "Chaingunner emitted more than one bullet on its initial burst frame")
+	var first_bullet: Bullet = _latest_minigun_bullet()
+	_check(first_bullet != null and first_bullet.target == null and first_bullet.travel_direction.is_equal_approx(Vector2.RIGHT), "directional gun projectile still homes instead of travelling straight")
 	await get_tree().create_timer(minigun.get("burst_interval") * 1.2).timeout
 	_check(_count_minigun_bullets() == bullets_before + 2, "Chaingunner rounds are not arriving sequentially")
 	await get_tree().create_timer(minigun.get("burst_interval") * 6.2).timeout
@@ -94,6 +112,12 @@ func _count_minigun_bullets() -> int:
 		if child.get_script() == MinigunBulletScript:
 			count += 1
 	return count
+
+func _latest_minigun_bullet() -> Bullet:
+	for child in get_tree().current_scene.get_children():
+		if child.get_script() == MinigunBulletScript:
+			return child
+	return null
 
 func _test_convoy_spacing_and_reverse() -> void:
 	var convoy: TrainConvoy = ConvoyScene.instantiate()
@@ -397,6 +421,13 @@ func _test_main_scene_train_integration() -> void:
 	_check(main.track_routes.size() >= 2, "normal level should retain routes for purchased locomotives")
 	if not main.convoys.is_empty():
 		_check(main.convoys[0].path == main.track_routes[1], "first mission locomotive did not start on the bottom rail")
+		var preview_screen_position: Vector2 = main.get_viewport().get_canvas_transform() * main.convoys[0].global_position
+		main._on_train_drag_updated(0, preview_screen_position, 1)
+		_check(main.car_placement_ghost.visible, "valid train drag did not show a track-snapped placement ghost")
+		var preview_fire_direction: Vector2 = main.car_placement_ghost.get("_fire_direction")
+		main._on_train_drag_updated(0, preview_screen_position, -1)
+		_check(main.car_placement_ghost.get("_fire_direction").dot(preview_fire_direction) < -0.99, "right-click facing did not flip the placement arrow")
+		main._hide_car_placement_ghost()
 		_check(main.convoys[0].car_count() >= 1, "starter car was rejected or missing")
 		var starter_car: Node2D = main.convoys[0].followers[0]
 		var starter_data := BuildManager.towers[0]

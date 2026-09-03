@@ -23,6 +23,8 @@ class_name Turret
 @export var fixed_direction_enabled := false
 @export var fixed_direction_texture: Texture2D
 @export var fixed_direction_scale := Vector2(0.17, 0.17)
+@export_range(4.0, 80.0, 1.0) var fixed_line_half_width := 38.0
+@export var show_fixed_targeting_line := true
 
 var attack_speed_multiplier: float = 1.0
 
@@ -45,6 +47,7 @@ func _ready() -> void:
 		_fixed_art.scale = fixed_direction_scale
 		add_child(_fixed_art)
 	set_fixed_direction_enabled(fixed_direction_enabled)
+	queue_redraw()
 
 func _process(delta: float) -> void:
 	_patrol_track(delta)
@@ -112,6 +115,7 @@ func _face_direction(direction: Vector2) -> void:
 		elif not is_instance_valid(target):
 			# Gun art faces up, unlike the chassis art which faces down.
 			turret_rotation_point.rotation = direction.angle() + PI * 0.5
+		queue_redraw()
 
 func _shoot() -> void:
 	if bullet_scene == null:
@@ -123,7 +127,10 @@ func _shoot() -> void:
 		bullet.set("bullet_damage", maxi(1, int(round(float(bullet.get("bullet_damage")) * float(get_meta("damage_multiplier", 1.0))))))
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = firing_point.global_position
-	bullet.set_target(target)
+	if fixed_direction_enabled and bullet.has_method("set_direction"):
+		bullet.set_direction(_fixed_fire_direction())
+	else:
+		bullet.set_target(target)
 	var tracer := preload("res://scripts/comic_tracer.gd").new()
 	get_tree().current_scene.add_child(tracer)
 	tracer.configure(firing_point.global_position, target.global_position)
@@ -155,18 +162,28 @@ func _shoot_volume_db() -> float:
 	return -6.0
 
 func _find_target() -> Node2D:
-	if targeting_area == null:
-		return null
-	var bodies := targeting_area.get_overlapping_bodies()
 	if not fixed_direction_enabled:
+		if targeting_area == null:
+			return null
+		var bodies := targeting_area.get_overlapping_bodies()
 		return bodies[0] if bodies.size() > 0 else null
-	for body in bodies:
-		if _is_in_fixed_firing_side(body):
-			return body
-	return null
+	# Fixed guns use every live spider on the board, then reduce that set to a
+	# narrow forward corridor. Distance is deliberately not part of selection.
+	var nearest: Node2D = null
+	var nearest_forward := INF
+	for candidate in get_tree().get_nodes_in_group("spiders"):
+		var candidate_node := candidate as Node2D
+		if candidate_node != null and _is_in_fixed_firing_line(candidate_node):
+			var forward: float = (candidate_node.global_position - global_position).dot(_fixed_fire_direction())
+			if forward < nearest_forward:
+				nearest_forward = forward
+				nearest = candidate_node
+	return nearest
 
 func _target_in_range() -> bool:
-	return global_position.distance_to(target.global_position) <= targeting_range and (not fixed_direction_enabled or _is_in_fixed_firing_side(target))
+	if fixed_direction_enabled:
+		return _is_in_fixed_firing_line(target)
+	return global_position.distance_to(target.global_position) <= targeting_range
 
 func _rotate_towards_target(delta: float) -> void:
 	if fixed_direction_enabled:
@@ -186,6 +203,7 @@ func set_fixed_direction_enabled(enabled: bool) -> void:
 	if _fixed_art:
 		_fixed_art.visible = fixed_direction_enabled
 	_face_direction(_convoy_direction)
+	queue_redraw()
 
 func _fixed_fire_direction() -> Vector2:
 	# The static artwork's unflipped barrel points screen-right while its car
@@ -193,8 +211,37 @@ func _fixed_fire_direction() -> Vector2:
 	# is a negative quarter-turn from the direction of travel.
 	return _convoy_direction.rotated(float(fixed_direction_facing) * -PI * 0.5).normalized()
 
-func _is_in_fixed_firing_side(candidate: Node2D) -> bool:
+func _is_in_fixed_firing_line(candidate: Node2D) -> bool:
 	if not is_instance_valid(candidate):
 		return false
-	var to_candidate := global_position.direction_to(candidate.global_position)
-	return to_candidate.dot(_fixed_fire_direction()) > 0.15
+	var offset := candidate.global_position - firing_point.global_position
+	var direction := _fixed_fire_direction()
+	var forward := offset.dot(direction)
+	var sideways := absf(offset.dot(direction.orthogonal()))
+	return forward > 0.0 and sideways <= fixed_line_half_width
+
+func _draw() -> void:
+	if not fixed_direction_enabled or not show_fixed_targeting_line:
+		return
+	var direction := _fixed_fire_direction()
+	var distance := _distance_to_viewport_edge(direction)
+	var global_start := firing_point.global_position
+	draw_line(to_local(global_start), to_local(global_start + direction * distance), Color(0.28, 1.0, 0.68, 0.42), 2.0, true)
+
+func _distance_to_viewport_edge(direction: Vector2) -> float:
+	var size := get_viewport_rect().size
+	var origin := firing_point.global_position
+	var distances: Array[float] = []
+	if direction.x > 0.001:
+		distances.append((size.x - origin.x) / direction.x)
+	elif direction.x < -0.001:
+		distances.append((0.0 - origin.x) / direction.x)
+	if direction.y > 0.001:
+		distances.append((size.y - origin.y) / direction.y)
+	elif direction.y < -0.001:
+		distances.append((0.0 - origin.y) / direction.y)
+	var result := 1600.0
+	for value in distances:
+		if value >= 0.0:
+			result = minf(result, value)
+	return result

@@ -7,6 +7,7 @@ const TrainConvoyScene := preload("res://scenes/TrainConvoy.tscn")
 const GameOverOverlayScene := preload("res://scenes/ui/GameOverOverlay.tscn")
 const SpiderAssaultControllerScript := preload("res://scripts/spider_assault_controller.gd")
 const NEW_BOARD_CAR_SCALE := Vector2(0.54, 0.54)
+const PlacementGhostScript := preload("res://scripts/car_placement_ghost.gd")
 
 @onready var spawner: EnemySpawner = $EnemySpawner
 @onready var track: TrackRenderer = $Track
@@ -60,6 +61,7 @@ var train_control_panel: TrainControlPanel
 var selected_convoy: TrainConvoy
 var game_over_overlay: GameOverOverlay
 var spider_assault_controller: SpiderAssaultController
+var car_placement_ghost: Node2D
 
 func _ready() -> void:
 	get_tree().root.physics_object_picking = true
@@ -76,6 +78,8 @@ func _ready() -> void:
 		menu.train_drag_started.connect(convoy.set_drag_active.bind(true))
 		menu.train_drag_ended.connect(convoy.set_drag_active.bind(false))
 	menu.train_drop_requested.connect(_on_train_drop_requested)
+	menu.train_drag_updated.connect(_on_train_drag_updated)
+	menu.train_drag_ended.connect(_hide_car_placement_ghost)
 	menu.engine_drop_requested.connect(_on_engine_drop_requested)
 	menu.remove_requested.connect(_on_remove_requested)
 	_seed_tabletop()
@@ -106,6 +110,10 @@ func _ready() -> void:
 		spider_assault_controller.name = "SpiderAssaultController"
 		$CanvasLayer.add_child(spider_assault_controller)
 		spider_assault_controller.configure(self, spawner, $Station, convoys)
+	car_placement_ghost = PlacementGhostScript.new()
+	car_placement_ghost.name = "CarPlacementGhost"
+	car_placement_ghost.visible = false
+	add_child(car_placement_ghost)
 
 ## Regenerates the railway until it passes validation (every lane reachable,
 ## every route internally connected, at least two usable routes) or the
@@ -166,12 +174,37 @@ func _generate_and_spawn_trains() -> void:
 		convoys.append(convoy)
 
 func _process(delta: float) -> void:
+	if menu.dragging_tower >= 0:
+		_on_train_drag_updated(menu.dragging_tower, get_viewport().get_mouse_position(), menu.drag_facing)
 	if not is_instance_valid(selected_convoy):
 		return
 	var axis := int(Input.is_key_pressed(KEY_UP)) - int(Input.is_key_pressed(KEY_DOWN))
 	if selected_convoy.get_meta("reverse_locked", false) and axis < 0:
 		axis = 0
 	selected_convoy.set_manual_axis(axis, delta)
+
+func _on_train_drag_updated(tower_index: int, screen_position: Vector2, facing: int) -> void:
+	if car_placement_ghost == null or tower_index < 0 or tower_index >= BuildManager.towers.size():
+		return
+	var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * screen_position
+	var convoy: TrainConvoy = _find_attachable_convoy(world_position)
+	if convoy == null:
+		_hide_car_placement_ghost()
+		menu.set_drag_preview_snapped(false)
+		return
+	var preview := convoy.next_car_preview_transform()
+	if preview.is_empty():
+		_hide_car_placement_ghost()
+		menu.set_drag_preview_snapped(false)
+		return
+	var tower: TowerData = BuildManager.towers[tower_index]
+	car_placement_ghost.configure(tower.icon, preview.position, preview.direction, facing, tower_index == 0 or tower_index == 1)
+	car_placement_ghost.visible = true
+	menu.set_drag_preview_snapped(true)
+
+func _hide_car_placement_ghost() -> void:
+	if car_placement_ghost:
+		car_placement_ghost.visible = false
 
 func _on_engine_drop_requested(screen_position: Vector2) -> void:
 	if not CampaignManager.challenge_shop_enabled():

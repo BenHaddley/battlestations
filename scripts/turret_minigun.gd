@@ -35,7 +35,10 @@ func _fire_burst_round(index: int) -> void:
 		bullet.set("bullet_damage", maxi(1, int(round(float(bullet.get("bullet_damage")) * float(get_meta("damage_multiplier", 1.0))))))
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = firing_point.global_position + across * spread
-	bullet.set_target(target)
+	if fixed_direction_enabled and bullet.has_method("set_direction"):
+		bullet.set_direction(_fixed_fire_direction())
+	else:
+		bullet.set_target(target)
 	var tracer := preload("res://scripts/comic_tracer.gd").new()
 	get_tree().current_scene.add_child(tracer)
 	tracer.configure(bullet.global_position, target.global_position + across * spread * 0.7)
