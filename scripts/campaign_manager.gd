@@ -173,7 +173,7 @@ func save_progress() -> void:
 ## 1, or the campaign finished) — a fresh save from restart_campaign() at
 ## level 0 shouldn't make the title screen offer to "continue" nothing.
 func has_saved_progress() -> bool:
-	if not FileAccess.file_exists(ProfileManager.profile_path(SAVE_FILE)):
+	if not has_campaign_save():
 		return false
 	var config := ConfigFile.new()
 	if config.load(ProfileManager.profile_path(SAVE_FILE)) != OK:
@@ -181,6 +181,11 @@ func has_saved_progress() -> bool:
 	var index: int = config.get_value("campaign", "current_level_index", 0)
 	var complete: bool = config.get_value("campaign", "campaign_complete", false)
 	return index > 0 or complete
+
+## Any campaign save counts for Start Game, including a saved first mission.
+## Challenges are transient and deliberately never affect this check.
+func has_campaign_save() -> bool:
+	return FileAccess.file_exists(ProfileManager.profile_path(SAVE_FILE))
 
 ## Loads saved progress into memory and resets the level-scoped autoload
 ## state (wallet, phase clock) to match — call right before changing to

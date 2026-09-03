@@ -80,13 +80,18 @@ func _play_music_looped() -> void:
 		stream.loop = true
 	music_player.play()
 
-## Start always opens the character-led choice. With no meaningful save the
-## Continue option is visibly unavailable and Daisy points the player to New Game.
+## Start resumes the active profile's campaign immediately. Challenges never
+## participate in this path; a profile with no campaign save gets the new-game
+## choice and its character-led introduction instead.
 func _on_start_pressed() -> void:
 	if starting:
 		return
 	start_choice_modal.hide()
-	start_dialogue.open(CampaignManager.has_saved_progress())
+	if CampaignManager.has_campaign_save():
+		CampaignManager.continue_saved_game()
+		_launch_game()
+	else:
+		start_dialogue.open(false)
 
 func _on_continue_pressed() -> void:
 	start_choice_modal.hide()
