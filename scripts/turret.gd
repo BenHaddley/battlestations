@@ -188,7 +188,10 @@ func set_fixed_direction_enabled(enabled: bool) -> void:
 	_face_direction(_convoy_direction)
 
 func _fixed_fire_direction() -> Vector2:
-	return _convoy_direction.rotated(float(fixed_direction_facing) * PI * 0.5).normalized()
+	# The static artwork's unflipped barrel points screen-right while its car
+	# chassis points down. In Godot's Y-down coordinates, train-relative right
+	# is a negative quarter-turn from the direction of travel.
+	return _convoy_direction.rotated(float(fixed_direction_facing) * -PI * 0.5).normalized()
 
 func _is_in_fixed_firing_side(candidate: Node2D) -> bool:
 	if not is_instance_valid(candidate):

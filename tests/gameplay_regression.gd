@@ -67,13 +67,15 @@ func _test_reported_combat_regressions() -> void:
 	add_child(minigun)
 	_check(minigun.fixed_direction_enabled, "Chaingunner did not enable the new static-facing prototype")
 	_check(minigun._fixed_art != null and minigun._fixed_art.visible, "Chaingunner static sprite is missing")
+	minigun.set_convoy_transform(Vector2.ZERO, Vector2.DOWN)
+	_check(minigun._fixed_fire_direction().is_equal_approx(Vector2.RIGHT), "unflipped directional gun art points right but fires left")
 	var initial_fire_direction := minigun._fixed_fire_direction()
 	minigun.set_fixed_facing(-1)
 	_check(minigun._fixed_fire_direction().dot(initial_fire_direction) < -0.99, "directional gun flip did not reverse its firing side")
 	minigun.set_fixed_facing(1)
 	var target_node := Node2D.new()
-	# Default convoy travel is down, so facing +1 fires toward screen-left.
-	target_node.position = Vector2(-200, 0)
+	# Default static artwork and facing +1 point toward screen-right.
+	target_node.position = Vector2(200, 0)
 	add_child(target_node)
 	minigun.target = target_node
 	var bullets_before := _count_minigun_bullets()
