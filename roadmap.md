@@ -70,16 +70,15 @@ they improve the game.
       preserving its illustrated layout and adding keyboard-focus states alongside
       pointer hit areas.
 - [ ] **Start Game:** begin the normal story campaign, including pre-round dialogue.
-- [ ] **Level Select:** list unlocked levels for replay and for retrying missed level
+- [x] **Level Select:** list unlocked levels for replay and for retrying missed level
       challenges; locked levels must be visually distinct.
 - [ ] **Challenges:** show a clear coming-soon state until special handicap/mechanic
       levels are designed.
-- [ ] **Achievements:** show the medal display and a clear coming-soon state until
-      achievement tasks and persistence are designed.
-- [ ] **Almanac:** open the discovery/reference collection from the main menu.
-- [ ] **Settings (gear):** expose the existing audio, fullscreen, and other supported
+- [x] **Achievements:** show persisted medal tasks and their locked/unlocked state.
+- [x] **Almanac:** open the persisted discovery/reference collection from the main menu.
+- [x] **Settings (gear):** expose music/SFX volume and default battle speed preferences.
       preferences.
-- [ ] **Profiles:** support three save profiles and make the active profile obvious;
+- [x] **Profiles:** support three save profiles and make the active profile obvious;
       profile switching must isolate campaign progress and settings as specified.
 - [ ] **Quit (X):** quit native builds safely. For Web builds, explain that the tab
       can be closed or return to a harmless title state instead of calling an

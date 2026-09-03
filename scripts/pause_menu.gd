@@ -4,7 +4,6 @@ class_name PauseMenu
 
 signal resumed
 
-const SETTINGS_PATH := "user://battle_stations_settings.cfg"
 const FONT := preload("res://assets/fonts/ArchitectsDaughter-Regular.ttf")
 
 var volume_slider: HSlider
@@ -172,7 +171,9 @@ func _paper_style(fill: Color, border: Color, width: int) -> StyleBoxFlat:
 
 func _on_volume_changed(value: float) -> void:
 	var safe_value := clampf(value, 0.0, 100.0)
-	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(safe_value / 100.0, 0.0001)))
+	AppSettings.music_percent = safe_value
+	AppSettings.sfx_percent = safe_value
+	AppSettings.apply()
 	volume_value.text = "%d%%" % roundi(safe_value)
 	_save_settings()
 
@@ -200,8 +201,8 @@ func _load_settings() -> void:
 	var config := ConfigFile.new()
 	var volume := 80.0
 	var muted := false
-	if config.load(SETTINGS_PATH) == OK:
-		volume = float(config.get_value("audio", "master_volume", 80.0))
+	if config.load(ProfileManager.profile_path("settings.cfg")) == OK:
+		volume = float(config.get_value("audio", "music_percent", AppSettings.music_percent))
 		muted = bool(config.get_value("audio", "muted", false))
 	volume_slider.set_value_no_signal(volume)
 	mute_check.set_pressed_no_signal(muted)
@@ -213,7 +214,9 @@ func _save_settings() -> void:
 	if volume_slider == null or mute_check == null:
 		return
 	var config := ConfigFile.new()
-	config.set_value("audio", "master_volume", volume_slider.value)
+	config.set_value("audio", "music_percent", volume_slider.value)
+	config.set_value("audio", "sfx_percent", volume_slider.value)
+	config.set_value("game", "default_speed", AppSettings.default_game_speed)
 	config.set_value("audio", "muted", mute_check.button_pressed)
 	config.set_value("display", "fullscreen", fullscreen_check.button_pressed if fullscreen_check else false)
-	config.save(SETTINGS_PATH)
+	config.save(ProfileManager.profile_path("settings.cfg"))

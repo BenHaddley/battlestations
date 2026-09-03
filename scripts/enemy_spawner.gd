@@ -118,6 +118,7 @@ func _end_wave() -> void:
 	if OS.is_debug_build():
 		print("WAVE TELEMETRY %s" % telemetry)
 	wave_cleared.emit(current_wave)
+	GameEvents.wave_completed.emit(current_wave)
 	if wave_target > 0 and current_wave >= wave_target:
 		CampaignManager.complete_current_level()
 
@@ -138,6 +139,7 @@ func _spawn_enemy() -> void:
 	var campaign_level := int(CampaignManager.get("current_level_index"))
 	var forced_enemy := String(CampaignManager.challenge_value("enemy", ""))
 	var profile := EnemyRoster.by_id(forced_enemy) if not forced_enemy.is_empty() else EnemyRoster.pick(campaign_level)
+	DiscoveryTracker.discover("enemy:%s" % String(profile.get("id", "generic")))
 	if enemy.has_method("configure_archetype"):
 		enemy.configure_archetype(profile, current_wave, campaign_level)
 	# The new courtyard uses 65.5-unit cells instead of the previous 90-unit
@@ -166,6 +168,7 @@ func spawn_controlled_spider(profile_id: String, entrance: Vector2, destination:
 	var profile := EnemyRoster.by_id(profile_id)
 	if profile.is_empty():
 		return null
+	DiscoveryTracker.discover("enemy:%s" % profile_id)
 	var enemy: Node2D = enemy_prefabs[0].instantiate()
 	get_tree().current_scene.add_child(enemy)
 	enemy.global_position = entrance

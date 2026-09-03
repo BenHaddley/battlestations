@@ -27,6 +27,10 @@ UIManager="*res://scripts/ui_manager.gd"
 AudioFX="*res://scripts/audio_fx.gd"
 PhaseManager="*res://scripts/phase_manager.gd"
 CampaignManager="*res://scripts/campaign_manager.gd"
+ProfileManager="*res://scripts/profile_manager.gd"
+AppSettings="*res://scripts/app_settings.gd"
+DiscoveryTracker="*res://scripts/discovery_tracker.gd"
+AchievementTracker="*res://scripts/achievement_tracker.gd"
 
 [display]
 

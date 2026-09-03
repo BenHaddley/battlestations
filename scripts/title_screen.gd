@@ -2,7 +2,8 @@ extends Control
 ## Functional shell over the authored 16:9 title-screen illustration.
 
 const StartGameDialogueScript := preload("res://scripts/start_game_dialogue.gd")
-const TUTORIAL_SAVE_PATH := "user://battle_stations_tutorial.cfg"
+const EnemyDataResource := preload("res://scripts/enemy_data.gd")
+const TUTORIAL_SAVE_FILE := "tutorial.cfg"
 
 @onready var start_button: Button = $StartButton
 @onready var level_select_button: Button = $LevelSelectButton
@@ -29,6 +30,8 @@ func _ready() -> void:
 		get_tree().change_scene_to_file("res://scenes/ArtistGridView.tscn")
 		return
 	Engine.time_scale = 1.0
+	AppSettings.load_settings()
+	music_player.bus = &"Music"
 	get_tree().paused = false
 	_play_music_looped()
 	start_button.pressed.connect(_on_start_pressed)
@@ -100,8 +103,9 @@ func _on_new_game_pressed() -> void:
 ## completion intentionally lives outside the campaign save so Continue can
 ## suppress repeated lessons, therefore Restart must clear this exact flag.
 func _reset_tutorial_progress() -> void:
-	if FileAccess.file_exists(TUTORIAL_SAVE_PATH):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(TUTORIAL_SAVE_PATH))
+	var tutorial_path := ProfileManager.profile_path(TUTORIAL_SAVE_FILE)
+	if FileAccess.file_exists(tutorial_path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(tutorial_path))
 
 func _launch_game() -> void:
 	if starting:
@@ -112,18 +116,132 @@ func _launch_game() -> void:
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
 
 func _show_level_select() -> void:
-	_show_info_modal("LEVEL SELECT", "Replay unlocked stations and return for any objectives you missed.\n\nLevel selection is coming in a later update.")
+	_prepare_interactive_modal("LEVEL SELECT", "Choose an unlocked mission to replay.")
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 12)
+	_mark_dynamic(grid)
+	_modal_content().add_child(grid)
+	_modal_content().move_child(grid, _back_button().get_index())
+	for index in range(CampaignManager.levels.size()):
+		var level: LevelData = CampaignManager.levels[index]
+		var unlocked := CampaignManager.campaign_complete or index <= CampaignManager.current_level_index
+		var card := Button.new()
+		card.custom_minimum_size = Vector2(280, 74)
+		card.text = "%s\n%d WAVES" % [level.level_name, level.wave_count] if unlocked else "???\nLOCKED — REACH MISSION %d" % (index + 1)
+		card.disabled = not unlocked
+		card.modulate = Color.WHITE if unlocked else Color(0.48, 0.48, 0.48, 0.72)
+		if unlocked:
+			card.pressed.connect(_launch_level.bind(index))
+		grid.add_child(card)
+	_expand_modal(330.0, 330.0)
+	modal.show()
+
+func _launch_level(index: int) -> void:
+	CampaignManager.clear_challenge()
+	CampaignManager.current_level_index = clampi(index, 0, CampaignManager.levels.size() - 1)
+	CampaignManager.tutorial_requested = false
+	CampaignManager.reset_for_current_level()
+	get_tree().change_scene_to_file("res://scenes/Main.tscn")
 
 func _show_almanac() -> void:
-	_show_info_modal("ALMANAC", "Review discovered trains, cars, spiders, and railway notes.\n\nThe almanac is coming in a later update.")
+	_prepare_interactive_modal("ALMANAC", "Units reveal their entries after appearing in a run.")
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(630, 470)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 10)
+	scroll.add_child(grid)
+	for tower in BuildManager.towers:
+		_add_almanac_card(grid, "tower:%s" % tower.tower_name.to_snake_case(), tower.tower_name, tower.summary, tower.icon)
+	for profile in EnemyRoster.PROFILES:
+		var data := EnemyDataResource.new()
+		data.enemy_id = String(profile.id)
+		data.enemy_name = String(profile.name)
+		data.summary = _enemy_summary(String(profile.get("ability", "")))
+		data.icon = profile.walk_a
+		_add_almanac_card(grid, "enemy:%s" % data.enemy_id, data.enemy_name, data.summary, data.icon)
+	_add_dynamic_before_back(scroll)
+	_expand_modal(365.0, 340.0)
+	modal.show()
+
+func _add_almanac_card(parent: GridContainer, content_id: String, title: String, summary: String, icon: Texture2D) -> void:
+	var discovered := DiscoveryTracker.is_discovered(content_id)
+	var card := Button.new()
+	card.disabled = true
+	card.custom_minimum_size = Vector2(300, 104)
+	card.text = "%s\n%s" % [title, summary] if discovered else "???\nNOT YET DISCOVERED"
+	card.icon = icon if discovered else null
+	card.expand_icon = true
+	card.add_theme_constant_override("icon_max_width", 72)
+	card.modulate = Color.WHITE if discovered else Color(0.38, 0.38, 0.38, 0.72)
+	parent.add_child(card)
+
+func _enemy_summary(ability: String) -> String:
+	return {
+		"dots": "Changes form as it takes damage.", "charge": "Bursts forward at speed.",
+		"rally": "Strengthens nearby spiders.", "armor": "Shrugs off repeated hits.",
+		"enrage": "Enrages below half health.", "jump": "Moves only while jumping.",
+		"hatch": "Hatches into smaller spiders.", "": "A quick railway pest."
+	}.get(ability, "A dangerous railway pest.")
 
 func _show_achievements() -> void:
-	_show_info_modal("ACHIEVEMENTS", "Complete special tasks to earn medals for this cabinet.\n\nAchievements are coming in a later update.")
+	_prepare_interactive_modal("ACHIEVEMENTS", "Complete tasks to unlock medals for this profile.")
+	for definition in AchievementTracker.DEFINITIONS:
+		var unlocked := String(definition.id) in AchievementTracker.unlocked_ids
+		var card := Button.new()
+		card.disabled = true
+		card.custom_minimum_size = Vector2(590, 70)
+		card.text = "%s  %s\n%s" % ["●" if unlocked else "○", definition.title if unlocked else "LOCKED MEDAL", definition.description]
+		card.modulate = Color("f1ce72") if unlocked else Color(0.48, 0.48, 0.48, 0.75)
+		_add_dynamic_before_back(card)
+	_expand_modal(340.0, 300.0)
+	modal.show()
 
 func _show_profiles() -> void:
-	_show_info_modal("PROFILES", "Three separate railway profiles are planned.\n\nProfile switching is coming in a later update.")
+	_prepare_interactive_modal("PROFILES", "Choose one of three independent railway careers.")
+	for slot in range(1, ProfileManager.SLOT_COUNT + 1):
+		var row := HBoxContainer.new()
+		var choose := Button.new()
+		choose.custom_minimum_size = Vector2(250, 62)
+		choose.text = "%s%s\n%s" % ["★ " if slot == ProfileManager.active_profile else "", ProfileManager.profile_name(slot), ProfileManager.progress_summary(slot)]
+		choose.pressed.connect(_select_profile.bind(slot))
+		row.add_child(choose)
+		var rename := LineEdit.new()
+		rename.placeholder_text = "Rename profile"
+		rename.custom_minimum_size.x = 170
+		rename.text_submitted.connect(func(new_name: String) -> void:
+			ProfileManager.rename_profile(slot, new_name)
+			_show_profiles()
+		)
+		row.add_child(rename)
+		var erase := Button.new()
+		erase.text = "DELETE"
+		erase.pressed.connect(func() -> void:
+			ProfileManager.delete_profile(slot)
+			if slot == ProfileManager.active_profile:
+				CampaignManager.current_level_index = 0
+				CampaignManager.campaign_complete = false
+			_show_profiles()
+		)
+		row.add_child(erase)
+		_add_dynamic_before_back(row)
+	_expand_modal(370.0, 285.0)
+	modal.show()
+
+func _select_profile(slot: int) -> void:
+	ProfileManager.select_profile(slot)
+	AppSettings.load_settings()
+	DiscoveryTracker.load_discoveries()
+	AchievementTracker.load_progress()
+	CampaignManager.continue_saved_game()
+	_show_profiles()
 
 func _show_info_modal(title: String, copy: String) -> void:
+	_clear_dynamic_modal_content()
+	modal_copy.visible = true
 	_clear_challenge_buttons()
 	modal_title.text = title
 	modal_copy.text = copy
@@ -172,7 +290,73 @@ func _launch_challenge(challenge_id: String) -> void:
 		_launch_game()
 
 func _show_options() -> void:
-	_show_info_modal("SETTINGS", "Use the illustrated controls in battle to pause or run at double speed.\n\nMore sound and display options are coming soon.")
+	_prepare_interactive_modal("SETTINGS", "Changes save automatically for the active profile.")
+	_add_setting_slider("MUSIC VOLUME", AppSettings.music_percent, func(value: float) -> void:
+		AppSettings.music_percent = value
+		AppSettings.save_settings()
+	)
+	_add_setting_slider("SFX VOLUME", AppSettings.sfx_percent, func(value: float) -> void:
+		AppSettings.sfx_percent = value
+		AppSettings.save_settings()
+	)
+	var speed_toggle := CheckButton.new()
+	speed_toggle.text = "START BATTLES AT 2× SPEED"
+	speed_toggle.button_pressed = AppSettings.default_game_speed > 1.5
+	speed_toggle.toggled.connect(func(enabled: bool) -> void:
+		AppSettings.default_game_speed = 2.0 if enabled else 1.0
+		AppSettings.save_settings()
+	)
+	_add_dynamic_before_back(speed_toggle)
+	_expand_modal(300.0, 230.0)
+	modal.show()
+
+func _prepare_interactive_modal(title: String, copy: String) -> void:
+	_clear_dynamic_modal_content()
+	_clear_challenge_buttons()
+	modal_title.text = title
+	modal_copy.text = copy
+	modal_copy.visible = true
+
+func _add_setting_slider(caption: String, value: float, callback: Callable) -> void:
+	var row := HBoxContainer.new()
+	var label := Label.new()
+	label.text = caption
+	label.custom_minimum_size.x = 150
+	row.add_child(label)
+	var slider := HSlider.new()
+	slider.min_value = 0
+	slider.max_value = 100
+	slider.step = 1
+	slider.value = value
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.value_changed.connect(callback)
+	row.add_child(slider)
+	_add_dynamic_before_back(row)
+
+func _modal_content() -> VBoxContainer:
+	return $Modal/Margin/VBox
+
+func _back_button() -> Button:
+	return $Modal/Margin/VBox/BackButton
+
+func _mark_dynamic(control: Control) -> void:
+	control.set_meta("dynamic_modal_content", true)
+
+func _add_dynamic_before_back(control: Control) -> void:
+	_mark_dynamic(control)
+	_modal_content().add_child(control)
+	_modal_content().move_child(control, _back_button().get_index())
+
+func _clear_dynamic_modal_content() -> void:
+	for child in _modal_content().get_children():
+		if child.has_meta("dynamic_modal_content"):
+			child.queue_free()
+
+func _expand_modal(half_width: float, half_height: float) -> void:
+	modal.offset_left = -half_width
+	modal.offset_right = half_width
+	modal.offset_top = -half_height
+	modal.offset_bottom = half_height
 
 func _quit_game() -> void:
 	if OS.has_feature("web"):

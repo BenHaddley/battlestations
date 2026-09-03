@@ -10,7 +10,7 @@ extends Node
 
 signal level_completed(level: LevelData, is_finale: bool)
 
-const SAVE_PATH := "user://campaign_progress.cfg"
+const SAVE_FILE := "campaign_progress.cfg"
 
 var levels: Array[LevelData] = []
 var current_level_index: int = 0
@@ -116,6 +116,7 @@ func complete_current_level() -> void:
 	if level == null:
 		return
 	PhaseManager.paused = true
+	GameEvents.level_completed_detail.emit(is_challenge_active())
 	var is_finale: bool = not is_challenge_active() and not campaign_complete and current_level_index == levels.size() - 1
 	level_completed.emit(level, is_finale)
 
@@ -166,16 +167,16 @@ func save_progress() -> void:
 	var config := ConfigFile.new()
 	config.set_value("campaign", "current_level_index", current_level_index)
 	config.set_value("campaign", "campaign_complete", campaign_complete)
-	config.save(SAVE_PATH)
+	config.save(ProfileManager.profile_path(SAVE_FILE))
 
 ## True only once a save exists AND it represents real progress (past level
 ## 1, or the campaign finished) — a fresh save from restart_campaign() at
 ## level 0 shouldn't make the title screen offer to "continue" nothing.
 func has_saved_progress() -> bool:
-	if not FileAccess.file_exists(SAVE_PATH):
+	if not FileAccess.file_exists(ProfileManager.profile_path(SAVE_FILE)):
 		return false
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
+	if config.load(ProfileManager.profile_path(SAVE_FILE)) != OK:
 		return false
 	var index: int = config.get_value("campaign", "current_level_index", 0)
 	var complete: bool = config.get_value("campaign", "campaign_complete", false)
@@ -187,8 +188,10 @@ func has_saved_progress() -> bool:
 func continue_saved_game() -> void:
 	clear_challenge()
 	tutorial_requested = false
+	current_level_index = 0
+	campaign_complete = false
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) == OK:
+	if config.load(ProfileManager.profile_path(SAVE_FILE)) == OK:
 		current_level_index = config.get_value("campaign", "current_level_index", 0)
 		campaign_complete = config.get_value("campaign", "campaign_complete", false)
 	reset_for_current_level()

@@ -21,6 +21,7 @@ var _last_played: int = -1
 var play_history: Array[int] = [] ## Exposed for lightweight playlist regression tests.
 
 func _ready() -> void:
+	bus = &"Music"
 	if CampaignManager.is_spider_assault():
 		tracks = [SPIDER_ASSAULT_TRACK]
 	elif tracks.is_empty():

@@ -8,6 +8,7 @@ const EnemyScene := preload("res://scenes/Enemy.tscn")
 const StationScene := preload("res://scenes/Station.tscn")
 const MainScene := preload("res://scenes/Main.tscn")
 const GameOverScene := preload("res://scenes/ui/GameOverOverlay.tscn")
+const TitleScene := preload("res://scenes/TitleScreen.tscn")
 const MinigunScene := preload("res://scenes/TurretMinigun.tscn")
 const MinigunBulletScript := preload("res://scripts/bullet.gd")
 
@@ -30,6 +31,7 @@ func _run() -> void:
 	_test_challenge_job_cards()
 	_test_music_playlist_rotation()
 	_test_game_over_modes()
+	await _test_title_feature_modals()
 	await _test_reported_combat_regressions()
 	await _test_station_attackers()
 	await _test_spider_assault()
@@ -316,6 +318,27 @@ func _test_game_over_modes() -> void:
 	_check(challenge._menu_button.texture_normal.resource_path.contains("951252df"), "failure overlay did not use the supplied Main Menu button")
 	get_tree().paused = false
 	challenge.queue_free()
+
+func _test_title_feature_modals() -> void:
+	var title = TitleScene.instantiate()
+	add_child(title)
+	await get_tree().process_frame
+	title._show_level_select()
+	_check(title.modal.visible and title.modal_title.text == "LEVEL SELECT", "level-select grid did not replace its placeholder")
+	await get_tree().process_frame
+	title._show_options()
+	_check(title._modal_content().find_children("*", "HSlider", true, false).size() == 2, "settings modal is missing separate music and SFX sliders")
+	await get_tree().process_frame
+	title._show_almanac()
+	_check(title.modal_title.text == "ALMANAC", "Almanac grid did not open")
+	await get_tree().process_frame
+	title._show_achievements()
+	_check(title.modal_title.text == "ACHIEVEMENTS", "achievement medal list did not open")
+	await get_tree().process_frame
+	title._show_profiles()
+	_check(title.modal_title.text == "PROFILES", "three-slot profile selector did not open")
+	title.queue_free()
+	await get_tree().process_frame
 
 func _test_station_attackers() -> void:
 	var station: Station = StationScene.instantiate()

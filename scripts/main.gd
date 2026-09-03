@@ -64,6 +64,8 @@ var spider_assault_controller: SpiderAssaultController
 var car_placement_ghost: Node2D
 
 func _ready() -> void:
+	Engine.time_scale = AppSettings.default_game_speed
+	AchievementTracker.begin_run()
 	get_tree().root.physics_object_picking = true
 	if CampaignManager.is_challenge_active():
 		starting_trains = int(CampaignManager.challenge_value("trains", starting_trains))
@@ -284,6 +286,7 @@ func _seed_tabletop() -> void:
 		if tower == null or tower.scene == null:
 			continue
 		var car: Node2D = tower.scene.instantiate()
+		DiscoveryTracker.discover("tower:%s" % tower.tower_name.to_snake_case())
 		car.set_meta("tower_data", tower)
 		trains.add_child(car)
 		car.scale = NEW_BOARD_CAR_SCALE
@@ -301,6 +304,7 @@ func _seed_spider_assault_defense() -> void:
 		if tower == null or tower.scene == null:
 			continue
 		var car: Node2D = tower.scene.instantiate()
+		DiscoveryTracker.discover("tower:%s" % tower.tower_name.to_snake_case())
 		car.set_meta("tower_data", tower)
 		trains.add_child(car)
 		car.scale = NEW_BOARD_CAR_SCALE
@@ -354,6 +358,7 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2, facing
 		return
 
 	var car: Node2D = tower.scene.instantiate()
+	DiscoveryTracker.discover("tower:%s" % tower.tower_name.to_snake_case())
 	car.set_meta("tower_data", tower)
 	trains.add_child(car)
 	if car.has_method("set_fixed_facing"):

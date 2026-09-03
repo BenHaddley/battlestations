@@ -3,7 +3,7 @@ class_name TutorialDirector
 ## Event-driven campaign dialogue. This scene deliberately discovers the
 ## current Main nodes instead of requiring edits to the campaign/phase work.
 
-const SAVE_PATH := "user://battle_stations_tutorial.cfg"
+const SAVE_FILE := "tutorial.cfg"
 
 var overlay: DialogueOverlay
 var main: Node
@@ -174,9 +174,9 @@ func _car_count() -> int:
 
 func _tutorial_was_completed() -> bool:
 	var config := ConfigFile.new()
-	return config.load(SAVE_PATH) == OK and bool(config.get_value("tutorial", "completed", false))
+	return config.load(ProfileManager.profile_path(SAVE_FILE)) == OK and bool(config.get_value("tutorial", "completed", false))
 
 func _mark_tutorial_completed() -> void:
 	var config := ConfigFile.new()
 	config.set_value("tutorial", "completed", true)
-	config.save(SAVE_PATH)
+	config.save(ProfileManager.profile_path(SAVE_FILE))

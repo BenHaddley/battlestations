@@ -30,6 +30,8 @@ func spend_currency(amount: int, reason: String = "purchase", warn_on_failure: b
 	if amount <= currency:
 		currency -= amount
 		currency_changed.emit(currency, -amount, reason)
+		if reason == "purchase":
+			GameEvents.purchase_made.emit()
 		return true
 	if warn_on_failure:
 		push_warning("You do not have enough to purchase this item")
