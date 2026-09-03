@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://q35nark55kn7"
+path="res://.godot/imported/Maggie Blues.ogg-04dcd5d48a3468bff22819dacf8f58cf.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/web/Maggie Blues.ogg"
+dest_files=["res://.godot/imported/Maggie Blues.ogg-04dcd5d48a3468bff22819dacf8f58cf.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

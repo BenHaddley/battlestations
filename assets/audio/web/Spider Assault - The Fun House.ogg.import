@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://bnwu7w1o3i3cc"
+path="res://.godot/imported/Spider Assault - The Fun House.ogg-4794adb73fdec3e243f8691100cee77f.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/web/Spider Assault - The Fun House.ogg"
+dest_files=["res://.godot/imported/Spider Assault - The Fun House.ogg-4794adb73fdec3e243f8691100cee77f.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

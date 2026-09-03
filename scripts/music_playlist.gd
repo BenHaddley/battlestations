@@ -3,13 +3,14 @@ extends AudioStreamPlayer
 ## order with no immediate repeats, then reshuffles and keeps going —
 ## instead of looping a single song for the whole session.
 
-const SPIDER_ASSAULT_TRACK := preload("res://assets/audio/songs/Spider Assault - The Fun House.mp3")
+const SPIDER_ASSAULT_PATH := "res://assets/audio/songs/Spider Assault - The Fun House.mp3"
+const WEB_SPIDER_ASSAULT_TRACK := preload("res://assets/audio/web/Spider Assault - The Fun House.ogg")
 const WEB_TRACKS: Array[AudioStream] = [
-	preload("res://assets/audio/songs/Clinch Mountan Backstep.mp3"),
-	preload("res://assets/audio/songs/Done Gone.mp3"),
-	preload("res://assets/audio/songs/Forked Deer.mp3"),
-	preload("res://assets/audio/songs/Maggie Blues.mp3"),
-	preload("res://assets/audio/songs/Roanoke.mp3"),
+	preload("res://assets/audio/web/Clinch Mountan Backstep.ogg"),
+	preload("res://assets/audio/web/Done Gone.ogg"),
+	preload("res://assets/audio/web/Forked Deer.ogg"),
+	preload("res://assets/audio/web/Maggie Blues.ogg"),
+	preload("res://assets/audio/web/Roanoke.ogg"),
 ]
 const SONG_DIRECTORY := "res://assets/audio/songs"
 const SPIDER_ASSAULT_FILE_NAME := "Spider Assault - The Fun House.mp3"
@@ -23,7 +24,12 @@ var play_history: Array[int] = [] ## Exposed for lightweight playlist regression
 func _ready() -> void:
 	bus = &"Music"
 	if CampaignManager.is_spider_assault():
-		tracks = [SPIDER_ASSAULT_TRACK]
+		var special_track: AudioStream = WEB_SPIDER_ASSAULT_TRACK if OS.has_feature("web") else load(SPIDER_ASSAULT_PATH) as AudioStream
+		tracks.clear()
+		if special_track:
+			tracks.append(special_track)
+		else:
+			tracks.assign(WEB_TRACKS)
 	elif tracks.is_empty():
 		tracks = WEB_TRACKS.duplicate() if OS.has_feature("web") else _load_native_playlist()
 	for track in tracks:

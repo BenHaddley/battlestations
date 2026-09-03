@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://bppbm0gmq5df8"
+path="res://.godot/imported/Forked Deer.ogg-5c690fe5fad38151d19cd5f5503b38cc.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/web/Forked Deer.ogg"
+dest_files=["res://.godot/imported/Forked Deer.ogg-5c690fe5fad38151d19cd5f5503b38cc.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

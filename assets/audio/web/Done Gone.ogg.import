@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://cv8bno2bomgb"
+path="res://.godot/imported/Done Gone.ogg-6c419450f6c7238fd1fb70627c4091a2.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/audio/web/Done Gone.ogg"
+dest_files=["res://.godot/imported/Done Gone.ogg-6c419450f6c7238fd1fb70627c4091a2.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
