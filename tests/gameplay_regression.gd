@@ -286,12 +286,14 @@ func _test_music_playlist_rotation() -> void:
 	playlist.queue_free()
 	var main = MainScene.instantiate()
 	var music_player := main.get_node("MusicPlayer") as AudioStreamPlayer
-	_check(music_player.tracks.size() == 20, "gameplay playlist should contain all 20 songs")
+	var native_tracks: Array[AudioStream] = music_player._load_native_playlist()
+	_check(native_tracks.size() == 20, "native gameplay playlist should retain all 20 songs")
 	var unique_paths: Dictionary = {}
-	for track in music_player.tracks:
+	for track in native_tracks:
 		unique_paths[track.resource_path] = true
 		_check(track.resource_path.begins_with("res://assets/audio/songs/"), "gameplay playlist contains a track outside the songs folder")
-	_check(unique_paths.size() == 20, "gameplay playlist contains duplicate songs")
+	_check(unique_paths.size() == 20, "native gameplay playlist contains duplicate songs")
+	_check(music_player.WEB_TRACKS.size() == 5, "web gameplay playlist should remain a compact five-track rotation")
 	main.queue_free()
 
 func _test_game_over_modes() -> void:

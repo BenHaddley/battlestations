@@ -178,7 +178,9 @@ func _process(delta: float) -> void:
 		_on_train_drag_updated(menu.dragging_tower, get_viewport().get_mouse_position(), menu.drag_facing)
 	if not is_instance_valid(selected_convoy):
 		return
-	var axis := int(Input.is_key_pressed(KEY_UP)) - int(Input.is_key_pressed(KEY_DOWN))
+	var forward_held := Input.is_key_pressed(KEY_UP) or Input.is_key_pressed(KEY_W)
+	var reverse_held := Input.is_key_pressed(KEY_DOWN) or Input.is_key_pressed(KEY_S)
+	var axis := int(forward_held) - int(reverse_held)
 	if selected_convoy.get_meta("reverse_locked", false) and axis < 0:
 		axis = 0
 	selected_convoy.set_manual_axis(axis, delta)

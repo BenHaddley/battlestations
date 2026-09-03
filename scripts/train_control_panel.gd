@@ -1,7 +1,7 @@
 extends Control
 class_name TrainControlPanel
-## Tiny read-only selected-engine indicator. Driving is handled with Up/Down,
-## leaving the battlefield visible at the moment controls matter most.
+## Tiny read-only selected-engine indicator. Driving is handled with Up/Down
+## (or W/S), leaving the battlefield visible at the moment controls matter most.
 
 signal control_changed(direction: int, throttle_notch: int)
 signal deselect_requested
@@ -62,7 +62,7 @@ func _draw() -> void:
 	var direction := "→" if _convoy.current_speed >= 0.0 else "←"
 	var ratio := absf(_convoy.current_speed) / maxf(_convoy.cruise_speed, 1.0)
 	var pace := "SLOW" if ratio < 0.72 else ("FAST" if ratio > 1.28 else "NORMAL")
-	_draw_centered_text("ENGINE %d   %s %s   ↑/↓ DRIVE" % [_train_number, direction, pace], Vector2(146, 25), 15, CREAM)
+	_draw_centered_text("ENGINE %d   %s %s   ↑↓/WS DRIVE" % [_train_number, direction, pace], Vector2(146, 25), 15, CREAM)
 
 func _draw_housing(rect: Rect2) -> void:
 	draw_style_box(_housing_style(), rect)

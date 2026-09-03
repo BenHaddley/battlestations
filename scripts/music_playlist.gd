@@ -4,6 +4,15 @@ extends AudioStreamPlayer
 ## instead of looping a single song for the whole session.
 
 const SPIDER_ASSAULT_TRACK := preload("res://assets/audio/songs/Spider Assault - The Fun House.mp3")
+const WEB_TRACKS: Array[AudioStream] = [
+	preload("res://assets/audio/songs/Clinch Mountan Backstep.mp3"),
+	preload("res://assets/audio/songs/Done Gone.mp3"),
+	preload("res://assets/audio/songs/Forked Deer.mp3"),
+	preload("res://assets/audio/songs/Maggie Blues.mp3"),
+	preload("res://assets/audio/songs/Roanoke.mp3"),
+]
+const SONG_DIRECTORY := "res://assets/audio/songs"
+const SPIDER_ASSAULT_FILE_NAME := "Spider Assault - The Fun House.mp3"
 
 @export var tracks: Array[AudioStream] = []
 
@@ -14,12 +23,24 @@ var play_history: Array[int] = [] ## Exposed for lightweight playlist regression
 func _ready() -> void:
 	if CampaignManager.is_spider_assault():
 		tracks = [SPIDER_ASSAULT_TRACK]
+	elif tracks.is_empty():
+		tracks = WEB_TRACKS.duplicate() if OS.has_feature("web") else _load_native_playlist()
 	for track in tracks:
 		var mp3 := track as AudioStreamMP3
 		if mp3:
 			mp3.loop = CampaignManager.is_spider_assault()
 	finished.connect(_play_next)
 	_play_next()
+
+func _load_native_playlist() -> Array[AudioStream]:
+	var result: Array[AudioStream] = []
+	for file_name in DirAccess.get_files_at(SONG_DIRECTORY):
+		if file_name.get_extension().to_lower() != "mp3" or file_name == SPIDER_ASSAULT_FILE_NAME:
+			continue
+		var loaded := load(SONG_DIRECTORY.path_join(file_name)) as AudioStream
+		if loaded:
+			result.append(loaded)
+	return result if not result.is_empty() else WEB_TRACKS.duplicate()
 
 func _play_next() -> void:
 	if tracks.is_empty():
