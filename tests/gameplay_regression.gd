@@ -49,8 +49,15 @@ func _run() -> void:
 
 func _test_reported_combat_regressions() -> void:
 	var basic_bullet: Bullet = BasicBulletScene.instantiate()
-	_check(basic_bullet.bullet_damage >= int(EnemyRoster.PROFILES[0].hp), "basic Gunner shot does not one-hit the level-one spider")
+	_check(basic_bullet.bullet_damage == 20, "basic Gunner did not receive its 4x damage increase")
 	basic_bullet.queue_free()
+	var minigun_bullet: Bullet = preload("res://scenes/MinigunBullet.tscn").instantiate()
+	_check(minigun_bullet.bullet_damage == 4, "Chaingunner rounds did not receive their 4x damage increase")
+	minigun_bullet.queue_free()
+	var coal_ball = preload("res://scenes/CoalCannonball.tscn").instantiate()
+	_check(coal_ball.direct_damage == 12 and coal_ball.splash_damage == 4, "Coal Cannon did not receive its 4x damage increase")
+	coal_ball.queue_free()
+	_check(preload("res://scripts/turret_ballast.gd").BLAST_DAMAGE == 8, "Ballast Blaster did not receive its 4x damage increase")
 
 	var jump_spider: EnemyMovement = EnemyScene.instantiate()
 	add_child(jump_spider)

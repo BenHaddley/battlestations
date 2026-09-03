@@ -2,7 +2,7 @@ extends "res://scripts/turret.gd"
 ## Short-range shotgun car. Every spider in the close targeting circle is hit
 ## by one blast while five supplied ballast chunks spray toward the target.
 
-const BLAST_DAMAGE := 2
+const BLAST_DAMAGE := 8
 const CHUNK_TEXTURES: Array[Texture2D] = [
 	preload("res://assets/sprites/projectiles/Ballast 1.png"),
 	preload("res://assets/sprites/projectiles/Ballast 2.png"),
