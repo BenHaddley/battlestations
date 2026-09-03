@@ -235,7 +235,10 @@ func _apply_consist_positions() -> void:
 		if not car.visible:
 			car.visible = true
 			car.process_mode = Node.PROCESS_MODE_INHERIT
-		var car_direction: Vector2 = sample.direction * cruise_direction
+		# Cars follow the rail's authored orientation, not the current travel
+		# sign. Reversing means backing the consist up; it must not turn every
+		# directional turret around and swap its firing side.
+		var car_direction: Vector2 = sample.direction
 		if car.has_method("set_convoy_transform"):
 			car.set_convoy_transform(sample.position, car_direction)
 		else:
@@ -312,7 +315,7 @@ func next_car_preview_transform() -> Dictionary:
 	var sample := _sample_route(route_distance - car_spacing * (followers.size() + 1))
 	return {
 		"position": sample.position,
-		"direction": sample.direction * cruise_direction,
+		"direction": sample.direction,
 	}
 
 func set_drag_active(active: bool) -> void:

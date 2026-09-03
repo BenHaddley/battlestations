@@ -110,7 +110,18 @@ func _test_reported_combat_regressions() -> void:
 	_check(_count_minigun_bullets() == bullets_before + 2, "Chaingunner rounds are not arriving sequentially")
 	await get_tree().create_timer(minigun.get("burst_interval") * 6.2).timeout
 	_check(_count_minigun_bullets() == bullets_before + 7, "Chaingunner burst did not emit exactly seven rounds")
+	var reverse_test_convoy: TrainConvoy = ConvoyScene.instantiate()
+	add_child(reverse_test_convoy)
+	reverse_test_convoy.configure_path(PackedVector2Array([
+		Vector2(0, 0), Vector2(720, 0), Vector2(720, 520), Vector2(0, 520)
+	]))
+	_check(reverse_test_convoy.attach_car(minigun), "directional turret could not attach for reverse-facing regression")
+	var fire_direction_before_reverse := minigun._fixed_fire_direction()
+	reverse_test_convoy.cruise_direction = -1
+	reverse_test_convoy._apply_consist_positions()
+	_check(minigun._fixed_fire_direction().is_equal_approx(fire_direction_before_reverse), "reversing the train switched the turret's placed firing side")
 	minigun.queue_free()
+	reverse_test_convoy.queue_free()
 	target_node.queue_free()
 
 func _count_minigun_bullets() -> int:
