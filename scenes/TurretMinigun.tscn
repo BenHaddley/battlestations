@@ -20,6 +20,10 @@ fixed_direction_texture = ExtResource("5")
 fixed_direction_scale = Vector2(0.17, 0.17)
 z_index = 20
 
+[node name="FixedDirectionArt" type="Sprite2D" parent="."]
+texture = ExtResource("5")
+scale = Vector2(0.17, 0.17)
+
 [node name="Base" type="Sprite2D" parent="."]
 texture = ExtResource("2")
 scale = Vector2(0.17, 0.17)

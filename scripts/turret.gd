@@ -37,15 +37,18 @@ var patrol_step: int = 1
 var _recoil_tween: Tween
 var fixed_direction_facing := 1
 var _convoy_direction := Vector2.DOWN
-var _fixed_art: Sprite2D
+@onready var _fixed_art: Sprite2D = get_node_or_null("FixedDirectionArt") as Sprite2D
 
 func _ready() -> void:
-	if fixed_direction_texture:
+	if fixed_direction_texture and _fixed_art == null:
 		_fixed_art = Sprite2D.new()
 		_fixed_art.name = "FixedDirectionArt"
 		_fixed_art.texture = fixed_direction_texture
 		_fixed_art.scale = fixed_direction_scale
 		add_child(_fixed_art)
+	elif _fixed_art:
+		_fixed_art.texture = fixed_direction_texture
+		_fixed_art.scale = fixed_direction_scale
 	set_fixed_direction_enabled(fixed_direction_enabled)
 	queue_redraw()
 
