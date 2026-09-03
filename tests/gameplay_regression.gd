@@ -394,6 +394,7 @@ func _test_main_scene_train_integration() -> void:
 	_check(main.convoys.size() == 1, "normal level should begin with exactly one free locomotive")
 	_check(main.track_routes.size() >= 2, "normal level should retain routes for purchased locomotives")
 	if not main.convoys.is_empty():
+		_check(main.convoys[0].path == main.track_routes[1], "first mission locomotive did not start on the bottom rail")
 		_check(main.convoys[0].car_count() >= 1, "starter car was rejected or missing")
 		var starter_car: Node2D = main.convoys[0].followers[0]
 		var starter_data := BuildManager.towers[0]

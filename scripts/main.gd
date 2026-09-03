@@ -145,7 +145,12 @@ func _generate_and_spawn_trains() -> void:
 	var livery_indices := range(ENGINE_LIVERIES.size())
 	livery_indices.shuffle()
 	var initial_engine_count := mini(starting_trains, routes.size()) if CampaignManager.is_challenge_active() else mini(1, routes.size())
-	for route_index in range(initial_engine_count):
+	# Boiler Room's second authored loop is the station-side/bottom rail. Starting
+	# there gives a new player time to learn before spiders cross the whole board.
+	# Other missions and multi-train challenges retain their authored route order.
+	var first_route_index := 1 if not CampaignManager.is_challenge_active() and CampaignManager.current_level_index == 0 and routes.size() > 1 else 0
+	for engine_slot in range(initial_engine_count):
+		var route_index := first_route_index if initial_engine_count == 1 else engine_slot
 		var convoy: Node2D = TrainConvoyScene.instantiate()
 		trains.add_child(convoy)
 		convoy.configure_path(routes[route_index])
