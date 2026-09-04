@@ -8,6 +8,7 @@ class_name Bullet
 var target: Node2D = null
 var travel_direction := Vector2.ZERO
 var _straight_lifetime := 0.0
+var _spent := false
 
 func set_target(t: Node2D) -> void:
 	target = t
@@ -18,7 +19,19 @@ func set_direction(direction: Vector2) -> void:
 
 func _physics_process(delta: float) -> void:
 	if not travel_direction.is_zero_approx():
-		global_position += travel_direction * bullet_speed * delta
+		# Web frame times can be long enough for a fast projectile to move from
+		# one side of a spider to the other without an overlap frame. Sweep the
+		# complete travelled segment so a visually crossing shot always hits.
+		var next_position := global_position + travel_direction * bullet_speed * delta
+		var query := PhysicsRayQueryParameters2D.create(global_position, next_position, collision_mask)
+		query.collide_with_areas = false
+		query.collide_with_bodies = true
+		var hit := get_world_2d().direct_space_state.intersect_ray(query)
+		if not hit.is_empty():
+			global_position = hit.position
+			_apply_hit(hit.collider as Node2D)
+			return
+		global_position = next_position
 		_straight_lifetime += delta
 		var bounds := get_viewport_rect().grow(120.0)
 		if _straight_lifetime > 4.0 or not bounds.has_point(global_position):
@@ -31,6 +44,12 @@ func _physics_process(delta: float) -> void:
 	global_position += direction * bullet_speed * delta
 
 func _on_body_entered(body: Node2D) -> void:
+	_apply_hit(body)
+
+func _apply_hit(body: Node2D) -> void:
+	if _spent or not is_instance_valid(body):
+		return
+	_spent = true
 	_spawn_hit_effect()
 	AudioFX.play(preload("res://assets/audio/sfx/spider_hit.wav"), -4.0)
 	if body.has_method("take_damage"):

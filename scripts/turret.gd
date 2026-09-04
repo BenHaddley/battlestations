@@ -27,7 +27,7 @@ class_name Turret
 # Keep acquisition narrower than the combined projectile/spider collision
 # radius. A wider corridor makes the gun repeatedly fire convincing-looking
 # tracers beside a spider without the physical projectile ever touching it.
-@export_range(4.0, 80.0, 1.0) var fixed_line_half_width := 24.0
+@export_range(4.0, 80.0, 1.0) var fixed_line_half_width := 18.0
 @export var show_fixed_targeting_line := true
 
 var attack_speed_multiplier: float = 1.0

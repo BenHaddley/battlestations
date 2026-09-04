@@ -68,6 +68,22 @@ func _test_reported_combat_regressions() -> void:
 		fired_basic_bullet.free()
 	basic_target.free()
 	basic_turret.free()
+	var collision_enemy: EnemyMovement = EnemyScene.instantiate()
+	collision_enemy.position = Vector2(120.0, 300.0)
+	add_child(collision_enemy)
+	collision_enemy.health.configure_hit_points(5)
+	var swept_bullet: Bullet = BasicBulletScene.instantiate()
+	swept_bullet.process_mode = Node.PROCESS_MODE_DISABLED
+	swept_bullet.position = Vector2(0.0, 300.0)
+	add_child(swept_bullet)
+	swept_bullet.set_direction(Vector2.RIGHT)
+	await get_tree().physics_frame
+	swept_bullet._physics_process(0.25)
+	_check(collision_enemy.health.is_destroyed, "fast straight Gunner projectile tunnelled through a level-one spider")
+	if is_instance_valid(swept_bullet):
+		swept_bullet.free()
+	if is_instance_valid(collision_enemy):
+		collision_enemy.free()
 	var minigun_bullet: Bullet = preload("res://scenes/MinigunBullet.tscn").instantiate()
 	_check(minigun_bullet.bullet_damage == 4, "Chaingunner rounds did not receive their 4x damage increase")
 	minigun_bullet.queue_free()
@@ -98,7 +114,7 @@ func _test_reported_combat_regressions() -> void:
 	add_child(minigun)
 	_check(minigun.fixed_direction_enabled, "Chaingunner did not enable the new static-facing prototype")
 	_check(minigun._fixed_art != null and minigun._fixed_art.visible, "Chaingunner static sprite is missing")
-	_check(minigun.fixed_line_half_width <= 24.0, "directional targeting corridor is wider than its projectile can hit")
+	_check(minigun.fixed_line_half_width <= 18.0, "directional targeting corridor is wider than a swept projectile can hit")
 	minigun.set_convoy_transform(Vector2.ZERO, Vector2.DOWN)
 	_check(minigun._fixed_fire_direction().is_equal_approx(Vector2.RIGHT), "unflipped directional gun art points right but fires left")
 	var initial_fire_direction := minigun._fixed_fire_direction()
