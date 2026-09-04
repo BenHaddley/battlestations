@@ -8,6 +8,7 @@ const BURST_SIZE := 7
 @export_range(0.03, 0.3, 0.01) var burst_interval := 0.09
 
 var _bursting := false
+var total_rounds_fired := 0 ## Lifetime counter used by combat regression tests.
 
 func _shoot() -> void:
 	if _bursting or bullet_scene == null or not is_instance_valid(target):
@@ -25,6 +26,7 @@ func _fire_burst() -> void:
 	_bursting = false
 
 func _fire_burst_round(index: int) -> void:
+	total_rounds_fired += 1
 	AudioFX.play(preload("res://assets/audio/sfx/turret_shoot_minigun.wav"), -12.0)
 	_play_recoil(2.5)
 	var aim := (target.global_position - firing_point.global_position).normalized()

@@ -69,7 +69,9 @@ func _test_reported_combat_regressions() -> void:
 	basic_target.free()
 	basic_turret.free()
 	var collision_enemy: EnemyMovement = EnemyScene.instantiate()
-	collision_enemy.position = Vector2(120.0, 300.0)
+	# A lined-up spider at the far side of the board must be reached before
+	# ordinary lane movement carries it away from the fixed firing ray.
+	collision_enemy.position = Vector2(1400.0, 300.0)
 	add_child(collision_enemy)
 	collision_enemy.health.configure_hit_points(5)
 	var swept_bullet: Bullet = BasicBulletScene.instantiate()
@@ -79,7 +81,7 @@ func _test_reported_combat_regressions() -> void:
 	swept_bullet.set_direction(Vector2.RIGHT)
 	await get_tree().physics_frame
 	swept_bullet._physics_process(0.25)
-	_check(collision_enemy.health.is_destroyed, "fast straight Gunner projectile tunnelled through a level-one spider")
+	_check(collision_enemy.health.is_destroyed, "straight Gunner projectile failed to one-hit a far level-one spider")
 	if is_instance_valid(swept_bullet):
 		swept_bullet.free()
 	if is_instance_valid(collision_enemy):
@@ -142,15 +144,15 @@ func _test_reported_combat_regressions() -> void:
 	target_node.position = Vector2(200, 0)
 	add_child(target_node)
 	minigun.target = target_node
-	var bullets_before := _count_minigun_bullets()
+	var rounds_before := int(minigun.get("total_rounds_fired"))
 	minigun._shoot()
-	_check(_count_minigun_bullets() == bullets_before + 1, "Chaingunner emitted more than one bullet on its initial burst frame")
+	_check(int(minigun.get("total_rounds_fired")) == rounds_before + 1, "Chaingunner emitted more than one bullet on its initial burst frame")
 	var first_bullet: Bullet = _latest_minigun_bullet()
 	_check(first_bullet != null and first_bullet.target == null and first_bullet.travel_direction.is_equal_approx(Vector2.RIGHT), "directional gun projectile still homes instead of travelling straight")
 	await get_tree().create_timer(minigun.get("burst_interval") * 1.2).timeout
-	_check(_count_minigun_bullets() == bullets_before + 2, "Chaingunner rounds are not arriving sequentially")
+	_check(int(minigun.get("total_rounds_fired")) == rounds_before + 2, "Chaingunner rounds are not arriving sequentially")
 	await get_tree().create_timer(minigun.get("burst_interval") * 6.2).timeout
-	_check(_count_minigun_bullets() == bullets_before + 7, "Chaingunner burst did not emit exactly seven rounds")
+	_check(int(minigun.get("total_rounds_fired")) == rounds_before + 7, "Chaingunner burst did not emit exactly seven rounds")
 	var reverse_test_convoy: TrainConvoy = ConvoyScene.instantiate()
 	add_child(reverse_test_convoy)
 	reverse_test_convoy.configure_path(PackedVector2Array([

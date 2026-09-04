@@ -10,7 +10,7 @@ radius = 8.0
 collision_layer = 4
 collision_mask = 2
 script = ExtResource("1")
-bullet_speed = 900.0
+bullet_speed = 6000.0
 bullet_damage = 20
 z_index = 40
 
