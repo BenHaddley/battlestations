@@ -6,11 +6,7 @@ extends AudioStreamPlayer
 const SPIDER_ASSAULT_PATH := "res://assets/audio/songs/Spider Assault - The Fun House.mp3"
 const WEB_SPIDER_ASSAULT_TRACK := preload("res://assets/audio/web/Spider Assault - The Fun House.ogg")
 const WEB_TRACKS: Array[AudioStream] = [
-	preload("res://assets/audio/web/Clinch Mountan Backstep.ogg"),
-	preload("res://assets/audio/web/Done Gone.ogg"),
-	preload("res://assets/audio/web/Forked Deer.ogg"),
 	preload("res://assets/audio/web/Maggie Blues.ogg"),
-	preload("res://assets/audio/web/Roanoke.ogg"),
 ]
 const SONG_DIRECTORY := "res://assets/audio/songs"
 const SPIDER_ASSAULT_FILE_NAME := "Spider Assault - The Fun House.mp3"

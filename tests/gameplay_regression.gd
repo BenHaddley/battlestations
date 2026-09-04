@@ -336,7 +336,7 @@ func _test_music_playlist_rotation() -> void:
 		unique_paths[track.resource_path] = true
 		_check(track.resource_path.begins_with("res://assets/audio/songs/"), "gameplay playlist contains a track outside the songs folder")
 	_check(unique_paths.size() == 20, "native gameplay playlist contains duplicate songs")
-	_check(music_player.WEB_TRACKS.size() == 5, "web gameplay playlist should remain a compact five-track rotation")
+	_check(music_player.WEB_TRACKS.size() == 1, "web gameplay playlist should remain a minimal one-track payload")
 	main.queue_free()
 
 func _test_game_over_modes() -> void:
