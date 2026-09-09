@@ -22,3 +22,11 @@ root:
 ```sh
 godot --headless --path . tests/GameplayRegression.tscn
 ```
+
+After exporting the Web build, boot it in headless Chromium to confirm the exported
+pack starts a level with its railway and train:
+
+```sh
+godot --headless --path . --export-release "Web" export/web/index.html
+tests/web_smoke.sh export/web
+```

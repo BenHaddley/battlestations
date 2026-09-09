@@ -135,6 +135,12 @@ func _ready() -> void:
 	range_preview = RangePreviewScript.new()
 	range_preview.name = "RangePreview"
 	add_child(range_preview)
+	# One console line per level so a browser smoke test can confirm the
+	# starting railway and train exist without a screenshot.
+	var starter_cars := 0
+	for convoy in convoys:
+		starter_cars += int(convoy.car_count())
+	print("LEVEL READY: %s | %d routes | %d trains | %d cars | %d rail cells" % [level.level_name if level else "?", track.routes.size(), convoys.size(), starter_cars, track.graph.size()])
 
 ## Regenerates the railway until it passes validation (every lane reachable,
 ## every route internally connected, at least two usable routes) or the

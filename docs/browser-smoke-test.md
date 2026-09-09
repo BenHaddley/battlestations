@@ -3,6 +3,11 @@
 Run this checklist against a release Web export in two supported desktop browsers.
 Record browser/version, operating system, date, tester, and any issue link.
 
+Before the manual pass, run `tests/web_smoke.sh export/web`: it boots the exported
+build in headless Chromium and fails if the level does not start with its railway and
+train or if the console shows a script error (the exported build can lack files the
+editor has — see [Current build](../wiki/current-build.md#running-the-project)).
+
 ## Launch and presentation
 
 - [ ] The title screen loads without missing textures or console errors.

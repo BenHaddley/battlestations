@@ -17,7 +17,10 @@ signal route_changed(route_index: int, path: PackedVector2Array)
 
 @export var rail_texture: Texture2D
 @export var curve_texture: Texture2D
-@export var end_texture: Texture2D = preload("res://assets/sprites/board/Rail End.png")
+## Buffer stop for dead ends. Wired from Main.tscn rather than preloaded here:
+## the Web preset exports an allowlist plus scene dependencies, and a script
+## preload of a file outside that list fails the whole script on the Web.
+@export var end_texture: Texture2D
 @export var tile_scale: float = 0.09
 @export var path_step: float = 65.5
 ## Nine columns by twelve rows, registered to the square courtyard in
@@ -830,7 +833,7 @@ func _render_cell(cell: Vector2i) -> void:
 		var texture: Texture2D = rail_texture
 		match String(piece.kind):
 			"curve": texture = curve_texture
-			"end": texture = end_texture
+			"end": texture = end_texture if end_texture != null else rail_texture
 		var shadow := Sprite2D.new()
 		shadow.texture = texture
 		shadow.position = point + Vector2(0.0, 7.0)

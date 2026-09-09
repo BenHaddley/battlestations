@@ -44,7 +44,29 @@ godot --headless --path . --export-release "Web" export/web/index.html
 
 `export/` is gitignored — it's a build artifact, not source. A GitHub Actions
 workflow (`.github/workflows/deploy-pages.yml`) builds and deploys this to GitHub
-Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
+Pages on push to `main`; the site is <https://benhaddley.github.io/battlestations/>.
+
+The Web preset exports an **allowlist**: the scenes in `export_files`, everything they
+reference transitively through `.tscn`/`.tres` dependencies, and the `include_filter`
+patterns in `export_presets.cfg`. It does not follow a script's own `preload()`
+targets. A script that preloads a file outside that set works in the editor but fails
+to load in the exported build, and every script depending on it fails with it — this
+is how the starting railway and train disappeared from the first Pages build after
+`track_renderer.gd` preloaded the new `Rail End.png`. Reference new textures from a
+scene where possible, add anything a script must preload to `include_filter`, and
+rely on `_test_export_preset_covers_preloads` in the regression suite, which fails
+whenever a preload target is not covered.
+
+To boot the exported build itself in a headless Chromium and confirm the level
+starts with its railway and train (and logs no script errors):
+
+```sh
+tests/web_smoke.sh export/web
+```
+
+It serves `export/web` locally, opens `index.html?autostart` (which starts a new
+campaign without a click), and checks the console for Main's `LEVEL READY` line.
+Chromium is located through `$CHROME_BIN` or the Playwright browser cache.
 
 ## Runtime architecture
 

@@ -51,6 +51,17 @@ func _ready() -> void:
 	start_dialogue.restart_selected.connect(_on_new_game_pressed)
 	start_dialogue.closed.connect(start_button.grab_focus)
 	start_button.grab_focus()
+	if _autostart_requested():
+		call_deferred("_on_new_game_pressed")
+
+## `?autostart` on the Web URL (or `--autostart` natively) begins a new
+## campaign without a click, so an exported build can be smoke-tested in a
+## headless browser — see tests/web_smoke.sh.
+func _autostart_requested() -> bool:
+	if OS.has_feature("web"):
+		var location = JavaScriptBridge.eval("window.location.search")
+		return String(location).contains("autostart")
+	return "--autostart" in OS.get_cmdline_user_args()
 
 ## Pages publishes the same tested game pack beneath /test. Detecting the URL
 ## here keeps the production title screen untouched while giving artists a

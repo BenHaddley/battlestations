@@ -48,6 +48,7 @@ func _run() -> void:
 	_check((await _test_range_preview_and_readout()) == true, "_test_range_preview_and_readout aborted on a script error")
 	_check((await _test_lessons_and_profiles()) == true, "_test_lessons_and_profiles aborted on a script error")
 	_check(_test_audio_normalization() == true, "_test_audio_normalization aborted on a script error")
+	_check(_test_export_preset_covers_preloads() == true, "_test_export_preset_covers_preloads aborted on a script error")
 	# Let short procedural/audio one-shots finish and release their players before
 	# ObjectDB performs its exit leak check.
 	await get_tree().create_timer(0.25).timeout
@@ -1169,6 +1170,64 @@ func _test_audio_normalization() -> bool:
 			player.stop()
 			player.free()
 	return true
+
+## The Web preset exports the selected scenes, their (transitive) scene and
+## resource dependencies, and an include_filter allowlist — never a script's
+## own preload() targets. A script that preloads a file outside that set
+## compiles in the editor but fails to load in the exported build, taking
+## every dependent script with it (this is how the starting railway and train
+## vanished from the first Pages build). Every preload must be covered.
+func _test_export_preset_covers_preloads() -> bool:
+	var preset := ConfigFile.new()
+	_check(preset.load("res://export_presets.cfg") == OK, "export_presets.cfg could not be read")
+	var include_patterns: PackedStringArray = String(preset.get_value("preset.0", "include_filter", "")).split(",", false)
+	var export_files: PackedStringArray = preset.get_value("preset.0", "export_files", PackedStringArray())
+	_check(export_files.has("res://scenes/Main.tscn") and export_files.has("res://scenes/TitleScreen.tscn"), "Web preset no longer exports the title and main scenes")
+	var covered: Dictionary = {}
+	var pending: Array[String] = []
+	for path in export_files:
+		pending.append(String(path))
+	var ext_resource := RegEx.create_from_string('path="(res://[^"]+)"')
+	while not pending.is_empty():
+		var path: String = pending.pop_back()
+		if covered.has(path):
+			continue
+		covered[path] = true
+		if path.ends_with(".tscn") or path.ends_with(".tres"):
+			var text := FileAccess.get_file_as_string(path)
+			for found in ext_resource.search_all(text):
+				pending.append(found.get_string(1))
+	var preload_call := RegEx.create_from_string('preload\\("(res://[^"]+)"\\)')
+	var uncovered: Array[String] = []
+	var preloads_seen := 0
+	var scripts := DirAccess.get_files_at("res://scripts")
+	for script_name in scripts:
+		if not script_name.ends_with(".gd"):
+			continue
+		var script_path := "res://scripts/" + script_name
+		var source := FileAccess.get_file_as_string(script_path)
+		for found in preload_call.search_all(source):
+			preloads_seen += 1
+			var target := found.get_string(1)
+			if covered.has(target) or _matches_include_filter(target.trim_prefix("res://"), include_patterns):
+				continue
+			var entry := "%s (from %s)" % [target, script_name]
+			if not uncovered.has(entry):
+				uncovered.append(entry)
+	_check(preloads_seen > 100, "preload scan found only %d preloads; the pattern is no longer matching the scripts" % preloads_seen)
+	_check(covered.has("res://assets/sprites/board/Rail End.png") and covered.has("res://assets/the_new_map.png"), "scene dependency scan did not follow Main.tscn's textures")
+	_check(_matches_include_filter("duckTalking.png", include_patterns) and _matches_include_filter("assets/sprites/effects/BREAK 1.png", include_patterns), "include filter matching is broken")
+	_check(uncovered.is_empty(), "script preload targets are not exported to the Web build: %s" % [uncovered])
+	return true
+
+func _matches_include_filter(relative_path: String, patterns: PackedStringArray) -> bool:
+	for pattern in patterns:
+		var trimmed := String(pattern).strip_edges()
+		if trimmed.is_empty():
+			continue
+		if relative_path.match(trimmed):
+			return true
+	return false
 
 func _test_mail_carrier() -> bool:
 	var mail: Turret = preload("res://scenes/MailCarrier.tscn").instantiate()
