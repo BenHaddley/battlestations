@@ -592,6 +592,19 @@ func _test_main_scene_train_integration() -> bool:
 	_check(starter.route_distance != distance_before and starter.global_position.distance_to(origin) > 4.0, "the level's starting train did not move over half a second")
 	_check(main.menu.get_node("NewIllustratedUi").visible, "normal play lost its illustrated UI background")
 	_check(main.get_node("Board").texture.resource_path == "res://assets/the_new_map.png", "normal play lost the shared new map background")
+	# The live health gauge must sit inside the channel drawn in the UI artwork.
+	# If it drifts wider or taller the meter reads as a slab of red laid over the
+	# casing rather than a fill rising inside it.
+	var hp_slot: Rect2 = Rect2(Menu.HP_CHANNEL_RECT.position / Menu.UI_TEXTURE_SCALE, Menu.HP_CHANNEL_RECT.size / Menu.UI_TEXTURE_SCALE)
+	var gauge: HpGauge = main.menu.hp_fill
+	_check(gauge.get_global_rect().is_equal_approx(hp_slot), "HP gauge does not cover the drawn health channel, it is at %s and the slot is %s" % [gauge.get_global_rect(), hp_slot])
+	_check(hp_slot.size.x < hp_slot.size.y * 0.1, "HP gauge lost its narrow proportions, the slot is %s" % hp_slot)
+	# Only the fill moves. Damage must never resize or reposition the gauge.
+	gauge.set_fraction(0.25)
+	gauge.displayed_fraction = 0.25
+	_check(gauge.get_global_rect().is_equal_approx(hp_slot), "taking damage resized the HP gauge itself")
+	gauge.set_fraction(1.0)
+	gauge.displayed_fraction = 1.0
 	_check(main.menu.wave_banner != null, "HUD did not create the wave-start banner")
 	main.menu._show_wave_start_cue(3)
 	_check(main.menu.wave_banner.text == "WAVE 3 — DEFEND!", "wave-start cue did not identify the active wave")

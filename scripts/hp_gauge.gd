@@ -1,7 +1,27 @@
 extends Control
 class_name HpGauge
-## Smooth vector health track. The label and heart remain separate controls,
-## so no UI artwork is stretched as the panel changes size.
+## Draws only the moving parts of the station health meter: the empty channel
+## and the fill that rises inside it. The casing, "HP" heading and heart cap all
+## belong to the UI artwork, so nothing here paints a second frame and nothing
+## here is stretched when health changes -- the gauge is laid straight over the
+## authored slot and only the fill's height moves.
+
+## Sampled from the authored HP artwork so a live gauge and the drawn one that
+## it replaces read as the same object.
+const EMPTY_COLOR := Color(0.392, 0.373, 0.333)
+const FILL_COLOR := Color(0.827, 0.0, 0.0)
+const CREST_COLOR := Color(0.988, 0.706, 0.157)
+## A hurt meter carries an amber crest at the head of its fill. The drawn full
+## and nearly full meters have none, so the crest fades in as health falls
+## between these two fractions rather than sitting on a healthy station.
+const CREST_FADE_START := 0.85
+const CREST_FADE_END := 0.6
+## The crest holds at this share of the track once it is fully faded in, and is
+## never more than half the fill, so a nearly empty meter is a short glow rather
+## than a band taller than the health it reports.
+const CREST_TRACK_RATIO := 0.22
+const CREST_FILL_RATIO := 0.5
+const DRAIN_SPEED := 0.85
 
 var displayed_fraction: float = 1.0
 var target_fraction: float = 1.0
@@ -15,31 +35,20 @@ func set_fraction(value: float) -> void:
 	set_process(true)
 
 func _process(delta: float) -> void:
-	displayed_fraction = move_toward(displayed_fraction, target_fraction, delta * 0.85)
+	displayed_fraction = move_toward(displayed_fraction, target_fraction, delta * DRAIN_SPEED)
 	queue_redraw()
 	if is_equal_approx(displayed_fraction, target_fraction):
 		set_process(false)
 
 func _draw() -> void:
-	var track := Rect2(7.0, 5.0, size.x - 14.0, size.y - 10.0)
-	draw_style_box(_track_box(), track)
-	var inner := track.grow(-7.0)
-	draw_rect(inner, Color(0.12, 0.09, 0.065, 1.0), true)
-	var fill_height := inner.size.y * displayed_fraction
-	if fill_height <= 1.0:
+	var track := Rect2(Vector2.ZERO, size)
+	draw_rect(track, EMPTY_COLOR, true)
+	var fill_height := track.size.y * displayed_fraction
+	if fill_height < 1.0:
 		return
-	var fill := Rect2(inner.position.x + 2.0, inner.end.y - fill_height, inner.size.x - 4.0, fill_height)
-	draw_rect(fill, Color(0.82, 0.16, 0.12, 1.0), true)
-	draw_line(fill.position + Vector2(3, 1), Vector2(fill.end.x - 3, fill.position.y + 1), Color(1.0, 0.43, 0.25, 0.8), 2.0)
-	draw_line(Vector2(fill.position.x + 3, fill.position.y), Vector2(fill.position.x + 3, fill.end.y), Color(1.0, 0.34, 0.22, 0.35), 2.0)
-
-func _track_box() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.055, 0.045, 0.032)
-	style.border_color = Color(0.02, 0.018, 0.012)
-	style.set_border_width_all(5)
-	style.corner_radius_top_left = 7
-	style.corner_radius_top_right = 5
-	style.corner_radius_bottom_left = 5
-	style.corner_radius_bottom_right = 8
-	return style
+	var fill_top := track.end.y - fill_height
+	draw_rect(Rect2(track.position.x, fill_top, track.size.x, fill_height), FILL_COLOR, true)
+	var crest_weight := clampf(inverse_lerp(CREST_FADE_START, CREST_FADE_END, displayed_fraction), 0.0, 1.0)
+	var crest_height := minf(fill_height * CREST_FILL_RATIO, track.size.y * CREST_TRACK_RATIO * crest_weight)
+	if crest_height >= 1.0:
+		draw_rect(Rect2(track.position.x, fill_top, track.size.x, crest_height), CREST_COLOR, true)

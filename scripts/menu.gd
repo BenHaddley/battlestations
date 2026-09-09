@@ -59,6 +59,11 @@ const PORTRAIT_STATION := preload("res://assets/sprites/ui/portrait/portrait_sta
 const PORTRAIT_BATTLE := preload("res://assets/sprites/ui/portrait/portrait_battle.png")
 const StationProgressPanelScene := preload("res://scenes/ui/StationProgressPanel.tscn")
 const NEW_UI_TEXTURE := preload("res://assets/the_new_ui.png")
+## The UI artwork is drawn at three times the design resolution. HP_CHANNEL_RECT
+## is the health slot measured in that artwork: the dark channel the drawn
+## sample fill sits in, between the "HP" heading and the heart cap.
+const UI_TEXTURE_SCALE := 3.0
+const HP_CHANNEL_RECT := Rect2(2842.0, 286.0, 97.0, 1636.0)
 const PauseMenuScript := preload("res://scripts/pause_menu.gd")
 
 var spawner: EnemySpawner
@@ -474,27 +479,22 @@ func _install_new_ui_layout() -> void:
 	feedback_label.add_theme_constant_override("outline_size", 3)
 	feedback_label.custom_minimum_size.y = 24.0
 
+## The casing, "HP" heading and heart cap are all drawn into the UI artwork, so
+## the live gauge has to occupy exactly the dark channel between them and
+## nothing more. Sizing it from the measured slot keeps the fill as narrow as
+## the drawing intends, instead of a second frame stretched across the rail.
 func _install_compact_hp_gauge(hp_panel: PanelContainer) -> void:
-	# The authored UI contains the casing, label and heart. Cover only its baked
-	# sample fill, then place a shorter live gauge inside the middle of the slot.
 	$HpRail/Margin.visible = false
 	var overlay_host := Control.new()
 	overlay_host.name = "HpOverlayHost"
 	overlay_host.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hp_panel.add_child(overlay_host)
-	var baked_fill_mask := ColorRect.new()
-	baked_fill_mask.name = "BakedHpFillMask"
-	baked_fill_mask.position = Vector2(20.0, 58.0)
-	baked_fill_mask.size = Vector2(27.0, 568.0)
-	baked_fill_mask.color = Color("25130f")
-	baked_fill_mask.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	overlay_host.add_child(baked_fill_mask)
 
 	hp_fill = HpGauge.new()
 	hp_fill.name = "CompactHpFill"
-	hp_fill.position = Vector2(14.0, 148.0)
-	hp_fill.size = Vector2(39.0, 390.0)
+	hp_fill.position = HP_CHANNEL_RECT.position / UI_TEXTURE_SCALE - hp_panel.position
+	hp_fill.size = HP_CHANNEL_RECT.size / UI_TEXTURE_SCALE
 	hp_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	overlay_host.add_child(hp_fill)
 
