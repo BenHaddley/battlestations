@@ -40,7 +40,7 @@ func _ready() -> void:
 		_make_level("Iron Hide", 5, 450, [0, 3, 2, 4], 4, 2),
 		_make_level("Full Load", 5, 500, [0, 3, 2, 4, 5], 5, 6),
 		_make_level("Long Haul", 6, 550, [0, 3, 2, 4, 5, 6], 6, 3),
-		_make_level("All Aboard", 8, 600, [0, 3, 2, 4, 5, 6, 1], 1, 7),
+		_make_level("All Aboard", 8, 600, [0, 3, 2, 4, 5, 6, 1, 7], 1, 7),
 	]
 	var last: LevelData = levels[-1]
 	_endless_level = _make_level("Open Rails", 0, last.starting_currency, last.unlocked_tower_indices, -1, -1)
@@ -58,7 +58,7 @@ func _make_level(level_name: String, waves: int, currency: int, unlocked: Array[
 func current_level() -> LevelData:
 	if is_challenge_active():
 		var challenge := active_challenge()
-		return _make_level(String(challenge.name), int(challenge.waves), int(challenge.currency), [0, 1, 2, 3, 4, 5, 6], -1, int(challenge.track))
+		return _make_level(String(challenge.name), int(challenge.waves), int(challenge.currency), [0, 1, 2, 3, 4, 5, 6, 7], -1, int(challenge.track))
 	if campaign_complete or levels.is_empty():
 		return _endless_level
 	return levels[mini(current_level_index, levels.size() - 1)]

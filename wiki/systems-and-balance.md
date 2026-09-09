@@ -190,10 +190,10 @@ and a locomotive can be dragged from the Train Yard onto an empty rail stretch f
 
 ## Documented combat movement direction
 
-Gubgub considers the current swivelling armed cars outdated. Future conventional
-shooting cars should fire in one fixed direction, giving the player a reason to move
-and orient engines around the board. Revised unit drawings are pending, so the
-current rotating-turret implementation remains an intentional placeholder.
+Gubgub's latest playtest feedback withdraws the fixed-direction experiment and
+requests the original swivelling guns. Gunner and Chaingunner now default to
+rotating turrets with circular targeting and targeted projectiles. The directional
+prototype remains available only as an opt-in debug sandbox comparison.
 
 Ordinary trains should not deal collision damage. A spider threatened by a normal-
 speed train moves one tile backward or sideways before impact. A distinct future

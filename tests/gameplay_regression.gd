@@ -29,6 +29,7 @@ func _run() -> void:
 	_test_convoy_spacing_and_reverse()
 	_test_campaign_track_library()
 	_test_content_catalogs()
+	_test_mail_carrier()
 	_test_wallet_wave_and_selection_rules()
 	_test_challenge_job_cards()
 	_test_music_playlist_rotation()
@@ -112,9 +113,37 @@ func _test_reported_combat_regressions() -> void:
 	_check(jump_spider.global_position.y < before_knockback.y, "Coal Cannon knockback did not move a spider away from its destination")
 	jump_spider.queue_free()
 
+	# Both campaign gun cars restore circular targeting, rotating art and aimed shots.
+	for scene in [BasicTurretScene, MinigunScene]:
+		var swivel: Turret = scene.instantiate()
+		add_child(swivel)
+		swivel.set_process(false)
+		_check(not swivel.fixed_direction_enabled, "gun car still defaults to direction locking")
+		_check(swivel.train_chassis.visible and swivel.turret_rotation_point.get_node("Top").visible and not swivel._fixed_art.visible, "gun car did not restore swivelling artwork")
+		var side_target := Node2D.new()
+		add_child(side_target)
+		side_target.position = Vector2.LEFT * 100.0
+		swivel.target = side_target
+		_check(swivel._target_in_range(), "swivel gun rejected a target on the opposite side")
+		swivel._rotate_towards_target(10.0)
+		_check(is_equal_approx(wrapf(swivel.turret_rotation_point.rotation, -PI, PI), -PI / 2.0), "swivel gun did not rotate toward its target")
+		if swivel.has_method("_fire_burst_round"):
+			swivel._fire_burst_round(0)
+		else:
+			swivel._shoot()
+		var aimed_bullet := _latest_minigun_bullet()
+		_check(aimed_bullet != null and aimed_bullet.target == side_target, "swivel gun did not fire a targeted projectile")
+		if aimed_bullet:
+			aimed_bullet.free()
+		side_target.position = Vector2.LEFT * (swivel.targeting_range + 50.0)
+		_check(not swivel._target_in_range(), "swivel gun ignored its circular range limit")
+		swivel.queue_free()
+		side_target.queue_free()
+
 	var minigun: Turret = MinigunScene.instantiate()
 	add_child(minigun)
-	_check(minigun.fixed_direction_enabled, "Chaingunner did not enable the new static-facing prototype")
+	# The directional experiment remains opt-in in the debug sandbox.
+	minigun.set_fixed_direction_enabled(true)
 	_check(minigun._fixed_art != null and minigun._fixed_art.visible, "Chaingunner static sprite is missing")
 	_check(minigun.fixed_line_half_width <= 18.0, "directional targeting corridor is wider than a swept projectile can hit")
 	minigun.set_convoy_transform(Vector2.ZERO, Vector2.DOWN)
@@ -272,6 +301,7 @@ func _test_content_catalogs() -> void:
 		"res://resources/passenger_coach.tres",
 		"res://resources/brake_van.tres",
 		"res://resources/tender_car.tres",
+		"res://resources/mail_carrier.tres",
 	]
 	var tower_names: Dictionary = {}
 	for path in tower_paths:
@@ -501,6 +531,7 @@ func _test_main_scene_train_integration() -> void:
 	_check(main.get_node_or_null("TutorialDirector") is TutorialDirector, "main campaign scene is missing first-run instructions")
 	pause_menu.close()
 	_check(not get_tree().paused and not pause_menu.visible, "resume did not restore gameplay")
+	_check(main.menu.mail_carrier_button != null and main.menu.mail_carrier_button.get_parent() == main.menu.tender_button.get_parent(), "Mail Carrier shop row is missing")
 	_check(main.convoys.size() == 1, "normal level should begin with exactly one free locomotive")
 	_check(main.track_routes.size() >= 2, "normal level should retain routes for purchased locomotives")
 	if not main.convoys.is_empty():
@@ -508,9 +539,7 @@ func _test_main_scene_train_integration() -> void:
 		var preview_screen_position: Vector2 = main.get_viewport().get_canvas_transform() * main.convoys[0].global_position
 		main._on_train_drag_updated(0, preview_screen_position, 1)
 		_check(main.car_placement_ghost.visible, "valid train drag did not show a track-snapped placement ghost")
-		var preview_fire_direction: Vector2 = main.car_placement_ghost.get("_fire_direction")
-		main._on_train_drag_updated(0, preview_screen_position, -1)
-		_check(main.car_placement_ghost.get("_fire_direction").dot(preview_fire_direction) < -0.99, "right-click facing did not flip the placement arrow")
+		_check(not main.car_placement_ghost.get("_directional"), "swivel gun placement still shows a fixed-direction arrow")
 		main._hide_car_placement_ghost()
 		_check(main.convoys[0].car_count() >= 1, "starter car was rejected or missing")
 		var starter_car: Node2D = main.convoys[0].followers[0]
@@ -550,3 +579,58 @@ func _test_main_scene_train_integration() -> void:
 		_check(main.train_control_panel._expansion < 0.1, "train controls did not collapse after deselection")
 	main.queue_free()
 	await get_tree().process_frame
+
+func _test_mail_carrier() -> void:
+	var mail: Turret = preload("res://scenes/MailCarrier.tscn").instantiate()
+	add_child(mail)
+	mail.set_process(false)
+	_check(mail.targeting_range == 225.0 and not mail.fixed_direction_enabled, "Mail Carrier must use swivelling 5×5 targeting")
+	var spiders: Array[EnemyMovement] = []
+	for position in [Vector2(100, 0), Vector2(-100, 0), Vector2(226, 0)]:
+		var spider: EnemyMovement = EnemyScene.instantiate()
+		add_child(spider)
+		spider.set_process(false)
+		spider.set_physics_process(false)
+		spider.position = position
+		spiders.append(spider)
+	var recipients: Dictionary = {}
+	for index in range(128):
+		var recipient := mail._find_target()
+		_check(recipient == spiders[0] or recipient == spiders[1], "Mail Carrier selected a spider outside its radius")
+		recipients[recipient] = true
+	_check(recipients.size() == 2, "Mail Carrier always selected the same spider")
+	spiders[1].position = Vector2(-226, 0)
+	mail._process(1.0 / mail.bps)
+	var envelope: Bullet = null
+	for child in get_children():
+		if child.get_script() == preload("res://scripts/mail_envelope.gd"):
+			envelope = child
+	_check(envelope != null and envelope.target == spiders[0], "Mail Carrier failed to fire at its only eligible recipient")
+	if envelope:
+		var hp_before := spiders[0].health.hit_points
+		envelope._physics_process(1.0)
+		_check(spiders[0].health.hit_points == hp_before - mail.base_projectile_damage, "Envelope overshot its recipient or dealt incorrect damage")
+		envelope.free()
+	spiders[0].position = Vector2(226, 0)
+	spiders[1].position = Vector2(-100, 0)
+	mail.attack_speed_multiplier = 2.0
+	mail._process(1.0 / (mail.bps * mail.attack_speed_multiplier))
+	envelope = null
+	for child in get_children():
+		if child.get_script() == preload("res://scripts/mail_envelope.gd"):
+			envelope = child
+	_check(envelope != null and envelope.target == spiders[1], "Mail Carrier retained its old target or ignored a fire-rate upgrade")
+	if envelope:
+		envelope.free()
+	spiders[1].health.is_destroyed = true
+	_check(mail._find_target() == null, "Mail Carrier targeted a destroyed spider")
+	spiders[1].health.is_destroyed = false
+	spiders[1].queue_free()
+	_check(mail._find_target() == null, "Mail Carrier targeted a despawning spider")
+	mail._process(10.0)
+	for child in get_children():
+		_check(child.get_script() != preload("res://scripts/mail_envelope.gd"), "Mail Carrier fired with no eligible spiders")
+	for spider in spiders:
+		spider.queue_free()
+	mail.queue_free()
+	_check(CampaignManager.tower_unlock_level(7) == 7, "Mail Carrier is unreachable in the campaign shop")

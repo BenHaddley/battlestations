@@ -10,7 +10,11 @@ repository identifies an author; treat this as **Documented** per the
 [confidence labels](README.md#confidence-labels) — a surviving design artifact, not
 verified first-hand design intent.
 
-**This is the authoritative unit design source.** The reconciliation this page used
+**This is the historical unit design source used for the initial reconciliation.**
+The subsequently supplied [asset workbook](asset-workbook.md) documents a broader
+25-unit roster and conflicting costs, capacity, and Brake Van behavior. Those
+conflicts are now tracked for reconciliation; this page preserves the original cards.
+ The reconciliation this page used
 to flag as an open question has been resolved — the shipped build now adopts these
 cards' costs, weights, and (converted) ranges wholesale; see
 [Divergence from the current build](#divergence-from-the-current-build) below for how

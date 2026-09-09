@@ -38,7 +38,7 @@ commanding the swarm in Spider Assault.
 ## Known issues and release gates
 
 - Art, music, recorded SFX, and one font are not yet rights-cleared.
-- Armed cars still swivel while fixed-direction redraws and rules remain pending.
+- Armed cars use the original swivelling behavior following playtest feedback.
 - Between-wave rail construction and Barrier Car mechanics are deferred.
 - Browser autoplay may require the player's first interaction.
 - Late-wave browser performance and fresh-player balance still need recorded tests.

@@ -21,6 +21,69 @@ in the [roadmap unblock checklist](docs/roadmap-blockers.md).
 
 ---
 
+## Asset workbook — roster and production backlog
+
+Source: [Assets to make.xlsx](wiki/sources/Assets%20to%20make.xlsx),
+`Sheet1!A1:L26`; [complete 25-unit register](wiki/asset-workbook.md), documented
+2026-09-09. These are documented concepts, not 25 delivered assets or an approved
+release order. The following work groups are a proposed implementation sequence.
+
+### Reconcile the existing roster first
+
+- [x] Transcribe all 25 units, all stat columns, and their roles; retain `N/A`,
+      qualitative power/speed, and targeting priorities without inventing values.
+- [x] Record differences from the build and older infowiki cards in the wiki.
+- [x] Restore the original swivelling Gunner/Chaingunner behavior following playtest
+      feedback; retain the directional experiment only as a debug comparison.
+- [x] Add Mail Carrier with supplied chassis/turret/envelope artwork, 5×5 range,
+      and independent random targeting for every projectile.
+- [ ] Reconcile Steam Engine cost 250/carry 1200, Tender cost 75, Delta Coach cost
+      100, Mail Car cost 125/weight 125, and Brake Van cost 175 against current values.
+      Tender weight and capacity bonus are `N/A`, not replacements for existing values.
+- [ ] Resolve Brake Van's specified 1.25× attack-power buff versus the current
+      1.2× attack-speed buff, including stacking, train-cap, and braking behavior.
+- [ ] Translate Weak/Average/Great/Insta-Kill power and Fast/Average/Slow/Very Slow/
+      Recharge speed labels into approved numeric stats. Define Coal Cannon's
+      knockback chance and exact Close/Strong/All/Webs targeting rules.
+- [ ] Specify health/damage/destruction for engines and cars using the workbook's
+      health column, including consist reconnection, lost capacity, and buff removal.
+- [ ] Playtest reconciled existing cars before expanding the roster.
+
+### Audit and produce assets
+
+- [ ] Audit all 25 entries against available files, including the shared Drive;
+      record delivered/missing chassis, tops, icons, projectiles, effects, and animations.
+- [ ] Assign owners and delivery status; agree dimensions, pivots, facing, scale,
+      required states, and authorship/permissions. The workbook supplies none of these.
+- [ ] Define the double-size Barrier Car footprint and train spacing/placement art.
+- [ ] Supply action visuals for the new roles: tongue/chewing, rail spike, returning
+      slate, crossfire, thump/stun, glue tiles, web clearing, drilling, and interception.
+
+### Implement approved additions in dependency groups
+
+- [ ] Add Diesel Engine's higher-capacity/slower movement variant and Turbine Coach's
+      rapid-motion Delta income after defining movement thresholds and income rates.
+- [ ] Add Greenhouse (eat/chew), Steel Driver (strong-target spike), Slate Return
+      (boomerang path damage), Clique Car (same-train scaling), and Crossfire Car
+      (four-way fire), with targeting and damage rules tested per mechanic.
+- [ ] Add Barrier Car (two-tile blocker), Thumper (area stun), Scapegoat (station
+      damage interception), and Glue Tanker (slowing tiles) after train health and
+      board navigation/effect rules are specified.
+- [ ] Add Velocity Van (speed boost, 10% damage reduction), Mini Van (1.75× attack
+      power with at most three cars), and Throttle Rocket (whole-train speed boost).
+      Define magnitude, stacking/caps, and whether engine/Tender count toward limits.
+- [ ] Add Web Whacker (web-cluster removal) and Jackhammer (rapid close damage,
+      extra damage to rocks) alongside persistent webs and destructible obstacles.
+- [ ] Add approved cars to the shop, discovery/almanac, campaign unlocks, and sandbox;
+      validate costs, capacity, placement, effects, and readable counterplay.
+
+**Exit criterion:** every accepted unit has an approved specification and tracked
+assets; implementation status is explicit, and new mechanics pass focused gameplay
+checks and playtests. Unspecified mechanics remain in the
+[decision register](wiki/open-questions.md#asset-workbook-reconciliation).
+
+---
+
 ## Current sprint — menu and 2026-09-03 playtest follow-up
 
 This sprint translates Gubgub's latest menu description, demo notes, and four-car art
@@ -47,7 +110,7 @@ they improve the game.
       changing relevant state, and resetting the encounter without playing through
       campaign levels. Link its controls from the developer documentation.
 
-### Today: directional-car prototype
+### Historical experiment: directional-car prototype
 
 - [x] Import and connect the four updated car artworks without deleting or replacing
       the current production assets.
@@ -58,11 +121,8 @@ they improve the game.
       right-click flip from cancelling or prematurely placing the drag.
 - [x] Keep the existing swivelling implementation available behind a toggle, separate
       scene, or versioned resource so the two aiming models can be compared safely.
-- [ ] Playtest fixed-direction targeting with current spider and engine speeds before
-      changing either. Record whether positioning is interesting, whether targets
-      spend enough time in the firing arc, and whether manual train movement is
-      necessary. Treat tile-step engine movement and arrow-key driving as later
-      design options, not part of this first experiment.
+- [x] Record playtest outcome: direction locking was withdrawn; original swivelling
+      behavior is restored in normal gameplay. The debug toggle remains available.
 
 ### Next: build the full main menu
 
@@ -439,12 +499,13 @@ has no unresolved asset-rights questions, and communicates what the game is.
 
 ## Next five tasks
 
-These are the immediate implementation priorities from the current sprint; complete
-the remaining sprint items after them.
+These priorities follow the newly documented workbook; outstanding browser, rights,
+and playtest gates remain in the [unblock checklist](docs/roadmap-blockers.md).
 
-1. Fix and regression-test Chaingunner burst sequencing and audio.
-2. Fix Jumping Spider idle movement and Coal Cannon knockback.
-3. Improve font outlines and replace placement errors with the timed top banner.
-4. Add and document the direct unit-testing sandbox/debug scene.
-5. Prototype reversible left/right facing for the two updated attacking cars while
-   preserving the current swivelling version.
+1. Reconcile the workbook's existing-unit costs, carry capacity, and Brake Van buff
+   with the active build, starting with Mail Carrier's provisional cost and weight.
+2. Audit the 25-unit register against supplied assets and record missing deliverables.
+3. Specify per-car health/destruction and support-effect stacking/removal rules.
+4. Define numeric attack cadence/power, targeting priorities, and board-effect rules
+   for the first approved new units.
+5. Playtest the reconciled roster and select the first asset-ready expansion group.

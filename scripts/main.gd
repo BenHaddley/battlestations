@@ -212,7 +212,7 @@ func _on_train_drag_updated(tower_index: int, screen_position: Vector2, facing: 
 		menu.set_drag_preview_snapped(false)
 		return
 	var tower: TowerData = BuildManager.towers[tower_index]
-	car_placement_ghost.configure(tower.icon, preview.position, preview.direction, facing, tower_index == 0 or tower_index == 1)
+	car_placement_ghost.configure(tower.icon, preview.position, preview.direction, facing, false)
 	car_placement_ghost.visible = true
 	menu.set_drag_preview_snapped(true)
 

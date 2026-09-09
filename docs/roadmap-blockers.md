@@ -52,9 +52,25 @@ written permission under `wiki/sources/` and a future `legal/` directory.
 Owner needed: artist/designer.
 
 - Decide whether current spider art is retained or replaced.
-- Supply fixed-direction armed-car redraws or approve continued swivelling art.
 - If replacing art, specify frame dimensions, pivots, facing direction, animation
   frames, and whether existing collision silhouettes remain valid.
+
+## Asset workbook decisions and deliveries
+
+Owner needed: designer and artist; source is the
+[25-unit workbook register](../wiki/asset-workbook.md).
+
+- Resolve spreadsheet-versus-build costs, Steam carry capacity, and Brake Van's
+  attack-power versus attack-speed behavior; Mail cost/weight are currently provisional.
+- Define numeric power/cadence, targeting rules, knockback chance, buff stacking,
+  train-health/destruction rules, and new board-effect durations and interactions.
+- Audit delivered assets and supply missing chassis/top/icon/projectile/effect art,
+  with dimensions, pivots, states, authorship, and delivery status.
+- Choose the first expansion group and its campaign unlocks after existing-roster
+  reconciliation and playtesting.
+
+Evidence to save: dated decisions and an asset inventory linked to the workbook rows.
+The spreadsheet contains no completion statuses or numeric replacements for `N/A`.
 
 ## Between-wave rail expansion specification
 

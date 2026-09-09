@@ -54,7 +54,7 @@ permanent cross-run upgrades remain intentionally absent until baseline balance 
 ## Design boundaries
 
 - Target: Godot 4.7.2 Web, single player, 1280×720 logical viewport.
-- Current armed cars swivel; fixed-direction replacements await art and rules.
+- Armed cars use the original swivelling behavior following playtest feedback.
 - Rail editing, Barrier Car damage/pathfinding, and a discovery gallery are deferred.
 - Asset authorship and release permission must be established before public release.
 - Recovered facts, collaborator direction, and new decisions remain distinguished.

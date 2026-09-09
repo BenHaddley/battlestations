@@ -20,9 +20,21 @@ question is resolved, then update the affected design page.
 | How far should spider bounties be reduced? | Large-wave kill rewards currently make costs inconsequential and crowd out Passenger Coach strategy. | Gubgub's 2026-08-28 playtest establishes the direction—less bounty, more reliance on Passenger Coaches—but supplies no target values. |
 | What are the final manual engine controls and speed limits? | The expanded panel hides the station edge, while full stopping encourages static play. | Suggested direction: compact Up/Down input, manual speed mainly boosts cruise, and engines slow dramatically without reaching zero. Exact behavior remains open. |
 | ~~Can engines be acquired during a level?~~ **Resolved as design intent** | Determines shop scope and how multiple trains enter play. | Each level grants one engine; the player can buy and place more engines on rails, then manage them separately. Not implemented. |
-| How should fixed-direction armed cars aim and orient? | One-direction fire makes movement meaningful but requires clear rules for facing, reversing, curves, and target arcs. | Gubgub says swivelling shooting units are outdated and plans new drawings. Implementation waits on the redraw/specification. |
-| How does car destruction affect a train? | Barrier play introduces car health, biting, and possible gaps inside consists. | A blocked spider bites the train when no detour exists within three blocks; enough bites destroy a car. Health and reconnection rules are unknown. |
+| How does car destruction affect a train? | Barrier play introduces car health, biting, and possible gaps inside consists. | A blocked spider bites the train when no detour exists within three blocks; enough bites destroy a car. The [workbook](asset-workbook.md) now specifies unit health (Barrier 1250); damage and reconnection rules remain unknown. |
 | What are the rules and economy for between-wave rail expansion? | Rail editing changes route validity, spending, and convoy rebinding. | Confirmed as a later feature, explicitly deferred; see [Future rails and navigation](future-runtime-rails-and-navigation.md). |
+
+## Asset workbook reconciliation
+
+Source: [25-unit register and build comparison](asset-workbook.md). Record decisions
+before treating the spreadsheet's unspecified values as implementation defaults.
+
+| Question | Why it matters | Current evidence |
+|---|---|---|
+| Which workbook values supersede the older cards and provisional build stats? | Costs, carry capacity, and buffs change existing balance. | Steam 250/1200 carry, Tender 75, Delta Coach 100, Mail 125 cost/125 weight, Brake Van 175 and 1.25× attack power differ from the build. |
+| How do Power, Speed, and Priority map to exact rules? | Defines damage, cadence, nearest/strong selection, targeting ties, and exceptions. | Workbook supplies qualitative labels; Mail random-per-projectile behavior is already implemented. Coal knockback probability is not given. |
+| How do per-unit health, destruction, and support effects interact? | Determines train gaps, lost buffs, station interception, and capacity after losing a Tender. | Workbook supplies health for all units; Barrier has 1250 and Scapegoat 1000. Damage, reconnection, buff stacking, and Mini Van's car-count rules are incomplete. |
+| What are the new board-effect and movement thresholds? | Required for Turbine income, glue, stun, web clearing, rocks, and speed-support cars. | Roles are documented, but durations, income rates, speed thresholds, limits, and obstacle rules are not. |
+| Which planned units have production-ready assets and approved unlocks? | Prevents a concept entry being mistaken for a delivered car. | Workbook lists no asset paths, completion statuses, owners, or release order. |
 
 ## Art, audio, and identity
 

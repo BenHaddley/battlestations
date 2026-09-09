@@ -28,7 +28,10 @@ named for the latter three.
 
 ## Defense and train-unit art
 
-All seven placeable cars are implemented and purchasable from the in-game shop; see
+The [asset workbook register](asset-workbook.md) documents 25 intended units and
+their full stats. It is a design backlog, not a count of delivered or implemented assets.
+
+All eight placeable cars are implemented and purchasable from the in-game shop; see
 [Placeable cars](systems-and-balance.md#placeable-cars) for cost, stats, and behavior.
 
 | Family | Surviving art | Active gameplay |
@@ -109,3 +112,16 @@ unverified. Do not assume it is cleared for release until provenance is confirme
 The original Unity project and its metadata remain in `legacy_unity/`. Use the active
 `assets/` tree for Godot work; use the archive to investigate provenance or recover
 scene configuration, not as a second live asset library.
+
+### Mail Carrier
+
+Uses Gubgub’s Mail Carrier A (turret), B (chassis), and envelope artwork from the
+[shared Drive](https://drive.google.com/drive/folders/1JFq3gCmqjWwBDbTMUmwSai6Otw1JEgpP).
+Each shot independently selects a live spider within 5×5 range (225-unit radius);
+repeat recipients are allowed. Rotating turret, no direction lock.
+
+Provisional balance: 3 shots/second, 4 damage, Δ200 cost, 150 weight. These numbers
+were not specified in the design message. The newly documented [workbook](asset-workbook.md)
+specifies cost 125 and weight 125; reconciling these is pending. It labels power
+Weak and speed Fast without numeric values. Unlocks at All Aboard (stop 7), and is
+available in Open Rails, shopping-enabled challenges, and debug sandbox key `8`.

@@ -8,7 +8,7 @@ godot --path . scenes/DebugSandbox.tscn
 
 Move the mouse to the desired position, then use:
 
-- `1`–`7`: spawn any shop car, in shop order
+- `1`–`8`: spawn any shop car, in shop order
 - `Q W E R T Y U I O`: spawn each spider archetype
 - `F`: flip the most recently spawned directional gun car
 - `V`: toggle that gun car between the new static-facing prototype and the preserved swivel version
@@ -16,3 +16,5 @@ Move the mouse to the desired position, then use:
 - `Escape`: return to the main menu
 
 This lab ignores prices, campaign unlocks, waves, and train capacity so combat interactions can be checked immediately.
+
+Mail Carrier is available on `8`, with a fresh random recipient per envelope.

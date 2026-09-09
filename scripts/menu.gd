@@ -46,7 +46,9 @@ signal remove_requested(screen_position: Vector2)
 @export var selected_style: StyleBox
 @export var unaffordable_style: StyleBox
 
-const TOWER_BUTTONS := ["gunner_button", "chaingunner_button", "ballast_button", "passenger_button", "coal_cannon_button", "brake_van_button", "tender_button"]
+var mail_carrier_button: Button
+
+const TOWER_BUTTONS := ["gunner_button", "chaingunner_button", "ballast_button", "passenger_button", "coal_cannon_button", "brake_van_button", "tender_button", "mail_carrier_button"]
 static var ENGINE_COST: int = (preload("res://resources/game_balance.tres") as GameBalance).locomotive_cost
 const ENGINE_ICON := preload("res://assets/sprites/engines/Steam Engine Black.png")
 
@@ -105,6 +107,7 @@ func _ready() -> void:
 	_install_station_progress_panel()
 	_install_wave_banner()
 	_install_placement_banner()
+	_install_mail_carrier_row()
 	_style_train_yard()
 	for index in range(TOWER_BUTTONS.size()):
 		var button: Button = get(TOWER_BUTTONS[index])
@@ -352,7 +355,7 @@ func _style_train_yard() -> void:
 			tray_icon.position = Vector2(9, -13)
 			tray_icon.size = Vector2(91, 91)
 			tray_icon.pivot_offset = tray_icon.size * 0.5
-			tray_icon.rotation = (-PI / 2.0) + deg_to_rad([-2.0, 1.5, -1.0, 2.0, -1.5, 1.0, -2.0][index])
+			tray_icon.rotation = (-PI / 2.0) + deg_to_rad([-2.0, 1.5, -1.0, 2.0, -1.5, 1.0, -2.0, 1.5][index])
 			button.add_child(tray_icon)
 
 		var name_label := button.find_child("NameLabel", true, false) as Label
@@ -416,15 +419,6 @@ func _input(event: InputEvent) -> void:
 		_position_drag_preview(event.position)
 		if dragging_tower >= 0:
 			train_drag_updated.emit(dragging_tower, event.position, drag_facing)
-	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-		# The two fixed-direction gun cars can be flipped without releasing the
-		# left-button drag. The preview pivots in place, so placement stays stable.
-		if dragging_tower == 0 or dragging_tower == 1:
-			drag_facing *= -1
-			drag_preview.scale.x = float(drag_facing)
-			train_drag_updated.emit(dragging_tower, event.position, drag_facing)
-			show_placement_feedback("Facing %s — right-click again to flip." % ("left" if drag_facing < 0 else "right"), true)
-			get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 		if dragging_tower == -2:
 			engine_drop_requested.emit(event.position)
@@ -705,3 +699,11 @@ func _locked_train_yard_style(index: int) -> StyleBoxFlat:
 	style.bg_color = Color("9a765d")
 	style.border_color = Color("352018")
 	return style
+
+func _install_mail_carrier_row() -> void:
+	mail_carrier_button = tender_button.duplicate() as Button
+	mail_carrier_button.name = "MailCarrierRow"
+	mail_carrier_button.tooltip_text = BuildManager.towers[7].summary
+	(mail_carrier_button.find_child("Icon", true, false) as TextureRect).texture = BuildManager.towers[7].icon
+	(mail_carrier_button.find_child("NameLabel", true, false) as Label).text = "MAIL CARRIER"
+	tender_button.get_parent().add_child(mail_carrier_button)

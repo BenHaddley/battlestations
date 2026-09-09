@@ -3,7 +3,7 @@ extends Node2D
 ## campaign progression, prices, waves, and train placement restrictions.
 
 const EnemyScene := preload("res://scenes/Enemy.tscn")
-const CAR_KEYS := [KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7]
+const CAR_KEYS := [KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8]
 const SPIDER_KEYS := [KEY_Q, KEY_W, KEY_E, KEY_R, KEY_T, KEY_Y, KEY_U, KEY_I, KEY_O]
 
 var _last_car: Node2D
@@ -98,7 +98,7 @@ func _build_help() -> void:
 	var box := VBoxContainer.new()
 	panel.add_child(box)
 	var help := Label.new()
-	help.text = "DEBUG UNIT LAB  |  Cars: 1–7  |  Spiders: Q W E R T Y U I O  |  F: flip last gun  |  V: static/swivel  |  C: clear  |  Esc: menu"
+	help.text = "DEBUG UNIT LAB  |  Cars: 1–8  |  Spiders: Q W E R T Y U I O  |  F: flip last gun  |  V: static/swivel  |  C: clear  |  Esc: menu"
 	help.add_theme_font_size_override("font_size", 17)
 	help.add_theme_color_override("font_outline_color", Color.BLACK)
 	help.add_theme_constant_override("outline_size", 5)

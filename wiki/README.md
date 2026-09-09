@@ -15,6 +15,7 @@ as settled design.
 | [Content catalog](content-catalog.md) | Available board, train, weapon, spider, effect, UI, and audio content |
 | [Infowiki unit cards](infowiki-cards.md) | Authoritative per-car design specs (cost, range, weight, bio) from `assets/audio/infowiki/`, and how they diverge from the shipped build |
 | [History and sources](history-and-sources.md) | Project timeline, evidence, provenance, and missing leads |
+| [Asset workbook](asset-workbook.md) | All 25 spreadsheet unit concepts, stats, build differences, and production dependencies |
 | [Asset provenance](asset-provenance.md) | Release-rights register and evidence still required for art, audio, and fonts |
 | [Future rails and navigation](future-runtime-rails-and-navigation.md) | Prepared architecture and validation rules for later rail editing and obstacle-aware spiders |
 | [Open questions](open-questions.md) | Decisions and missing information still needing an answer |
