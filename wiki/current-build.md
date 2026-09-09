@@ -118,8 +118,13 @@ kept alongside them.
   environmental painting deliberately secondary to the tabletop play area.
 - The left panel is a scrollable Train Yard list of illustrated shop rows (icon, name,
   Delta price pill) rather than a fixed grid, so the roster can grow without the tray
-  itself changing shape. Beneath it sits a description card — unit name, cost/weight/
-  health/range, and the authored blurb — followed by BUILD TRACK and REMOVE UNIT.
+  itself changing shape. The column is a stack of **non-overlapping regions**:
+  currency, the scrolling unit list, a fixed-height selected-unit card
+  (`Menu.DETAIL_PANEL_HEIGHT`), then BUILD TRACK and REMOVE UNIT. The card must never
+  grow with its text — when it did, it took height from the list until shop rows sat
+  underneath it and could not be reached. It shows only what a purchase decision needs
+  (name, price, weight, health, range and the one-line `TowerData.summary`); the
+  authored paragraphs live in `UnitLore` and are shown by the Almanac.
   **No shop control carries `tooltip_text`:** Godot's native tooltip rendered those
   multi-paragraph blurbs as a banner across the board, the Train Yard and the right
   panel, so the copy was moved into the card and the tooltips emptied. A locked card

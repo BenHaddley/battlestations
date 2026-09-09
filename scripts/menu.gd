@@ -73,9 +73,9 @@ var removing_mode: bool = false
 var _wave_start_health: int = -1
 var _wave_start_enemy_count: int = 0
 var _hovered_removable: Node2D = null
-## Shop copy moved out of Godot's native tooltip, which rendered these
-## multi-paragraph strings as a banner across the whole screen.
-var _shop_descriptions: Dictionary = {}
+## Height reserved for the selected-unit card. The Train Yard is a column of
+## non-overlapping regions: currency, scrolling unit list, this card, actions.
+const DETAIL_PANEL_HEIGHT := 96.0
 var shop_detail_panel: PanelContainer
 var shop_detail_name: Label
 var shop_detail_stats: Label
@@ -123,9 +123,8 @@ func _ready() -> void:
 	for index in range(TOWER_BUTTONS.size()):
 		var button: Button = get(TOWER_BUTTONS[index])
 		var unlocked := CampaignManager.is_tower_unlocked(index)
-		# The authored blurb lives on the scene's tooltip_text. Keep the words,
-		# drop the native tooltip: it drew a full-width banner over the board.
-		_shop_descriptions[index] = button.tooltip_text
+		# Godot's native tooltip drew the authored blurb as a banner across the
+		# whole screen. The long copy now lives in UnitLore, read by the Almanac.
 		button.tooltip_text = ""
 		button.pressed.connect(_select_tower.bind(index))
 		button.gui_input.connect(_on_tower_gui_input.bind(index))
@@ -135,7 +134,6 @@ func _ready() -> void:
 		button.disabled = not unlocked or not CampaignManager.challenge_shop_enabled()
 		if not CampaignManager.challenge_shop_enabled():
 			_set_price_text(button, "FIXED")
-			_shop_descriptions[index] = "This challenge uses a fixed train."
 			continue
 		if unlocked:
 			_set_price_text(button, "%d" % (BuildManager.towers[index].cost if index < BuildManager.towers.size() else 0))
@@ -240,7 +238,13 @@ func _apply_focus_dimming() -> void:
 func _install_shop_detail_panel() -> void:
 	shop_detail_panel = PanelContainer.new()
 	shop_detail_panel.name = "ShopDetail"
-	shop_detail_panel.custom_minimum_size.y = 132
+	# A fixed, reserved band. It must never grow with its text: the Train Yard
+	# is one column of stacked regions, and a card that expands steals height
+	# from the scrollable unit list until cards sit under it and cannot be
+	# reached. Everything inside is clipped and non-interactive.
+	shop_detail_panel.custom_minimum_size.y = DETAIL_PANEL_HEIGHT
+	shop_detail_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	shop_detail_panel.clip_contents = true
 	shop_detail_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color("2a1a10")
@@ -269,11 +273,18 @@ func _install_shop_detail_panel() -> void:
 	box.add_child(shop_detail_stats)
 	shop_detail_body = _detail_label(13, Color("efe0c2"))
 	shop_detail_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	shop_detail_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	shop_detail_body.max_lines_visible = 2
+	shop_detail_body.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	box.add_child(shop_detail_body)
 	var column: VBoxContainer = $LeftPanel/Margin/VBox
 	column.add_child(shop_detail_panel)
 	column.move_child(shop_detail_panel, remove_button.get_index())
+	# The unit list takes whatever height the fixed regions leave, and keeps a
+	# floor so it can always show a couple of cards.
+	var scroll: ScrollContainer = $LeftPanel/Margin/VBox/ScrollContainer
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.custom_minimum_size.y = 150.0
+	scroll.clip_contents = true
 
 func _detail_label(font_size: int, color: Color) -> Label:
 	var label := Label.new()
@@ -309,11 +320,8 @@ func _show_shop_detail(index: int) -> void:
 	if range_radius > 0.0:
 		stats += " · %d×%d RANGE" % [_card_range_grid(range_radius), _card_range_grid(range_radius)]
 	shop_detail_stats.text = stats
-	# A locked card keeps its numbers and its blurb — knowing what a car costs
-	# and does is half the reason to look at one before it unlocks. Only the
-	# availability note is added.
-	var blurb := String(_shop_descriptions.get(index, tower.summary))
-	shop_detail_body.text = blurb if unlocked else "UNLOCKS AT STOP %d.  %s" % [CampaignManager.tower_unlock_level(index), blurb]
+	# One line: enough to choose with. The full authored entry is in the Almanac.
+	shop_detail_body.text = tower.summary if unlocked else "UNLOCKS AT STOP %d.  %s" % [CampaignManager.tower_unlock_level(index), tower.summary]
 
 ## Shop ranges are quoted in the infowiki/workbook's NxN grid notation, the
 ## same wording Duck and Daisy use. The shipped radii were converted with the

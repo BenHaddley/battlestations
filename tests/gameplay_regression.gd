@@ -1319,10 +1319,36 @@ func _test_train_yard_readability() -> bool:
 	_check(menu.shop_detail_panel.get_index() < menu.remove_button.get_index(), "the description card should sit above REMOVE UNIT")
 
 	# Hovering a row fills the card with that unit's name, stats and blurb.
+	# The Train Yard is a column of non-overlapping regions. A card that grew
+	# with its text stole height from the unit list until shop rows sat under
+	# it and could not be clicked.
+	var scroll_rect: Rect2 = menu.get_node("LeftPanel/Margin/VBox/ScrollContainer").get_global_rect()
+	var panel_rect: Rect2 = menu.shop_detail_panel.get_global_rect()
+	_check(not scroll_rect.intersects(panel_rect), "the unit list and the info card overlap: %s vs %s" % [scroll_rect, panel_rect])
+	_check(menu.shop_detail_panel.mouse_filter == Control.MOUSE_FILTER_IGNORE, "the info card intercepts mouse input")
+	_check(panel_rect.size.y <= Menu.DETAIL_PANEL_HEIGHT + 8.0, "the info card grew past its reserved band: %.0f" % panel_rect.size.y)
+	_check(scroll_rect.size.y > panel_rect.size.y * 2.0, "the info card is crowding out the unit list (%.0f list vs %.0f card)" % [scroll_rect.size.y, panel_rect.size.y])
+	for button_name in Menu.TOWER_BUTTONS:
+		var row: Button = menu.get(button_name)
+		var row_rect: Rect2 = row.get_global_rect()
+		# Rows scrolled out of view keep rects below the fold, but the scroll
+		# viewport clips them; only rows actually on screen matter here.
+		if scroll_rect.encloses(row_rect):
+			_check(not row_rect.intersects(panel_rect), "%s is drawn under the info card" % button_name)
+	# The longest blurb in the game must not change the reserved height.
+	menu._show_shop_detail(5)
+	_check(menu.shop_detail_panel.get_global_rect().size.y <= Menu.DETAIL_PANEL_HEIGHT + 8.0, "a long description resized the info card")
+
 	# A locked car still explains itself; only its availability line changes.
 	menu._show_shop_detail(3)
 	_check(menu.shop_detail_name.text == "PASSENGER COACH", "detail card did not name the hovered unit, saw '%s'" % menu.shop_detail_name.text)
-	_check(menu.shop_detail_body.text.contains("currency generation"), "detail card lost the authored Passenger Coach copy")
+	# The shop shows the one-line summary; the authored paragraphs are Almanac
+	# material and must not reappear in this small card.
+	_check(menu.shop_detail_body.text.contains("Delta generation"), "detail card lost the Passenger Coach summary, saw '%s'" % menu.shop_detail_body.text)
+	_check(not menu.shop_detail_body.text.contains("hearty defense"), "the long authored blurb is back in the shop card")
+	_check(UnitLore.for_tower(BuildManager.towers[3]).contains("hearty defense"), "the Passenger Coach lore did not move to the Almanac source")
+	for tower in BuildManager.towers:
+		_check(UnitLore.for_tower(tower).length() > tower.summary.length(), "%s has no Almanac entry beyond its one-line summary" % tower.tower_name)
 	_check(menu.shop_detail_body.text.contains("UNLOCKS AT STOP 2"), "a locked car does not say when it unlocks, saw '%s'" % menu.shop_detail_body.text)
 	_check(menu.shop_detail_stats.text.contains("Δ110") and menu.shop_detail_stats.text.contains("175 HP"), "a locked car should still show its cost and health, saw '%s'" % menu.shop_detail_stats.text)
 	menu._show_shop_detail(0)
@@ -1334,7 +1360,7 @@ func _test_train_yard_readability() -> bool:
 	menu._show_shop_detail(2)
 	_check(menu.shop_detail_stats.text.contains("3×3 RANGE"), "the Ballast Blaster should advertise its 3×3 card range, saw '%s'" % menu.shop_detail_stats.text)
 	menu._show_shop_detail(0)
-	_check(menu.shop_detail_body.text.contains("most basic attacking unit"), "detail card lost the authored Gunner copy")
+	_check(menu.shop_detail_body.text.contains("Fires pellets"), "detail card lost the Gunner summary, saw '%s'" % menu.shop_detail_body.text)
 	menu._show_shop_detail(-1)
 	_check(menu.shop_detail_name.text == "LOCOMOTIVE" and menu.shop_detail_stats.text.contains("Δ%d" % Menu.ENGINE_COST), "the locomotive row has no description")
 

@@ -180,7 +180,9 @@ func _add_card(entry: Dictionary, seen: bool) -> void:
 	name_label.add_theme_font_override("font", HEADING)
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	copy.add_child(name_label)
-	var summary := _label(entry.summary if seen else "NOT YET DISCOVERED", 15, INK if seen else MUTED)
+	# Cards get the first sentence only; the full entry is behind the card.
+	var card_text := String(entry.summary).split("\n")[0] if seen else "NOT YET DISCOVERED"
+	var summary := _label(card_text, 15, INK if seen else MUTED)
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	copy.add_child(summary)
 	for corner in [Vector2(5, 5), Vector2(-8, 5), Vector2(5, -8), Vector2(-8, -8)]:
@@ -308,7 +310,9 @@ func _catalog() -> Array[Dictionary]:
 		result.append({"id": "enemy:" + String(profile.id), "category": 0, "title": profile.name, "summary": summary, "profile": profile, "stats": "Base health: %d • Movement: ×%.2f\nHealth increases with campaign difficulty." % [profile.hp, profile.speed]})
 	for tower in BuildManager.towers:
 		var attacking := float(CarArt.for_tower(tower).get("range", 0)) > 0
-		result.append({"id": "tower:" + tower.tower_name.to_snake_case(), "category": 2 if attacking else 1, "title": tower.tower_name, "summary": tower.summary, "tower": tower, "stats": "Cost: Δ%d • Weight: %d" % [tower.cost, tower.weight]})
+		# The long authored description lives here rather than in the shop, which
+		# only has room for the numbers and a one-line summary.
+		result.append({"id": "tower:" + tower.tower_name.to_snake_case(), "category": 2 if attacking else 1, "title": tower.tower_name, "summary": UnitLore.for_tower(tower), "tower": tower, "stats": "Cost: Δ%d • Weight: %d • Health: %d" % [tower.cost, tower.weight, tower.health]})
 	result.append({"id": "engine:steam", "category": 1, "title": "Steam Engine", "summary": "Carries your cars around the railway.", "texture": preload("res://assets/sprites/engines/Steam Engine 1.png"), "stats": "Purchase: Δ%d • Base capacity: %d" % [Menu.ENGINE_COST, (preload("res://resources/game_balance.tres") as GameBalance).carry_capacity]})
 	for kind in ["straight", "curve", "end"]:
 		var textures := {"straight": preload("res://assets/sprites/board/Rail Straight.png"), "curve": preload("res://assets/sprites/board/Rail Curve.png"), "end": preload("res://assets/sprites/board/Rail End.png")}
