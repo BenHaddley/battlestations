@@ -26,10 +26,23 @@ var _dragging_throttle := false
 var _animation: Tween
 
 func _ready() -> void:
-	custom_minimum_size = Vector2(292, 38)
+	custom_minimum_size = Vector2(400, 44)
 	size = custom_minimum_size
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	queue_redraw()
+
+## Second line of the readout: live weight against capacity and engine
+## health, refreshed every frame so coupling, selling, losing a Tender or
+## taking bites all show immediately.
+func status_line() -> String:
+	if not is_instance_valid(_convoy):
+		return ""
+	var line := "WEIGHT %d / %d" % [roundi(_convoy.total_weight()), roundi(_convoy.effective_capacity())]
+	if _convoy.unit_health:
+		line += "   ENGINE HP %d / %d" % [ceili(_convoy.unit_health.hit_points), roundi(_convoy.unit_health.max_hit_points)]
+	if _convoy.wrecked:
+		line += "   WRECKED"
+	return line
 
 func show_for(convoy: TrainConvoy, train_number: int) -> void:
 	_convoy = convoy
@@ -57,12 +70,15 @@ func _process(_delta: float) -> void:
 func _draw() -> void:
 	if _expansion < 0.05 or not is_instance_valid(_convoy):
 		return
-	var housing := Rect2(0, 0, 292, 38)
+	var housing := Rect2(0, 0, 400, 44)
 	_draw_housing(housing)
 	var direction := "→" if _convoy.current_speed >= 0.0 else "←"
 	var ratio := absf(_convoy.current_speed) / maxf(_convoy.cruise_speed, 1.0)
 	var pace := "SLOW" if ratio < 0.72 else ("FAST" if ratio > 1.28 else "NORMAL")
-	_draw_centered_text("ENGINE %d   %s %s   ↑↓/WS DRIVE" % [_train_number, direction, pace], Vector2(146, 25), 15, CREAM)
+	if _convoy.wrecked:
+		pace = "WRECKED"
+	_draw_centered_text("CONTROLLING ENGINE %d   %s %s   ↑↓/WS DRIVE" % [_train_number, direction, pace], Vector2(200, 19), 14, CREAM)
+	_draw_centered_text(status_line(), Vector2(200, 37), 13, Color("ffd98a"))
 
 func _draw_housing(rect: Rect2) -> void:
 	draw_style_box(_housing_style(), rect)

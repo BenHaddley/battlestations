@@ -2,7 +2,7 @@ extends Node
 ## Autoload. STATION/BATTLE phase clock. STATION is the build/rest window
 ## between waves; BATTLE is an active wave. STATION always ends by starting
 ## the next wave — either its departure timer running out, or the player
-## forcing it early via the existing NEXT WAVE button.
+## forcing it early via the START WAVE button.
 
 signal phase_changed(phase_name: String)
 
@@ -13,10 +13,14 @@ enum Phase { STATION, BATTLE }
 var phase: Phase = Phase.STATION
 var phase_timer: float = station_duration
 var rail_building_enabled: bool = true
-## Set by CampaignManager while the level-complete overlay is up, so the
-## station clock can't auto-start a wave the player hasn't seen the newly
-## unlocked roster for yet. Also checked by Menu's SKIP WAIT handler.
+## Set by CampaignManager while the level-complete overlay is up (and by
+## Spider Assault for its whole run), so the station clock can never start a
+## wave the player has not been shown the newly unlocked roster for.
 var paused: bool = false
+## Held by Duck and Daisy while a lesson is on screen or a station-phase
+## objective is still open. Unlike `paused`, the player may still start the
+## wave by hand; only the automatic departure countdown waits.
+var dialogue_hold: bool = false
 
 var _spawner: EnemySpawner
 
@@ -39,13 +43,31 @@ func reset() -> void:
 	phase_timer = station_duration
 	rail_building_enabled = true
 	paused = false
+	dialogue_hold = false
+	_spawner = null
 
 func _process(delta: float) -> void:
-	if paused or phase != Phase.STATION or _spawner == null:
+	if not clock_running():
 		return
 	phase_timer = maxf(0.0, phase_timer - delta)
 	if phase_timer <= 0.0 and _spawner.can_start_next_wave():
 		_spawner.start_next_wave()
+
+func clock_running() -> bool:
+	return not paused and not dialogue_hold and phase == Phase.STATION and is_instance_valid(_spawner)
+
+## True whenever the player is allowed to start the next wave by hand: the
+## station window is open, no overlay owns the clock, and the spawner is idle.
+func can_start_wave() -> bool:
+	return not paused and phase == Phase.STATION and is_instance_valid(_spawner) and _spawner.can_start_next_wave()
+
+## Starts the next wave from a player action. Returns false when nothing
+## happened, so a double-click or a stale button can never queue two waves.
+func request_wave_start() -> bool:
+	if not can_start_wave():
+		return false
+	_spawner.start_next_wave()
+	return true
 
 func _on_wave_started(_wave_number: int) -> void:
 	phase = Phase.BATTLE
@@ -58,11 +80,16 @@ func _on_wave_cleared(_wave_number: int) -> void:
 	rail_building_enabled = true
 	phase_changed.emit("station")
 
+func is_station() -> bool:
+	return phase == Phase.STATION
+
 func status_text() -> String:
-	if _spawner == null:
+	if not is_instance_valid(_spawner):
 		return ""
 	if phase == Phase.BATTLE:
 		return "%d SPIDERS LEFT" % _spawner.enemies_remaining()
+	if dialogue_hold:
+		return "DEPARTURE HELD"
 	var seconds: int = int(ceil(phase_timer))
 	return "DEPARTURE %02d:%02d" % [seconds / 60, seconds % 60]
 

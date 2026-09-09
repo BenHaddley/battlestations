@@ -47,6 +47,9 @@ var followers: Array[Node2D] = []
 var segment_starts: PackedFloat32Array = PackedFloat32Array()
 var route_length := 0.0
 var route_distance := 0.0
+## Index into TrackRenderer.routes this train drives, so a rail edit that
+## revises that route can find every convoy it has to rebind.
+var route_index: int = -1
 var smoke_timer: float = 0.0
 var current_speed: float = 0.0 ## Signed. Positive is route-forward, negative reverse.
 var requested_direction: int = 0 ## Reverser: -1 REV, 0 N, +1 FWD.
@@ -60,10 +63,33 @@ var _brake_time_multiplier: float = 1.0
 var manual_axis: int = 0
 var manual_hold_time: float = 0.0
 const REVERSE_HOLD_SECONDS := 1.15
+## Units within this distance of a spider's centre are in contact with it.
+const IMPACT_RADIUS := 48.0
+
+var unit_health: UnitHealth
+## A wrecked engine stays on the rails as rubble: its cars keep fighting
+## where they stand, but nothing moves until a new locomotive is dropped on
+## the wreck to recover the train.
+var wrecked: bool = false
+var impact_damage: int = 20
+var impact_cooldown_seconds: float = 2.0
+var impact_minimum_speed_fraction: float = 0.6
+var impact_recoil_distance: float = 8.0
+var impact_speed_retained: float = 0.35
+var impacts_landed: int = 0
 
 func _ready() -> void:
+	add_to_group("train_units")
+	var engine_hit_points := 300.0 if balance == null else float(balance.engine_health)
+	unit_health = UnitHealth.attach_to(self, engine_hit_points, "ENGINE")
+	unit_health.destroyed.connect(_on_engine_destroyed)
 	if balance == null:
 		return
+	impact_damage = balance.impact_damage
+	impact_cooldown_seconds = balance.impact_cooldown_seconds
+	impact_minimum_speed_fraction = balance.impact_minimum_speed_fraction
+	impact_recoil_distance = balance.impact_recoil_distance
+	impact_speed_retained = balance.impact_speed_retained
 	cruise_speed = balance.cruise_speed
 	max_speed = balance.maximum_speed
 	minimum_speed = balance.minimum_speed
@@ -99,12 +125,69 @@ func configure_path(track_path: PackedVector2Array) -> void:
 func _process(delta: float) -> void:
 	if path.size() < 2:
 		return
+	if wrecked:
+		current_speed = 0.0
+		queue_redraw()
+		return
 	_update_speed(delta)
 	_advance_safely(current_speed * delta)
+	_apply_impacts()
 	smoke_timer -= delta
 	if smoke_timer <= 0.0 and absf(current_speed) > 2.0:
 		_emit_smoke()
 		smoke_timer = 0.32
+	queue_redraw()
+
+## Ramming is incidental: a unit moving at a real pace deals one Gunner
+## bullet's worth to each spider it overlaps, then the train recoils a
+## little. The per-spider cooldown lives on the spider, so parking on one
+## never turns into a damage engine.
+func _apply_impacts() -> void:
+	if absf(current_speed) < cruise_speed * impact_minimum_speed_fraction:
+		return
+	var units: Array[Node2D] = [self]
+	for car in followers:
+		if is_instance_valid(car) and car.visible:
+			units.append(car)
+	var struck := false
+	for spider in get_tree().get_nodes_in_group("spiders"):
+		var body := spider as Node2D
+		if body == null or not body.has_method("take_impact"):
+			continue
+		for unit in units:
+			if unit.global_position.distance_to(body.global_position) <= IMPACT_RADIUS:
+				if body.take_impact(unit, impact_damage, impact_cooldown_seconds):
+					struck = true
+					impacts_landed += 1
+				break
+	if struck:
+		_recoil()
+
+func _recoil() -> void:
+	var direction := signf(current_speed) if not is_zero_approx(current_speed) else float(cruise_direction)
+	current_speed *= impact_speed_retained
+	_advance_safely(-impact_recoil_distance * direction)
+	# The jolt is drawn, not simulated: cars stay on their route samples.
+	var rest := engine.position
+	var tween := create_tween()
+	tween.tween_property(engine, "position", rest + Vector2(0.0, 5.0).rotated(engine.rotation), 0.05)
+	tween.tween_property(engine, "position", rest, 0.12)
+
+func _on_engine_destroyed(_unit: Node2D) -> void:
+	wrecked = true
+	current_speed = 0.0
+	release_driver_controls()
+	engine.modulate = Color(0.32, 0.28, 0.26, 1.0)
+	GameEvents.engine_wrecked.emit(self)
+	queue_redraw()
+
+## A new locomotive dropped on the wreck puts the train back into service
+## with full engine health; the surviving cars are exactly where they were.
+func recover_engine() -> void:
+	wrecked = false
+	engine.modulate = Color.WHITE
+	unit_health.repair_fully()
+	current_speed = cruise_speed * cruise_direction
 	queue_redraw()
 
 func _update_speed(delta: float) -> void:
@@ -167,31 +250,103 @@ func place_at_route_distance(distance_on_route: float) -> bool:
 	_apply_consist_positions()
 	return true
 
-func set_selected(value: bool) -> void:
+var selected_number: int = 0
+
+func set_selected(value: bool, number: int = 0) -> void:
 	selected = value
+	selected_number = number if value else 0
 	queue_redraw()
 
 func _build_route_metrics() -> void:
-	segment_starts = PackedFloat32Array()
-	route_length = 0.0
-	for index in range(path.size()):
-		segment_starts.append(route_length)
-		route_length += path[index].distance_to(path[(index + 1) % path.size()])
+	var metrics := _metrics_for(path)
+	segment_starts = metrics.starts
+	route_length = metrics.length
+
+static func _metrics_for(ring: PackedVector2Array) -> Dictionary:
+	var starts := PackedFloat32Array()
+	var length := 0.0
+	for index in range(ring.size()):
+		starts.append(length)
+		length += ring[index].distance_to(ring[(index + 1) % ring.size()])
+	return {"starts": starts, "length": length}
 
 func _sample_route(distance_on_route: float) -> Dictionary:
 	if route_length <= 0.0:
 		return {"position": global_position, "direction": Vector2.DOWN, "index": 0}
-	var wrapped := fposmod(distance_on_route, route_length)
-	for index in range(path.size()):
-		var start_distance: float = segment_starts[index]
-		var next_distance := route_length if index == path.size() - 1 else float(segment_starts[index + 1])
-		if wrapped <= next_distance or index == path.size() - 1:
-			var start := path[index]
-			var finish := path[(index + 1) % path.size()]
+	return _sample_on(path, segment_starts, route_length, distance_on_route)
+
+static func _sample_on(ring: PackedVector2Array, starts: PackedFloat32Array, length: float, distance_on_route: float) -> Dictionary:
+	var wrapped := fposmod(distance_on_route, length)
+	for index in range(ring.size()):
+		var start_distance: float = starts[index]
+		var next_distance := length if index == ring.size() - 1 else float(starts[index + 1])
+		if wrapped <= next_distance or index == ring.size() - 1:
+			var start := ring[index]
+			var finish := ring[(index + 1) % ring.size()]
 			var segment_length := maxf(next_distance - start_distance, 0.001)
 			var weight := clampf((wrapped - start_distance) / segment_length, 0.0, 1.0)
 			return {"position": start.lerp(finish, weight), "direction": (finish - start).normalized(), "index": index}
-	return {"position": path[0], "direction": Vector2.DOWN, "index": 0}
+	return {"position": ring[0], "direction": Vector2.DOWN, "index": 0}
+
+## Distance along `ring` of the closest point to `point`, or -1.0 when the
+## point is further than `tolerance` from every segment.
+static func _project_onto(ring: PackedVector2Array, starts: PackedFloat32Array, point: Vector2, tolerance: float) -> float:
+	var best := -1.0
+	var best_gap := tolerance
+	for index in range(ring.size()):
+		var start := ring[index]
+		var finish := ring[(index + 1) % ring.size()]
+		var segment := finish - start
+		var weight := clampf((point - start).dot(segment) / maxf(segment.length_squared(), 0.001), 0.0, 1.0)
+		var candidate := start + segment * weight
+		var gap := candidate.distance_to(point)
+		if gap <= best_gap:
+			best_gap = gap
+			best = float(starts[index]) + segment.length() * weight
+	return best
+
+## Adopts a revised ring for the same railway. Succeeds only when the engine
+## and every car already sit on geometry the two rings share, in the same
+## order and facing, so nothing teleports and the consist can never end up
+## straddling a stretch the new route no longer includes. Callers retry
+## later when this returns false.
+func rebind_route(new_path: PackedVector2Array) -> bool:
+	if new_path.size() < 4:
+		return false
+	var metrics := _metrics_for(new_path)
+	var new_length: float = metrics.length
+	if (followers.size() + 1) * car_spacing + occupancy_distance >= new_length:
+		return false
+	var engine_distance := _project_onto(new_path, metrics.starts, global_position, 2.0)
+	if engine_distance < 0.0:
+		return false
+	var current := _sample_route(route_distance)
+	var revised := _sample_on(new_path, metrics.starts, new_length, engine_distance)
+	if Vector2(current.direction).dot(Vector2(revised.direction)) < 0.9:
+		return false
+	for index in range(followers.size()):
+		var car := followers[index]
+		if not is_instance_valid(car):
+			continue
+		var expected: Vector2 = _sample_on(new_path, metrics.starts, new_length, engine_distance - car_spacing * (index + 1)).position
+		if expected.distance_to(car.global_position) > 3.0:
+			return false
+	if not _positions_valid_on(new_path, metrics.starts, new_length, engine_distance, followers.size()):
+		return false
+	path = new_path.duplicate()
+	_build_route_metrics()
+	route_distance = fposmod(engine_distance, route_length)
+	_apply_consist_positions()
+	return true
+
+## True when the engine or any coupled car is within `radius` of `point`.
+func occupies_point(point: Vector2, radius: float) -> bool:
+	if global_position.distance_to(point) <= radius:
+		return true
+	for car in followers:
+		if is_instance_valid(car) and car.visible and car.global_position.distance_to(point) <= radius:
+			return true
+	return false
 
 func _advance_safely(signed_distance: float) -> void:
 	movement_blocked = false
@@ -211,10 +366,15 @@ func _advance_safely(signed_distance: float) -> void:
 func _positions_valid_at(engine_distance: float, follower_count: int) -> bool:
 	if route_length <= 0.0:
 		return false
+	return _positions_valid_on(path, segment_starts, route_length, engine_distance, follower_count)
+
+func _positions_valid_on(ring: PackedVector2Array, starts: PackedFloat32Array, length: float, engine_distance: float, follower_count: int) -> bool:
+	if length <= 0.0:
+		return false
 	var positions: Array[Vector2] = []
-	positions.append(_sample_route(engine_distance).position)
+	positions.append(_sample_on(ring, starts, length, engine_distance).position)
 	for index in range(follower_count):
-		positions.append(_sample_route(engine_distance - car_spacing * (index + 1)).position)
+		positions.append(_sample_on(ring, starts, length, engine_distance - car_spacing * (index + 1)).position)
 	for first in range(positions.size()):
 		for second in range(first + 1, positions.size()):
 			if positions[first].distance_to(positions[second]) < occupancy_distance:
@@ -298,7 +458,7 @@ func _reset_attack_speed_buffs() -> void:
 	_brake_time_multiplier = 1.0
 
 func can_attach_at(world_position: Vector2) -> bool:
-	if capped:
+	if capped or wrecked:
 		return false
 	if world_position.distance_to(global_position) <= attachment_radius:
 		return true
@@ -364,15 +524,23 @@ func remove_car(car: Node2D) -> bool:
 		capped = false
 		_reset_attack_speed_buffs()
 	car.queue_free()
+	# Close the gap now rather than on the next frame so a destroyed car's
+	# neighbours never sit a frame apart from where the route says they are.
+	_apply_consist_positions()
 	queue_redraw()
 	return true
 
 func _draw() -> void:
 	var previous := Vector2.ZERO
+	if wrecked:
+		draw_arc(Vector2.ZERO, 46.0, 0.0, TAU, 8, Color(1.0, 0.45, 0.3, 0.8), 3.0, false)
+		_draw_caption("WRECKED — DROP A LOCOMOTIVE HERE", Vector2(0.0, -58.0), Color(1.0, 0.82, 0.7, 1.0))
 	if selected:
 		draw_circle(Vector2.ZERO, 43.0, Color(0.15, 0.78, 1.0, 0.12))
 		draw_arc(Vector2.ZERO, 44.0, 0.04, TAU - 0.08, 30, Color("35d9ff"), 4.0, true)
 		draw_arc(Vector2(1.5, -1.0), 48.0, 0.2, TAU - 0.16, 27, Color(0.04, 0.03, 0.02, 0.9), 2.5, true)
+		var caption_offset := Vector2(0.0, -84.0 if wrecked else -58.0)
+		_draw_caption("ENGINE %d  ·  %d / %d" % [selected_number, roundi(total_weight()), roundi(effective_capacity())], caption_offset, Color("9fe9ff"))
 	if occupancy_debug:
 		var debug_color := Color(1.0, 0.22, 0.18, 0.75) if movement_blocked else Color(0.12, 0.9, 0.95, 0.45)
 		draw_arc(Vector2.ZERO, occupancy_distance * 0.5, 0.0, TAU, 24, debug_color, 2.0, true)
@@ -389,6 +557,19 @@ func _draw() -> void:
 		if drag_active and not capped:
 			_draw_attach_target(car_local)
 		previous = car_local
+
+const CAPTION_FONT := preload("res://assets/fonts/ArchitectsDaughter-Regular.ttf")
+
+## Screen-oriented text above the engine regardless of which way the
+## locomotive is facing (the convoy node itself never rotates).
+func _draw_caption(text: String, offset: Vector2, color: Color) -> void:
+	var font: Font = CAPTION_FONT
+	var font_size := 14
+	var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	var box := Rect2(offset - Vector2(width * 0.5 + 7.0, 11.0), Vector2(width + 14.0, 22.0))
+	draw_rect(box, Color(0.07, 0.05, 0.04, 0.85), true)
+	draw_rect(box, color, false, 2.0)
+	draw_string(font, box.position + Vector2(7.0, 16.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 
 func _draw_attach_target(target: Vector2) -> void:
 	# Crooked concentric rings read as a physical placement token while still

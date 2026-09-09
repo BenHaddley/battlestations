@@ -72,24 +72,49 @@ Owner needed: designer and artist; source is the
 Evidence to save: dated decisions and an asset inventory linked to the workbook rows.
 The spreadsheet contains no completion statuses or numeric replacements for `N/A`.
 
-## Between-wave rail expansion specification
+## Between-wave rail expansion and train damage — confirm the proposed rules
 
-Owner needed: designer. Implementation should begin only after these are answered.
+Owner needed: designer. The
+[latest notes](../wiki/sources/2026-09-09-rail-building-and-train-collision-notes.md)
+settled the gesture, the provisional Δ50 price and the biting/ramming figures; the
+rest was implemented as **proposed design** and needs a yes, a no, or replacement
+values. Current answers, all documented in
+[Systems and balance](../wiki/systems-and-balance.md#rail-building-during-stations):
 
-1. What does each rail piece cost, and is rail inventory finite?
-2. May players add only, or also remove/replace existing rails?
-3. Are junctions/switches in the first version, and how does a train choose a branch?
-4. Must every edited route remain a closed loop at every click, or only on confirmation?
-5. Can a route serve multiple trains, and what collision/separation rule applies?
-6. How is a convoy rebound after editing: nearest point, station, or explicit placement?
-7. What happens when a proposed loop is too short for its current consist?
-8. Can rail cross spider lanes freely, and are station/spawn rows reserved?
-9. Are edits allowed throughout the Station phase or in a separate paused editor?
-10. What undo/cancel/refund rules apply?
+1. Inventory is unlimited; the price is Δ50 per tile and refunds are full.
+2. Players may lift the rail they laid; authored rail cannot be removed.
+3. No switching. New tiles attach only to the tile they extend; a dead end is joined
+   by a separate free click; a longer player-built detour replaces the stretch it
+   bypasses and trains still drive one closed ring.
+4. Dead ends are construction: trains never enter them and no locomotive can be
+   parked on one until it closes into a circuit.
+5. A closed player-built lobe becomes its own circuit; two trains may share the cell
+   where it touches an authored ring, with no collision between them.
+6. A convoy rebinds only when its whole consist is on shared track, retrying every
+   frame; a tile under a train cannot be lifted.
+7. A revised ring that cannot hold the consist is refused for that train.
+8. Rail may cross every lane; no rows are reserved.
+9. Trains keep moving during STATIONS; a route change applies the moment it is safe.
+10. Lifting any tile of an adopted detour restores the original stretch.
+11. Bites tick every 0.25 s at 25 DPS per spider and stack linearly; ramming deals 20
+    per spider per unit on a 2 s cooldown above 60% cruise speed; a wrecked engine is
+    recovered by dropping a locomotive on it for Δ325.
 
-Once approved, implement route revisions, connection-port tiles, transactional edits,
-closed-loop/capacity validation, safe convoy rebinding, UI costs, and dedicated tests as
-outlined in `wiki/future-runtime-rails-and-navigation.md`.
+Playtest rail building, avoidance, multiple biting spiders, impact recoil and car
+destruction before tuning, then record the approved values under `wiki/sources/`.
+
+## Rail and gun artwork deliveries
+
+Owner needed: artist.
+
+- Rail tiles are 750 px squares scaled to 67.5 world units on a 65.5-unit grid, so
+  straights overlap slightly to hide seams. If exact-fit pieces are redrawn, keep the
+  buffer stop's open end at the bottom of the image and the curve joining down and right.
+- The updated Gunner and Chaingunner artwork on the shared Drive has not been added to
+  the repository. Deliver each as a separate chassis image and turret image (the turret
+  drawn pointing up, the chassis pointing down) so the placed cars keep swivelling; the
+  build renders the same pair on every surface, so replacing `Gunner Car Base/Top` and
+  `Minigun Base/Top` updates the shop, previews, almanac and placed cars together.
 
 ## Release operations
 

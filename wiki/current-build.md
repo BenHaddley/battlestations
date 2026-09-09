@@ -13,7 +13,11 @@ The build should be treated as a scaffold, not a finished playable slice — but
 core drag → deploy → patrol → shoot/slow → kill → currency → wave-scaling loop is now verified
 working end to end, including in an actual Web-exported browser build (see
 [Roadmap, Phase 4](../roadmap.md) for the full verification notes and the bugs that
-testing-in-browser caught that code review and the editor alone did not).
+testing-in-browser caught that code review and the editor alone did not). The
+2026-09-09 direction — STATIONS rail building, spider avoidance and biting, unit
+health and wrecks, range previews, the controlled-train readout and per-profile
+Duck and Daisy lessons — is implemented and covered by the headless regression
+suite (`tests/GameplayRegression.tscn`); it has not yet been playtested by a person.
 
 ## Running the project
 
@@ -50,12 +54,17 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 | `BuildManager` | Global tower catalog and current shop selection |
 | `UIManager` | Prevents board clicks passing through UI |
 | `GameEvents` | Global `enemy_destroyed` signal used for wave accounting |
-| `Main` | Generates the railway, spawns one TrainConvoy per route, and routes car purchases to whichever train the drop lands near |
+| `Main` | Generates the railway, spawns one TrainConvoy per route, routes car purchases to whichever train the drop lands near, registers coupled cars as obstacles with health, rebinds convoys after rail edits, and recovers wrecked engines when a locomotive is dropped on them |
 | `EnemySpawner` | Wave timing, alive count, and a hand-tuned gentle-start difficulty/spawn-rate/HP curve |
-| `EnemyMovement` + `Health` | Wave-scaled lane traversal speed, staged dot transformations, slowing, damage, death, and bounty |
-| `TowerData` | Train shop data, scene, description, price, and drag icon |
-| `TrackRenderer` | Builds 2+ closed concentric oval railway loops inside the playable board, validated for lane coverage and full-loop traversability |
-| `TrainConvoy` | Reusable scene (`TrainConvoy.tscn`); each instance samples its engine and attached cars at fixed distances along a closed route, including safe acceleration and reversing |
+| `EnemyMovement` + `Health` | Wave-scaled lane traversal speed, staged dot transformations, slowing, damage, death, bounty, plus train avoidance (sidestep to a clear lane), biting when boxed in, and ramming impacts |
+| `TowerData` | Train shop data, scene, description, price, drag icon, weight, and workbook health |
+| `TrackRenderer` | Owns the closed routes and the rail graph: authored/generated loops, STATIONS-built spurs, dead ends and join-closed detours; draws every cell from its connection set (straight, curve, buffer stop, junction pairs) and reroutes a ring when a longer player-built detour is joined |
+| `RailBuilder` | STATION hover/plus construction, join markers for dead ends, right-click removal with refunds, and the specific refusal reasons |
+| `TrainConvoy` | Reusable scene (`TrainConvoy.tscn`); each instance samples its engine and attached cars at fixed distances along a closed route, including safe acceleration and reversing, safe rebinding to a revised route, ramming impacts with recoil, and the wreck/recover states |
+| `UnitHealth` | Hit points on every engine and coupled car, bite/ram damage, screen-oriented health bar and jaws marker, debris burst and caption on destruction |
+| `RangePreview` + `CarPlacementGhost` | The real acquisition radius around a hovered or selected car and around the track-snapped placement preview |
+| `CarArt` | One chassis/turret art source for shop rows, drag previews, ghosts, almanac cards and upgrade portraits |
+| `TutorialDirector` + `DialogueOverlay` | Per-profile Duck and Daisy lessons with highlighted objectives, STATION scheduling, and replay |
 | `BattlefieldOverlay` | Draws subdued spider-lane entrances, lane guides, and the station danger line |
 | `Turret` + `Bullet` | Convoy following, target acquisition, rotation, firing, homing, and damage — base class for Chaingunner, Ballast, and Coal Cannon |
 | `TurretMinigun` | The Chaingunner Car — seven-projectile spread burst followed by a four-second cooldown (filenames kept as Minigun, its earlier working name) |
@@ -64,7 +73,8 @@ Pages on push to `main`, once the repo is pushed to GitHub with Pages enabled.
 | `PassengerCoach` | No weapon — passive Delta-income timer while attached and visible |
 | `BrakeVan` | No weapon — caps its train's car count, grants every other car an attack-speed multiplier, and trims accel/coast time |
 | `Tender` | No weapon — grants +500 carry capacity only when coupled directly behind the engine |
-| `Menu` | Run HUD, shop drag gestures, STATION/BATTLE schedule, HP rail, remove-any-car mode, and wave control |
+| `Menu` | Run HUD, shop drag gestures, STATION/BATTLE schedule, HP rail, remove-any-car mode, and the START WAVE control (offered in every STATION window, withdrawn during BATTLE and after the level ends) |
+| `PhaseManager` | STATION/BATTLE clock with two holds: the level-complete pause and the lesson hold that stops only the automatic departure |
 
 The roster is deliberately exactly the infowiki's documented turrets and cars (see
 [Infowiki unit cards](infowiki-cards.md)) — Slomo (no card) and an earlier standalone
@@ -123,33 +133,36 @@ The failure presentation now slightly darkens the live battlefield and fades in 
 supplied `GAME_OVER_TEXT` artwork. Restart/retry and Main Menu remain interactive
 actions beneath the title treatment.
 
-- The Train Yard list can attach all seven cars documented in the infowiki (Gunner Car,
-  Chaingunner Car, Ballast Blaster, Coal Cannon, Passenger Coach, Brake Van, Tender —
-  see [Infowiki unit cards](infowiki-cards.md)). Future cars remain visible as dimmed
-  illustrated previews labelled with the campaign stop that unlocks them, so the new
-  cabinet stays populated without bypassing progression. There is no per-car upgrade system — it was
-  removed entirely (it was dead code left over from the click-to-place Plot design
-  that predates the drag/drop train convoy, and had no reachable UI). REMOVE now
-  detaches whichever car is clicked, anywhere in the train, not just the tail; there
-  are still no refunds (a removed car's cost is not returned) or manual reordering.
-- There is no victory or restart flow. Playback controls are present and waves now
-  advance automatically, while the wider run-state flow remains prototype-level.
-- Wave number and remaining spiders are displayed, but there is no countdown.
-- All supplied spider artwork is spawnable through one shared scene and the
-  campaign-weighted `EnemyRoster`; specialist roles unlock progressively.
-- Target selection uses the first overlapping physics body, with no explicit
-  first/last/strongest targeting policy.
+- The Train Yard list can attach all eight documented cars (Gunner Car, Chaingunner
+  Car, Ballast Blaster, Coal Cannon, Passenger Coach, Brake Van, Tender, Mail Carrier).
+  Future cars remain visible as dimmed illustrated previews labelled with the campaign
+  stop that unlocks them. Cars have a run-local upgrade/sell card; REMOVE detaches
+  whichever car is clicked, without a refund, and there is no manual reordering.
+- STATIONS rail building is implemented with the proposed join/reroute/removal rules in
+  [Systems and balance](systems-and-balance.md#rail-building-during-stations). Trains
+  still drive closed rings only: there is no junction switching, no shuttle movement
+  on dead ends, and no collision between two trains sharing a cell. The Δ50 price is
+  provisional and rail inventory is unlimited.
+- Spiders steer round trains and bite when boxed in; engines and cars carry workbook
+  health, destroyed cars drop out of the consist and wrecked engines can be recovered.
+  All numbers are the notes' provisional figures. The Barrier Car, the workbook's
+  other new units, Strong/All/Webs targeting priorities and Coal knockback probability
+  are not implemented.
+- Guns acquire the nearest spider within their documented radius. The earlier build
+  acquired through the car's scaled physics area (about half the radius), so range
+  balance has effectively changed and needs a playtest.
+- Gunner and Chaingunner render the same chassis/turret pair everywhere (shop row,
+  drag preview, ghost, almanac, upgrade card, placed car). The updated artwork Gubgub
+  added to the shared Drive is not in the repository yet; once imported as chassis
+  and turret pieces it replaces `Gunner Car Base/Top` and `Minigun Base/Top`.
 - Spiders stop at the station and attack it repeatedly rather than disappearing.
   They remain targetable and keep the wave active until killed. Station HP is a
   separately tunable 60-point pool; no station gun has been added.
-- Campaign boards now use deterministic artist-reference layouts and receive one
-  train per closed circuit, so later boards can open with three or four distinct
-  trains. There are still no purchasable engines or true junctions/switches; each
-  circuit is an independent closed route.
-- Attaching a car still targets the nearest valid convoy. Engines can now be clicked
-  to expand a hand-drawn mechanical control stand with a separate reverser, six-notch
-  draggable throttle, live speed bars and actual direction indication. Deselecting
-  collapses it into a small SELECT A LOCOMOTIVE plate and returns automatic cruise.
+- Campaign boards use deterministic artist-reference layouts and receive one train
+  per closed circuit. Additional locomotives are purchasable and can be parked on any
+  free ring, including a player-built one.
+- Spider bounties and the workbook's cost/carry/buff differences are unchanged pending
+  the designer decisions in [roadmap blockers](../docs/roadmap-blockers.md).
 
 Resolved this session (were previously listed here): the slow effect now reduces
 speed relative to each enemy's own base speed and safely extends under overlapping

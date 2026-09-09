@@ -23,6 +23,8 @@
 | 2026-08-28 | Gubgub playtested the current build and requested less-obstructive engine controls, lower engine speeds/no full stop, reduced spider bounty, stronger Passenger Coach dependence, and placeable/purchasable engines. Spider death feedback was praised. | Documented |
 | 2026-08-29 | Gubgub documented fixed-direction armed cars, ordinary-spider train evasion, a possible ramming engine, the two-tile Barrier Car and spider biting behavior, a future discovery gallery, and art redraws in progress. | Documented |
 | 2026-09-09 | Imported the 25-unit `Assets to make.xlsx` roster into the wiki and roadmap; workbook authorship and revision date remain unspecified. | Documented |
+| 2026-09-09 (recorded) | Supplied follow-up prioritizes STATIONS rail building at provisional Δ50, train avoidance/biting and impact recoil, and corrected Gunner/Chaingunner artwork. Original conversation date unspecified. | Documented |
+| 2026-09-09 | STATIONS rail building, spider avoidance and biting, workbook unit health with destruction and wrecks, ramming recoil, range previews, the controlled-train readout, per-profile Duck and Daisy lessons, and the START WAVE/focus fixes were implemented with headless regression coverage. The join/reroute/removal and destruction rules are proposed design awaiting confirmation. | Implemented |
 | Repository history | The Unity project was snapshotted, then scaffolded into Godot 4. | Implemented/archived |
 
 ## Lost concept sheet
@@ -53,6 +55,8 @@ the raw notes for identification, but not repeated here as a usable reference.
 - The ownership and intended status of `Train 45.mp3` need confirmation.
 
 ## Raw and archived sources
+
+- [Rail building and train collision follow-up](sources/2026-09-09-rail-building-and-train-collision-notes.md) — STATIONS hover/plus construction, provisional rail and bite values, impact/recoil, and reported ghost/placed gun artwork mismatch.
 
 - [Assets to make.xlsx](sources/Assets%20to%20make.xlsx) — `Sheet1!A1:L26`, 25 unit concepts with costs, footprints, carry/weight, health, range, power, speed, targeting priorities, and roles. See the [transcription and build comparison](asset-workbook.md); distinct from the deleted 2023 sheet.
 

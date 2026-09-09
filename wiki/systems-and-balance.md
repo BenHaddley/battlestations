@@ -21,13 +21,16 @@ The currency is named **Delta** (`Δ`) throughout the HUD, per the
 | Specialist bounty | 8–45, plus 8 per campaign level |
 | Passenger Coach income | 32 every 8 seconds while coupled |
 | Wave completion bonus | 35 + 12 × wave number |
+| Rail tile (STATIONS only) | 50, refunded in full when lifted |
+| Locomotive, or recovering a wrecked engine | 325 |
 
 Dropping a shop car on a valid rail spends its `TowerData.cost`, but only after
 `TrainConvoy.attach_car()` also confirms the target train has capacity — see
 [Train weight and momentum](#train-weight-and-momentum). Invalid, off-track, or
 over-capacity drops spend nothing. Coupled cars can also be selected for the active
-upgrade/sell panel. Currency sinks are purchases and upgrades; its
-only sources are spider bounties, wave-completion bonuses, and Passenger Coach income.
+upgrade/sell panel. Currency sinks are purchases, upgrades, locomotives, and rail
+tiles; its only sources are spider bounties, wave-completion bonuses, Passenger Coach
+income, and rail refunds.
 
 ### Documented balance direction
 
@@ -52,27 +55,40 @@ Six cars can be dragged from the shop onto a train. Each has a `TowerData` resou
 combat cars (they extend `scripts/turret.gd` or reimplement its targeting loop);
 Passenger Coach, Brake Van, and Tender are non-combat utility cars.
 
-| Car | Cost | Weight | Rate of fire | Range | Damage |
-|---|---:|---:|---:|---:|---|
-| Gunner Car | 150 | 150 | 0.45/s (≈2.2s) | 315 | 1 direct, single target |
-| Chaingunner Car | 275 | 200 | 0.25/s (4s), 7-shot burst | 315 | 1 per pellet (7/burst) |
-| Ballast Blaster | 200 | 200 | 0.45/s (≈2.2s) | 135 | 2 to every target in range |
-| Coal Cannon | 300 | 225 | 0.22/s (≈4.5s) | 225 | 3 direct + 1 splash |
-| Passenger Coach | 50 | 125 | — | — | none — generates Delta |
-| Brake Van | 250 | 0 | — | — | none — caps train, buffs it |
-| Tender | 50 | 50 | — | — | none — +500 capacity behind the engine |
+| Car | Cost | Weight | Health | Rate of fire | Range | Damage |
+|---|---:|---:|---:|---:|---:|---|
+| Gunner Car | 150 | 150 | 200 | 0.45/s (≈2.2s) | 315 | 20 direct, single target |
+| Chaingunner Car | 275 | 200 | 200 | 0.25/s (4s), 7-shot burst | 315 | 4 per pellet (7/burst) |
+| Ballast Blaster | 200 | 200 | 200 | 0.45/s (≈2.2s) | 135 | 8 to every target in range |
+| Coal Cannon | 300 | 225 | 225 | 0.22/s (≈4.5s) | 225 | 12 direct + 4 splash, knockback |
+| Mail Carrier | 200 | 150 | 150 | 3/s | 225 | 4 per envelope, random recipient each shot |
+| Passenger Coach | 110 | 125 | 175 | — | — | none — generates Delta |
+| Brake Van | 250 | 0 | 200 | — | — | none — caps train, buffs it |
+| Tender | 50 | 50 | 125 | — | — | none — +500 capacity behind the engine |
+
+Health is the [asset workbook](asset-workbook.md) Health column, carried on each
+`TowerData` (`health`) and installed on the coupled car by `UnitHealth`
+(`scripts/unit_health.gd`); the Steam Engine's 300 lives in `game_balance.tres`. See
+[Train damage](#train-damage-avoidance-biting-ramming-and-wrecks) for what wears it
+down. Cost and weight remain the earlier infowiki values; the workbook's differing
+figures are still a pending designer decision.
 
 Range is the infowiki cards' `NxN` grid notation converted to the shipped world-unit
 radius as `radius = (N / 2) * path_step` (`path_step = 65.5`) — this conversion factor
 isn't stated on the cards themselves, so treat it as a judgment call, not a recovered
-fact. All four combat cars fire a homing projectile that flies at a fixed speed toward
-its locked target's current position each frame (Gunner Car 900 u/s, Chaingunner Car
-1050 u/s, Coal Cannon's cannonball 480 u/s); Ballast Blaster instead hits everyone
-already inside its own short range directly, with no travelling projectile.
+fact. Acquisition now measures that radius directly from the car (workbook priority
+**Close**: the nearest live spider inside it). It previously used the car's physics
+`TargetingArea`, which the placed car's 0.54 root scale shrank to roughly half the
+documented radius, so guns acquired much later than their cards claimed. Placement
+ghosts, the hovered-car ring and the upgrade card all draw this same radius, and none
+is drawn for a utility car. All four projectile cars fire a homing projectile toward
+their locked target's current position each frame (Gunner Car 6000 u/s swept,
+Chaingunner Car 1050 u/s, Coal Cannon's cannonball 480 u/s); Ballast Blaster instead
+hits everyone already inside its own short range directly, with no travelling projectile.
 
 **Gunner Car** (`scripts/turret.gd`, `scenes/Turret.tscn`) — the baseline single-target
-car every other combat car's turret behavior is built on: acquire the nearest enemy
-overlapping its `TargetingArea`, rotate to face it, fire on a timer.
+car every other combat car's turret behavior is built on: acquire the nearest spider
+within `targeting_range`, rotate to face it, fire on a timer.
 
 **Chaingunner Car** (`scripts/turret_minigun.gd`, extends Turret — filenames kept as
 Minigun, its earlier working name, per its infowiki card) — overrides `_shoot()` to
@@ -187,24 +203,71 @@ track generator remains playable and available for later modes.
 The acquisition model is implemented: campaign levels grant one starting engine,
 and a locomotive can be dragged from the Train Yard onto an empty rail stretch for
 Δ325. Each purchased engine is an independent train that can be selected and driven.
+Clicking an engine marks it with a ring and an `ENGINE n · weight / capacity` tag,
+and the compact readout at the top of the board lists weight, capacity and engine HP;
+all three refresh every frame, so coupling, selling, losing a Tender or taking bites
+shows at once.
 
-## Documented combat movement direction
+## Rail building during STATIONS
 
-Gubgub's latest playtest feedback withdraws the fixed-direction experiment and
-requests the original swivelling guns. Gunner and Chaingunner now default to
-rotating turrets with circular targeting and targeted projectiles. The directional
-prototype remains available only as an opt-in debug sandbox comparison.
+Implemented from the [2026-09-09 notes](sources/2026-09-09-rail-building-and-train-collision-notes.md)
+in `scripts/rail_builder.gd` and `scripts/track_renderer.gd`. The notes settle the
+gesture and the provisional price; the rules below for joining, rerouting, removal
+and persistence are **proposed design**, recorded in [Open questions](open-questions.md)
+until the designer confirms them.
 
-Ordinary trains should not deal collision damage. A spider threatened by a normal-
-speed train moves one tile backward or sideways before impact. A distinct future
-engine concept may carry only one car and travel fast enough to damage spiders by
-ramming; it has no finished assets or detailed stats.
+| Rule | Implemented behaviour |
+|---|---|
+| When | STATION only. The plus signs, join markers and right-click removal vanish the moment a wave starts and return when it clears. |
+| Laying | Hover any rail tile; plus signs appear on its empty orthogonal neighbours. A click lays one tile connected only to the tile you hovered, for **Δ50**, charged only after the tile exists. The hover stays anchored on the new tile so a run can be laid click by click. |
+| Refusals | Insufficient Delta, a tile that already holds rail, a tile not touching the hovered rail, or joining two separate circuits each produce a specific banner and change nothing. |
+| Dead ends | A tile with one connection is drawn with the supplied `Rail End` buffer stop. Trains never enter a dead end, and a locomotive cannot be parked on one. |
+| Joining | A dead end beside rail of the same circuit shows a join ring between the two; clicking it connects them for free. Only dead ends can be joined, so the network never becomes a lattice. Joining rail from a different circuit is refused. |
+| Rerouting | A join closes a cycle. If that cycle leaves a train's ring at one cell, returns at another, and its player-built part is longer than the stretch it bypasses, the ring adopts the detour and the bypassed stretch stays as a siding. Shortcuts, lobes that touch the ring at a single cell, and detours through sidings never change a route. |
+| Rebinding | A convoy adopts its revised ring only when its engine and every car already sit on track both rings share, facing the same way; until then it keeps driving the old geometry and retries every frame. Nothing ever teleports. |
+| New circuits | A closed lobe or spur cycle that no train drives becomes a circuit of its own the moment a locomotive is dropped on it. |
+| Removing | Right-click a tile you laid to lift it for a full **Δ50** refund. Authored rail, rail a train is standing on, and any removal that would strand track or leave a ring with no way round are refused. Lifting any tile of an adopted detour drops the whole detour from the ring, restoring the original stretch; the other detour tiles remain as spurs. |
+| Persistence | Built rail is run-local. It survives every wave of the level and is reset with the level whenever the scene reloads: restart, replay from Level Select, continuing a save, or the next campaign stop. |
+| Art | Every cell is drawn from its connection set — straight, curve, buffer stop, and for junctions one piece per rail pair — so junctions and crossings refresh as soon as a neighbour changes. |
 
-A planned **Barrier Car** is a heavy, two-tile-long divider that behaves as a wall.
-If a train blocks a spider and no route around it exists within three blocks, the
-spider attacks the train by biting it; enough damage destroys an individual car.
-Health, bite cadence, path-search interpretation, placement restrictions, and what
-happens to a consist after a middle car is destroyed remain unspecified.
+## Train damage: avoidance, biting, ramming and wrecks
+
+Implemented from the same notes in `scripts/enemy_movement.gd`, `scripts/unit_health.gd`
+and `scripts/train_convoy.gd`. The bite rate, ramming damage and recoil are the
+notes' provisional figures; the tick, stacking, search-distance and destruction rules
+are proposed design.
+
+| Parameter | Default |
+|---|---:|
+| Bite damage | 25 per second per spider, applied every 0.25 s (6.25 per tick); several spiders stack linearly |
+| Look-ahead | 130 units; contact 56 units; unit corridor half-width 34 units |
+| Detour search | up to 3 lanes each side, nearest clear lane first, the side away from the unit tried first |
+| Ramming damage | 20 (one Gunner bullet) per spider per unit, 2 s cooldown, only above 60% of cruise speed |
+| Recoil | train speed cut to 35% and nudged 8 units back |
+| Engine health | 300 |
+
+- Every engine and coupled car is an obstacle. A spider that sees one ahead in its
+  corridor first looks for a clear lane to its left or right and steps into it
+  diagonally, then continues down the new lane. Empty rail never blocks a spider.
+- When no lane within reach is clear and the unit is in contact, the spider stops and
+  bites, showing fangs toward its target; the bitten unit flashes, shows a jaws marker
+  and a health bar. A moving train leaves contact almost immediately, so biting mostly
+  punishes crawling or long trains parked across a lane.
+- A spider whose target drives away, is destroyed or becomes a wreck resumes walking
+  the next physics frame; a sidestep that cannot complete within 3 s is abandoned. A
+  frozen spider therefore cannot hold a wave open.
+- A destroyed car is removed and the consist closes the gap on its own. Whatever it
+  gave — firepower, income, the Tender's capacity, the Brake Van's cap and buffs — goes
+  with it. A train left over capacity keeps its cars but cannot couple more.
+- A destroyed engine becomes a **wreck**: the train stops, its surviving cars keep
+  firing where they stand, spiders walk past the rubble, and nothing can be coupled.
+  Dropping a locomotive from the Train Yard onto the wreck (Δ325) restores full engine
+  health and the train rolls again.
+- Ramming is incidental: the per-spider cooldown and the recoil mean parking on a
+  spider never out-damages a gun.
+
+The planned **Barrier Car** (workbook health 1250, two tiles) is not implemented;
+the obstacle rules above are what it would plug into.
 
 ## Removing cars
 
@@ -311,6 +374,43 @@ spawn rate  = min(0.4 × W^0.75, 15) enemies/second
 Enemy archetypes come from the campaign-unlocked weighted roster. In debug builds,
 F8 starts wave 10 when the spawner is idle. Completed waves print `WAVE TELEMETRY`
 with starting/ending Delta, income, spending, net change, and kills.
+
+### Station clock and the START WAVE control
+
+`PhaseManager` runs the 45-second departure countdown only while nothing owns the
+clock. Two holds exist: `paused` (set by the level-complete flow and Spider Assault,
+which also disables the wave button) and `dialogue_hold` (set by Duck and Daisy while
+a lesson or a STATION objective is open, which only stops the automatic countdown).
+The button reads `START WAVE n` in every STATION window from the first wave onward,
+`WAVE n UNDERWAY` during BATTLE, and `LEVEL COMPLETE` once the final wave clears;
+`request_wave_start()` refuses a second press while a wave runs and refuses entirely
+after the level is finished, so a wave can never start twice or underneath the
+level-complete card. Up/Down/W/S drive trains only while the board is the active
+surface: no HUD control can hold keyboard focus, and the arrow keys are consumed
+before interface focus navigation whenever no card or dialogue is open.
+
+## Duck and Daisy lessons
+
+`scripts/tutorial_director.gd` keys every lesson and records completion per profile
+in `tutorial.cfg`, so a fresh profile sees the opening again, a continued save is
+introduced to every car it has unlocked, and a skipped lesson never nags twice.
+Objectives highlight the control or unit involved (a pulsing frame around a shop row
+or the START WAVE button, a ring around an engine or car, with an arrow from the
+objective tag) and advance when the player performs the action. Guided tasks are set
+only when the wallet, capacity and trains on the board allow them; otherwise the
+lesson is information only. Lessons hold the departure clock but never remove the
+player's START WAVE control: starting a wave over an open objective skips that lesson.
+Battle events (first bite, first destroyed car, first wreck) are explained at the next
+STATION rather than mid-wave. The pause card's **REPLAY DUCK & DAISY LESSONS** forgets
+the profile's progress; New Game does the same.
+
+| Lesson | When | Objective |
+|---|---|---|
+| Opening | Boiler Room, new profile or New Game | couple a Gunner, then START WAVE |
+| Payout, driving, rails, upgrades | first STATION after a wave, once each | drive with Up/Down, lay a rail tile, open a car's upgrade card |
+| One per car (Gunner … Mail Carrier) | the first STATION on a level where it is unlocked | couple one, when affordable |
+| Biting, destroyed car, wreck | first STATION after the event | none |
+| Final wave, level ending | as before | none |
 
 ## Provenance
 

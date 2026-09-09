@@ -9,9 +9,10 @@ class_name LevelData
 ## Indices into BuildManager.towers — the cumulative roster available in the
 ## shop for this level (and every level after it).
 @export var unlocked_tower_indices: Array[int] = []
-## Index of the car newly introduced this level, for the level-complete
-## reward callout. -1 if nothing new (the first level).
-@export var new_tower_index: int = -1
+## Indices of the cars newly introduced this level, for the level-complete
+## reward callout. Empty if nothing new (the first level). A level can unlock
+## several cars at once.
+@export var new_tower_indices: Array[int] = []
 ## Index into TrackRenderer's authored reference-layout library. -1 retains
 ## procedural generation (used by post-campaign Open Rails).
 @export var track_layout_index: int = -1

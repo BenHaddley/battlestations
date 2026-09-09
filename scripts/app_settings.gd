@@ -34,6 +34,32 @@ func _ensure_buses() -> void:
 		if AudioServer.get_bus_index(bus_name) < 0:
 			AudioServer.add_bus()
 			AudioServer.set_bus_name(AudioServer.bus_count - 1, bus_name)
+	_ensure_sfx_limiter()
+
+## Simultaneous gunfire, kills and bites must never sum into clipping or a
+## sudden loud frame; a brick-wall limiter on the SFX bus keeps the mix
+## under a fixed ceiling whatever the wave throws at it.
+func _ensure_sfx_limiter() -> void:
+	var sfx := AudioServer.get_bus_index("SFX")
+	if sfx < 0:
+		return
+	for effect_index in range(AudioServer.get_bus_effect_count(sfx)):
+		if AudioServer.get_bus_effect(sfx, effect_index) is AudioEffectLimiter:
+			return
+	var limiter := AudioEffectLimiter.new()
+	limiter.ceiling_db = -1.0
+	limiter.threshold_db = -6.0
+	limiter.soft_clip_db = 2.0
+	AudioServer.add_bus_effect(sfx, limiter)
+
+func sfx_limiter_installed() -> bool:
+	var sfx := AudioServer.get_bus_index("SFX")
+	if sfx < 0:
+		return false
+	for effect_index in range(AudioServer.get_bus_effect_count(sfx)):
+		if AudioServer.get_bus_effect(sfx, effect_index) is AudioEffectLimiter:
+			return true
+	return false
 
 func _set_bus(bus_name: String, percent: float) -> void:
 	var index := AudioServer.get_bus_index(bus_name)

@@ -160,7 +160,7 @@ func _show_almanac() -> void:
 	grid.add_theme_constant_override("v_separation", 10)
 	scroll.add_child(grid)
 	for tower in BuildManager.towers:
-		_add_almanac_card(grid, "tower:%s" % tower.tower_name.to_snake_case(), tower.tower_name, tower.summary, tower.icon)
+		_add_almanac_card(grid, "tower:%s" % tower.tower_name.to_snake_case(), tower.tower_name, tower.summary, CarArt.icon_for(tower))
 	for profile in EnemyRoster.PROFILES:
 		var data := EnemyDataResource.new()
 		data.enemy_id = String(profile.id)

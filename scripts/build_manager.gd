@@ -20,6 +20,9 @@ extends Node
 ]
 
 var selected_tower: int = 0
+## Per-tower preview art and composited icons built lazily by CarArt.
+var car_art_cache: Dictionary = {}
+var car_icon_cache: Dictionary = {}
 
 func get_selected_tower() -> TowerData:
 	if selected_tower < 0 or selected_tower >= towers.size():

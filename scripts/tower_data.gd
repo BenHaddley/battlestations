@@ -11,3 +11,7 @@ class_name TowerData
 ## check lives on the car's own instantiated scene, not here. Kept in sync so the
 ## shop UI (which reads this resource, not the scene) isn't misleading.
 @export var weight: float = 1.0
+## Hit points from the asset workbook's Health column. Biting spiders and
+## ramming wear this down; at zero the car is destroyed and the train closes
+## the gap.
+@export var health: int = 200

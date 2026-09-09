@@ -53,9 +53,9 @@ func _build_interface() -> void:
 	card.anchor_right = 0.5
 	card.anchor_bottom = 0.5
 	card.offset_left = -260
-	card.offset_top = -290
+	card.offset_top = -322
 	card.offset_right = 260
-	card.offset_bottom = 290
+	card.offset_bottom = 322
 	card.add_theme_stylebox_override("panel", _paper_style(Color("e7c98e"), Color("29150e"), 9))
 	shade.add_child(card)
 
@@ -131,6 +131,7 @@ func _build_interface() -> void:
 	fullscreen_check.toggled.connect(_on_fullscreen_toggled)
 	content.add_child(fullscreen_check)
 
+	_add_button(content, "LessonsButton", "REPLAY DUCK & DAISY LESSONS", _replay_lessons, Color("3f6d8a"))
 	_add_button(content, "RestartButton", "RESTART THIS JOB", _restart_current, Color("b46a28"))
 	_add_button(content, "TitleButton", "RETURN TO TITLE", _return_to_title, Color("8b201b"))
 
@@ -184,6 +185,18 @@ func _on_mute_toggled(enabled: bool) -> void:
 func _on_fullscreen_toggled(enabled: bool) -> void:
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if enabled else DisplayServer.WINDOW_MODE_WINDOWED)
 	_save_settings()
+
+## Forgets this profile's lesson progress so Duck and Daisy teach again from
+## the next STATION, including every car already unlocked.
+func _replay_lessons() -> void:
+	TutorialDirector.reset_progress()
+	var director := get_tree().current_scene.get_node_or_null("TutorialDirector") as TutorialDirector
+	if director:
+		director.reload_progress()
+	var button := get_node_or_null("Shade/Card/Margin/Content/LessonsButton") as Button
+	if button:
+		button.text = "LESSONS WILL REPLAY"
+		button.disabled = true
 
 func _restart_current() -> void:
 	CampaignManager.reset_for_current_level()

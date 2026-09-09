@@ -135,7 +135,30 @@ func _ready() -> void:
 	station_progress_panel.skip_wait_pressed.connect(_on_advance_pressed)
 	PhaseManager.phase_changed.connect(_on_phase_changed)
 	_create_drag_preview()
+	_release_hud_focus()
 	_on_phase_changed(PhaseManager.phase_label().to_lower())
+
+## The battle HUD is pointer-driven. Up/Down (and W/S) belong to the train
+## being driven, so no HUD control may ever hold keyboard focus — otherwise
+## the same key press that throttles the engine would also walk the focus
+## highlight through the Train Yard. Menus and dialogue keep their own focus.
+func _release_hud_focus() -> void:
+	for button_name in TOWER_BUTTONS:
+		var tower_button: Button = get(button_name)
+		if tower_button:
+			tower_button.focus_mode = Control.FOCUS_NONE
+	for control in [remove_button, speed_button, pause_button, advance_button, task_health, task_no_leaks, task_train]:
+		if control:
+			control.focus_mode = Control.FOCUS_NONE
+	if station_progress_panel and station_progress_panel.skip_button:
+		station_progress_panel.skip_button.focus_mode = Control.FOCUS_NONE
+	var engine_row: Button = $LeftPanel/Margin/VBox/ScrollContainer/ShopList.get_node_or_null("EngineRow")
+	if engine_row:
+		engine_row.focus_mode = Control.FOCUS_NONE
+	var scroll: ScrollContainer = $LeftPanel/Margin/VBox/ScrollContainer
+	scroll.focus_mode = Control.FOCUS_NONE
+	if scroll.get_v_scroll_bar():
+		scroll.get_v_scroll_bar().focus_mode = Control.FOCUS_NONE
 
 func _install_wave_banner() -> void:
 	wave_banner = Label.new()
@@ -177,10 +200,11 @@ func _install_placement_banner() -> void:
 	placement_banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	placement_banner.anchor_left = 0.5
 	placement_banner.anchor_right = 0.5
+	# Sits just below the controlled-train readout so the two never overlap.
 	placement_banner.offset_left = -300.0
-	placement_banner.offset_top = 18.0
+	placement_banner.offset_top = 54.0
 	placement_banner.offset_right = 300.0
-	placement_banner.offset_bottom = 64.0
+	placement_banner.offset_bottom = 98.0
 	placement_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	placement_banner.z_index = 510
 	placement_banner.modulate.a = 0.0
@@ -349,7 +373,8 @@ func _style_train_yard() -> void:
 			var tray_icon := TextureRect.new()
 			tray_icon.name = "TrayIcon"
 			tray_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			tray_icon.texture = icon.texture
+			# The tray shows the same chassis and turret the coupled car uses.
+			tray_icon.texture = CarArt.icon_for(BuildManager.towers[index]) if index < BuildManager.towers.size() else icon.texture
 			tray_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			tray_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			tray_icon.position = Vector2(9, -13)
@@ -461,15 +486,22 @@ func _process(_delta: float) -> void:
 		# One node is the departure point, followed by one checkpoint per wave.
 		station_progress_panel.set_progress_fraction(journey_progress, total_waves + 1)
 		station_progress_panel.set_phase("BATTLE" if is_battle else "STATION", live_status, "DEFEND • FIRE • SURVIVE" if is_battle else "PREPARE • BUY • COUPLE")
-		if station_lost:
-			station_progress_panel.set_button_state("STATION LOST", true)
-		elif PhaseManager.paused:
-			station_progress_panel.set_button_state("LEVEL COMPLETE", true)
-		elif is_battle:
-			station_progress_panel.set_button_state("IN PROGRESS", true)
-		else:
-			station_progress_panel.set_button_state("SKIP WAIT", false)
+		_refresh_wave_button(is_battle)
 		_refresh_objectives()
+
+## The START WAVE control is the only way to skip the departure countdown. It
+## is offered during every STATION window — including the one before wave two
+## and every later wave — and withdrawn while a wave is underway, once the
+## level has been won or lost, or while the station itself has fallen.
+func _refresh_wave_button(is_battle: bool) -> void:
+	if station_lost:
+		station_progress_panel.set_button_state("STATION LOST", true)
+	elif spawner.level_finished or PhaseManager.paused:
+		station_progress_panel.set_button_state("LEVEL COMPLETE", true)
+	elif is_battle:
+		station_progress_panel.set_button_state("WAVE %d UNDERWAY" % spawner.current_wave, true)
+	else:
+		station_progress_panel.set_button_state("START WAVE %d" % (spawner.current_wave + 1), not PhaseManager.can_start_wave())
 
 func _refresh_hp_rail() -> void:
 	var fraction: float = float(station.current_health) / float(maxi(station.max_health, 1))
@@ -505,8 +537,8 @@ func _schedule_style(is_battle: bool) -> StyleBox:
 	return style
 
 func _on_advance_pressed() -> void:
-	if spawner and not PhaseManager.paused and spawner.can_start_next_wave():
-		spawner.start_next_wave()
+	if PhaseManager.request_wave_start():
+		AudioFX.play_cue(&"ui")
 
 ## Arms remove mode rather than removing on this same click — the button
 ## press and the follow-up battlefield click are two separate input events,
@@ -596,7 +628,7 @@ func _on_tower_gui_input(event: InputEvent, index: int) -> void:
 		BuildManager.set_selected_tower(index)
 		dragging_tower = index
 		var tower := BuildManager.get_selected_tower()
-		drag_preview.texture = tower.icon if tower else null
+		drag_preview.texture = CarArt.icon_for(tower) if tower else null
 		drag_facing = 1
 		drag_preview.scale = Vector2.ONE
 		drag_preview.visible = true

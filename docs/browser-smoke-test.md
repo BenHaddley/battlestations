@@ -18,6 +18,21 @@ Record browser/version, operating system, date, tester, and any issue link.
 - [ ] Up accelerates; a short Down press slows without stopping; holding Down reverses.
 - [ ] Pause/resume and 2×/1× speed work without breaking timers or audio.
 - [ ] Waves start, count down, spawn spiders, award kills, and advance normally.
+- [ ] START WAVE is offered in every STATION window (including before wave two), is
+      disabled during BATTLE, and cannot start a wave twice.
+- [ ] Up/Down drive the train without moving the highlight through the Train Yard.
+- [ ] During STATIONS, hovering a rail shows plus signs; laying a tile costs Δ50, a
+      dead end shows the buffer stop, a join ring closes a detour, and right-click
+      lifts a laid tile for a refund. Nothing of this is available during BATTLE.
+- [ ] A spider steps into a clear neighbouring lane round a train and bites a unit
+      when boxed in; the bitten unit shows its health bar and jaws marker.
+- [ ] A destroyed car leaves the train with a debris burst; a wrecked engine shows
+      the recover caption and a dropped locomotive puts it back into service.
+- [ ] Dragging a gun shows its range ring at the coupling point; hovering a coupled
+      car shows the same ring; a Passenger Coach shows none.
+- [ ] Clicking an engine shows its weight/capacity tag and the readout at the top.
+- [ ] Duck and Daisy objectives highlight the shop row or START WAVE button, and a
+      fresh profile replays the opening lesson.
 - [ ] Station defeat pauses play and fades in the supplied GAME OVER artwork.
 - [ ] Restart and Main Menu work from the failure overlay.
 

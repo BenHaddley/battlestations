@@ -34,31 +34,31 @@ var _endless_level: LevelData
 
 func _ready() -> void:
 	levels = [
-		_make_level("Boiler Room", 3, 300, [0], -1, 0),
-		_make_level("Fare Collection", 4, 350, [0, 3], 3, 9),
-		_make_level("Swarm Warning", 4, 400, [0, 3, 2], 2, 8),
-		_make_level("Iron Hide", 5, 450, [0, 3, 2, 4], 4, 2),
-		_make_level("Full Load", 5, 500, [0, 3, 2, 4, 5], 5, 6),
-		_make_level("Long Haul", 6, 550, [0, 3, 2, 4, 5, 6], 6, 3),
-		_make_level("All Aboard", 8, 600, [0, 3, 2, 4, 5, 6, 1, 7], 1, 7),
+		_make_level("Boiler Room", 3, 300, [0], [], 0),
+		_make_level("Fare Collection", 4, 350, [0, 3], [3], 9),
+		_make_level("Swarm Warning", 4, 400, [0, 3, 2], [2], 8),
+		_make_level("Iron Hide", 5, 450, [0, 3, 2, 4], [4], 2),
+		_make_level("Full Load", 5, 500, [0, 3, 2, 4, 5], [5], 6),
+		_make_level("Long Haul", 6, 550, [0, 3, 2, 4, 5, 6], [6], 3),
+		_make_level("All Aboard", 8, 600, [0, 3, 2, 4, 5, 6, 1, 7], [1, 7], 7),
 	]
 	var last: LevelData = levels[-1]
-	_endless_level = _make_level("Open Rails", 0, last.starting_currency, last.unlocked_tower_indices, -1, -1)
+	_endless_level = _make_level("Open Rails", 0, last.starting_currency, last.unlocked_tower_indices, [], -1)
 
-func _make_level(level_name: String, waves: int, currency: int, unlocked: Array[int], new_index: int, track_layout: int) -> LevelData:
+func _make_level(level_name: String, waves: int, currency: int, unlocked: Array[int], new_indices: Array[int], track_layout: int) -> LevelData:
 	var level := LevelData.new()
 	level.level_name = level_name
 	level.wave_count = waves
 	level.starting_currency = currency
 	level.unlocked_tower_indices = unlocked
-	level.new_tower_index = new_index
+	level.new_tower_indices = new_indices
 	level.track_layout_index = track_layout
 	return level
 
 func current_level() -> LevelData:
 	if is_challenge_active():
 		var challenge := active_challenge()
-		return _make_level(String(challenge.name), int(challenge.waves), int(challenge.currency), [0, 1, 2, 3, 4, 5, 6, 7], -1, int(challenge.track))
+		return _make_level(String(challenge.name), int(challenge.waves), int(challenge.currency), [0, 1, 2, 3, 4, 5, 6, 7], [], int(challenge.track))
 	if campaign_complete or levels.is_empty():
 		return _endless_level
 	return levels[mini(current_level_index, levels.size() - 1)]

@@ -8,6 +8,8 @@ const GameOverOverlayScene := preload("res://scenes/ui/GameOverOverlay.tscn")
 const SpiderAssaultControllerScript := preload("res://scripts/spider_assault_controller.gd")
 const NEW_BOARD_CAR_SCALE := Vector2(0.54, 0.54)
 const PlacementGhostScript := preload("res://scripts/car_placement_ghost.gd")
+const RailBuilderScript := preload("res://scripts/rail_builder.gd")
+const RangePreviewScript := preload("res://scripts/range_preview.gd")
 
 @onready var spawner: EnemySpawner = $EnemySpawner
 @onready var track: TrackRenderer = $Track
@@ -16,7 +18,16 @@ const PlacementGhostScript := preload("res://scripts/car_placement_ghost.gd")
 
 ## One TrainConvoy instance per generated route, in generation order.
 var convoys: Array[Node2D] = []
-var track_routes: Array[PackedVector2Array] = []
+## The live railway rings. TrackRenderer owns them because STATIONS rail
+## building can revise a ring after the level starts.
+var track_routes: Array[PackedVector2Array]:
+	get:
+		return track.routes
+## Convoys whose route was revised while their consist straddled track the
+## new ring no longer covers; retried every frame until the rebind is safe.
+var pending_rebinds: Dictionary = {}
+var rail_builder: RailBuilder
+var range_preview: RangePreview
 
 @export_range(2, 4) var starting_trains: int = 2
 @export_range(0, 6) var starting_cars: int = 1
@@ -101,10 +112,10 @@ func _ready() -> void:
 	train_control_panel.anchor_right = 0.5
 	train_control_panel.anchor_top = 0.0
 	train_control_panel.anchor_bottom = 0.0
-	train_control_panel.offset_left = -146.0
-	train_control_panel.offset_right = 146.0
-	train_control_panel.offset_top = 6.0
-	train_control_panel.offset_bottom = 44.0
+	train_control_panel.offset_left = -200.0
+	train_control_panel.offset_right = 200.0
+	train_control_panel.offset_top = 4.0
+	train_control_panel.offset_bottom = 48.0
 	train_control_panel.control_changed.connect(_on_train_control_changed)
 	train_control_panel.deselect_requested.connect(_clear_train_selection)
 	if CampaignManager.is_spider_assault():
@@ -116,6 +127,14 @@ func _ready() -> void:
 	car_placement_ghost.name = "CarPlacementGhost"
 	car_placement_ghost.visible = false
 	add_child(car_placement_ghost)
+	rail_builder = RailBuilderScript.new()
+	rail_builder.name = "RailBuilder"
+	add_child(rail_builder)
+	rail_builder.configure(self, track, menu)
+	track.route_changed.connect(_on_route_changed)
+	range_preview = RangePreviewScript.new()
+	range_preview.name = "RangePreview"
+	add_child(range_preview)
 
 ## Regenerates the railway until it passes validation (every lane reachable,
 ## every route internally connected, at least two usable routes) or the
@@ -148,7 +167,7 @@ func _generate_and_spawn_trains() -> void:
 
 	if CampaignManager.is_challenge_active() and routes.size() > starting_trains:
 		routes.resize(starting_trains)
-	track_routes = routes
+		track.routes = routes
 	for child in trains.get_children():
 		child.queue_free()
 	convoys = []
@@ -164,6 +183,7 @@ func _generate_and_spawn_trains() -> void:
 		var convoy: Node2D = TrainConvoyScene.instantiate()
 		trains.add_child(convoy)
 		convoy.configure_path(routes[route_index])
+		convoy.route_index = route_index
 		if CampaignManager.is_challenge_active():
 			var speed_scale := float(CampaignManager.challenge_value("speed", 1.0))
 			convoy.cruise_speed *= speed_scale
@@ -178,9 +198,11 @@ func _generate_and_spawn_trains() -> void:
 func _process(delta: float) -> void:
 	if menu.dragging_tower >= 0:
 		_on_train_drag_updated(menu.dragging_tower, get_viewport().get_mouse_position(), menu.drag_facing)
-	var forward_held := Input.is_key_pressed(KEY_UP) or Input.is_key_pressed(KEY_W)
-	var reverse_held := Input.is_key_pressed(KEY_DOWN) or Input.is_key_pressed(KEY_S)
-	var axis := int(forward_held) - int(reverse_held)
+	var axis := 0
+	if train_driving_enabled():
+		var forward_held := Input.is_key_pressed(KEY_UP) or Input.is_key_pressed(KEY_W)
+		var reverse_held := Input.is_key_pressed(KEY_DOWN) or Input.is_key_pressed(KEY_S)
+		axis = int(forward_held) - int(reverse_held)
 	if is_instance_valid(selected_convoy):
 		_apply_keyboard_axis(selected_convoy, axis, delta)
 	else:
@@ -191,11 +213,111 @@ func _process(delta: float) -> void:
 			var convoy := convoy_node as TrainConvoy
 			if is_instance_valid(convoy):
 				_apply_keyboard_axis(convoy, axis, delta)
+	_retry_pending_rebinds()
+	_refresh_range_preview()
+
+## The attack radius is shown for the car under the pointer and for the car
+## whose upgrade card is open; utility cars draw nothing.
+func _refresh_range_preview() -> void:
+	if range_preview == null:
+		return
+	if upgrade_panel != null and upgrade_panel.visible and is_instance_valid(upgrade_panel.unit):
+		range_preview.follow(upgrade_panel.unit)
+		return
+	if not board_interaction_enabled():
+		range_preview.follow(null)
+		return
+	var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * get_viewport().get_mouse_position()
+	range_preview.follow(car_near(world_position, 44.0))
+
+func car_near(world_position: Vector2, radius: float) -> Node2D:
+	var best: Node2D = null
+	var best_distance := radius
+	for convoy_node in convoys:
+		var convoy := convoy_node as TrainConvoy
+		if not is_instance_valid(convoy):
+			continue
+		for car in convoy.followers:
+			if not is_instance_valid(car) or not car.visible:
+				continue
+			var distance: float = car.global_position.distance_to(world_position)
+			if distance < best_distance:
+				best_distance = distance
+				best = car
+	return best
+
+## A revised ring reaches each convoy only once its whole consist sits on
+## track both rings share; until then the train keeps its old geometry.
+func _on_route_changed(route_index: int, path: PackedVector2Array) -> void:
+	for convoy_node in convoys:
+		var convoy := convoy_node as TrainConvoy
+		if not is_instance_valid(convoy) or convoy.route_index != route_index:
+			continue
+		if convoy.rebind_route(path):
+			pending_rebinds.erase(convoy)
+		else:
+			pending_rebinds[convoy] = path
+
+func _retry_pending_rebinds() -> void:
+	if pending_rebinds.is_empty():
+		return
+	for convoy in pending_rebinds.keys():
+		if not is_instance_valid(convoy):
+			pending_rebinds.erase(convoy)
+			continue
+		var latest: PackedVector2Array = track.routes[convoy.route_index] if convoy.route_index >= 0 and convoy.route_index < track.routes.size() else pending_rebinds[convoy]
+		if convoy.rebind_route(latest):
+			pending_rebinds.erase(convoy)
+
+## The board is interactive for rail building and unit selection only while
+## no card is open and no shop gesture is in progress.
+func board_interaction_enabled() -> bool:
+	return train_driving_enabled() and menu.dragging_tower == -1 and not menu.removing_mode
+
+func rail_cell_occupied(cell: Vector2i) -> bool:
+	var point := track.world_of(cell)
+	for convoy_node in convoys:
+		var convoy := convoy_node as TrainConvoy
+		if is_instance_valid(convoy) and convoy.occupies_point(point, track.path_step * 0.7):
+			return true
+	return false
 
 func _apply_keyboard_axis(convoy: TrainConvoy, axis: int, delta: float) -> void:
 	if convoy.get_meta("reverse_locked", false) and axis < 0:
 		axis = 0
 	convoy.set_manual_axis(axis, delta)
+
+## Directional keys drive trains only while the board itself is the active
+## surface. Every full-screen card (pause, upgrades, level complete, game
+## over, Duck and Daisy) keeps ordinary keyboard navigation instead.
+func train_driving_enabled() -> bool:
+	if get_tree().paused or CampaignManager.is_spider_assault():
+		return false
+	if game_over_overlay != null and game_over_overlay.visible:
+		return false
+	if upgrade_panel != null and upgrade_panel.visible:
+		return false
+	if level_complete_overlay != null and level_complete_overlay.visible:
+		return false
+	if menu.pause_menu != null and menu.pause_menu.visible:
+		return false
+	var director := get_node_or_null("TutorialDirector") as TutorialDirector
+	if director != null and director.overlay != null and director.overlay.visible and not director.overlay.waiting_for_action:
+		return false
+	return true
+
+## Runs before any Control sees the event. While the board is live, the
+## arrow keys are train controls and must not also move interface focus.
+func _input(event: InputEvent) -> void:
+	if not (event is InputEventKey):
+		return
+	if not train_driving_enabled():
+		return
+	for action in ["ui_up", "ui_down", "ui_left", "ui_right", "ui_focus_next", "ui_focus_prev"]:
+		if event.is_action(action):
+			get_viewport().gui_release_focus()
+			get_viewport().set_input_as_handled()
+			return
 
 func _on_train_drag_updated(tower_index: int, screen_position: Vector2, facing: int) -> void:
 	if car_placement_ghost == null or tower_index < 0 or tower_index >= BuildManager.towers.size():
@@ -212,7 +334,7 @@ func _on_train_drag_updated(tower_index: int, screen_position: Vector2, facing: 
 		menu.set_drag_preview_snapped(false)
 		return
 	var tower: TowerData = BuildManager.towers[tower_index]
-	car_placement_ghost.configure(tower.icon, preview.position, preview.direction, facing, false)
+	car_placement_ghost.configure(CarArt.for_tower(tower), preview.position, preview.direction, facing, false)
 	car_placement_ghost.visible = true
 	menu.set_drag_preview_snapped(true)
 
@@ -225,7 +347,25 @@ func _on_engine_drop_requested(screen_position: Vector2) -> void:
 		menu.show_placement_feedback("This job card forbids purchasing engines.", false)
 		return
 	var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * screen_position
+	var wreck := _find_wreck_near(world_position)
+	if wreck != null:
+		if not LevelManager.spend_currency(Menu.ENGINE_COST):
+			menu.show_placement_feedback("Not enough funds for a locomotive.", false)
+			return
+		wreck.recover_engine()
+		AudioFX.play_cue(&"purchase")
+		menu.show_placement_feedback("Locomotive recovered — the train is back in service.", true)
+		return
 	var placement := _nearest_free_rail_placement(world_position)
+	if placement.is_empty():
+		# Player-built rail off the authored rings: a closed detour becomes a
+		# circuit of its own; a dead end cannot host a locomotive yet.
+		var cell := track.cell_of(world_position)
+		if track.in_bounds(cell) and track.is_rail(cell) and track.route_index_of(cell) < 0:
+			if track.route_for_engine(cell) < 0:
+				menu.show_placement_feedback("That rail dead-ends. Close it into a loop before parking a locomotive on it.", false)
+				return
+			placement = _nearest_free_rail_placement(world_position)
 	if placement.is_empty():
 		menu.show_placement_feedback("Place the locomotive on an empty stretch of rail.", false)
 		return
@@ -235,6 +375,7 @@ func _on_engine_drop_requested(screen_position: Vector2) -> void:
 	var convoy: TrainConvoy = TrainConvoyScene.instantiate()
 	trains.add_child(convoy)
 	convoy.configure_path(track_routes[int(placement.route)])
+	convoy.route_index = int(placement.route)
 	convoy.set_engine_livery(ENGINE_LIVERIES[convoys.size() % ENGINE_LIVERIES.size()])
 	if not convoy.place_at_route_distance(float(placement.distance)):
 		LevelManager.increase_currency(Menu.ENGINE_COST)
@@ -267,6 +408,13 @@ func _nearest_free_rail_placement(world_position: Vector2) -> Dictionary:
 				best = {"route": route_index, "distance": along + segment.length() * weight}
 			along += segment.length()
 	return best
+
+func _find_wreck_near(world_position: Vector2) -> TrainConvoy:
+	for convoy_node in convoys:
+		var convoy := convoy_node as TrainConvoy
+		if is_instance_valid(convoy) and convoy.wrecked and convoy.global_position.distance_to(world_position) <= 64.0:
+			return convoy
+	return null
 
 func _engine_space_is_free(candidate: Vector2) -> bool:
 	for convoy in convoys:
@@ -302,7 +450,33 @@ func _seed_tabletop() -> void:
 		car.scale = NEW_BOARD_CAR_SCALE
 		_apply_car_palette(car, _car_palette_cursor)
 		_car_palette_cursor += 1
-		convoy.attach_car(car)
+		if convoy.attach_car(car):
+			_register_car(car, tower)
+		else:
+			car.queue_free()
+
+## Every coupled car is an obstacle spiders steer round or bite, with the
+## workbook hit points for its type; losing it closes the gap in the train.
+func _register_car(car: Node2D, tower: TowerData) -> void:
+	car.add_to_group("train_units")
+	var health := UnitHealth.attach_to(car, float(tower.health), tower.tower_name)
+	if not health.destroyed.is_connected(_on_car_destroyed):
+		health.destroyed.connect(_on_car_destroyed)
+
+func _on_car_destroyed(unit: Node2D) -> void:
+	if not is_instance_valid(unit):
+		return
+	if upgrade_panel and upgrade_panel.unit == unit:
+		upgrade_panel.close_panel()
+	for convoy_node in convoys:
+		var convoy := convoy_node as TrainConvoy
+		if is_instance_valid(convoy) and convoy.followers.has(unit):
+			var data = unit.get_meta("tower_data", null)
+			var label: String = data.tower_name if data is TowerData else "Car"
+			convoy.remove_car(unit)
+			menu.show_placement_feedback("%s destroyed — the train closed the gap." % label, false)
+			GameEvents.train_unit_destroyed.emit(label)
+			return
 
 func _seed_spider_assault_defense() -> void:
 	var defense_roster := [0, 1, 2, 4, 0, 1]
@@ -326,6 +500,7 @@ func _seed_spider_assault_defense() -> void:
 		if not convoy.attach_car(car):
 			car.queue_free()
 		else:
+			_register_car(car, tower)
 			_install_assault_blocker(car, 68.0)
 
 func _install_assault_blocker(host: Node2D, local_radius: float) -> void:
@@ -381,6 +556,7 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2, facing
 		car.queue_free()
 		menu.show_placement_feedback("That train cannot take another car.", false)
 		return
+	_register_car(car, tower)
 	AudioFX.play_cue(&"purchase")
 	menu.show_placement_feedback("%s connected to the train." % tower.tower_name, true)
 
@@ -461,7 +637,7 @@ func _select_convoy(convoy: TrainConvoy) -> void:
 		return
 	_clear_train_selection()
 	selected_convoy = convoy
-	selected_convoy.set_selected(true)
+	selected_convoy.set_selected(true, convoys.find(convoy) + 1)
 	train_control_panel.show_for(convoy, convoys.find(convoy) + 1)
 
 func _clear_train_selection() -> void:

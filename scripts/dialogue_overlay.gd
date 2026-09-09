@@ -14,6 +14,9 @@ var skip_button: Button
 var objective_panel: PanelContainer
 var objective_label: Label
 var waiting_for_action := false
+## Control or Node2D (or world Vector2) the open objective points at; drawn
+## as a pulsing frame or ring on top of the HUD while the objective is armed.
+var highlight_target: Variant = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -113,6 +116,7 @@ func show_entry(entry: Dictionary) -> void:
 	artwork.texture = DAISY if speaker.to_lower() == "daisy" else DUCK
 	dialogue_label.text = String(entry.get("text", ""))
 	waiting_for_action = false
+	highlight_target = null
 	artwork.visible = true
 	dialogue_label.visible = true
 	continue_label.visible = true
@@ -120,14 +124,71 @@ func show_entry(entry: Dictionary) -> void:
 	artwork.mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = true
 
-func show_objective(objective: String) -> void:
+func show_objective(objective: String, highlight: Variant = null) -> void:
 	waiting_for_action = true
 	artwork.visible = false
 	dialogue_label.visible = false
 	continue_label.visible = false
 	objective_label.text = "OBJECTIVE — %s" % objective
 	objective_panel.visible = true
+	highlight_target = highlight
 	visible = true
+	queue_redraw()
+
+func _process(_delta: float) -> void:
+	if visible and waiting_for_action:
+		queue_redraw()
+
+## Screen-space rectangle of the highlighted thing, or an empty Rect2.
+func highlight_rect() -> Rect2:
+	if highlight_target == null:
+		return Rect2()
+	if highlight_target is Control:
+		var control := highlight_target as Control
+		if not is_instance_valid(control) or not control.is_visible_in_tree():
+			return Rect2()
+		return control.get_global_rect()
+	var world := Vector2.ZERO
+	if highlight_target is Node2D:
+		var node := highlight_target as Node2D
+		if not is_instance_valid(node):
+			return Rect2()
+		world = node.global_position
+	elif highlight_target is Vector2:
+		world = highlight_target
+	else:
+		return Rect2()
+	var screen: Vector2 = get_viewport().get_canvas_transform() * world
+	return Rect2(screen - Vector2(46.0, 46.0), Vector2(92.0, 92.0))
+
+func _draw() -> void:
+	if not waiting_for_action or not visible:
+		return
+	var rect := highlight_rect()
+	if rect.size == Vector2.ZERO:
+		return
+	var pulse := 4.0 + 3.0 * sin(Time.get_ticks_msec() / 160.0)
+	var frame := rect.grow(pulse)
+	var color := Color(1.0, 0.86, 0.35, 0.95)
+	if highlight_target is Control:
+		draw_rect(frame.grow(3.0), Color(0.12, 0.06, 0.02, 0.85), false, 7.0)
+		draw_rect(frame, color, false, 4.0)
+	else:
+		var center := frame.get_center()
+		var radius := frame.size.x * 0.5
+		draw_arc(center, radius + 3.0, 0.0, TAU, 40, Color(0.12, 0.06, 0.02, 0.85), 7.0, true)
+		draw_arc(center, radius, 0.0, TAU, 40, color, 4.0, true)
+	# Arrow from the objective tag toward the thing to use.
+	var tag_anchor := objective_panel.get_global_rect().get_center() + Vector2(0.0, objective_panel.size.y * 0.5)
+	var target := frame.get_center()
+	var toward := (target - tag_anchor)
+	if toward.length() > 120.0:
+		var start := tag_anchor + toward.normalized() * 8.0
+		var finish := target - toward.normalized() * (frame.size.length() * 0.5 + 10.0)
+		draw_line(start, finish, Color(0.12, 0.06, 0.02, 0.6), 6.0, true)
+		draw_line(start, finish, color, 3.0, true)
+		var head := toward.normalized()
+		draw_colored_polygon(PackedVector2Array([finish + head * 12.0, finish - head * 6.0 + head.orthogonal() * 8.0, finish - head * 6.0 - head.orthogonal() * 8.0]), color)
 
 func _refresh_type_scale() -> void:
 	var width := size.x if size.x > 0 else 1280.0

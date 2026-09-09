@@ -12,3 +12,4 @@ scene = ExtResource("2")
 summary = "Caps the train, boosts every other car's attack power, and starts/stops faster."
 icon = ExtResource("3")
 weight = 0.0
+health = 200

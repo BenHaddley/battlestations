@@ -1,14 +1,23 @@
 extends Node2D
 class_name TrackRenderer
-## Generates several small, grid-aligned railway loops scattered across the
-## board — straight runs and 90-degree corners snapped to a shared grid,
-## not sweeping curves. Every loop is closed by construction (its last point
-## sits exactly one grid step from its first), so a train can circle it
-## forever by simply advancing (path_index + 1) % path.size() — there is no
-## reversal because there is no endpoint.
+## Owns the railway: authored/generated closed loops, the player-built rail
+## graph that grows off them during STATIONS, and the tile artwork for both.
+##
+## Two ideas are kept separate on purpose. `routes` are closed rings a train
+## can drive (every consecutive pair exactly one grid step apart, wrapping at
+## the end). `graph` is the built rail network: every route cell plus any
+## player-built spur, which may dead-end or branch. Trains only ever drive
+## routes; spurs exist as construction until they close a detour that a
+## route adopts (see place_rail()).
+
+signal network_changed
+## A route's geometry changed (a detour was adopted or a rail removed). Main
+## rebinds the convoys driving it once their consist sits on shared track.
+signal route_changed(route_index: int, path: PackedVector2Array)
 
 @export var rail_texture: Texture2D
 @export var curve_texture: Texture2D
+@export var end_texture: Texture2D = preload("res://assets/sprites/board/Rail End.png")
 @export var tile_scale: float = 0.09
 @export var path_step: float = 65.5
 ## Nine columns by twelve rows, registered to the square courtyard in
@@ -22,9 +31,20 @@ class_name TrackRenderer
 ## packing edge-to-edge.
 @export var loop_margin: int = 1
 
+const ORTHOGONAL: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
+
 var columns: Array[float] = []
 var rows: Array[float] = []
 var routes: Array[PackedVector2Array] = []
+## Rail graph: cell -> Array[Vector2i] of connected orthogonal neighbours.
+var graph: Dictionary = {}
+## Player-built cells (refundable), keyed by cell.
+var built_cells: Dictionary = {}
+## Bumped every time the graph or a route changes, so anything caching
+## geometry (placement previews, pending rebinds) can tell it is stale.
+var revision: int = 0
+
+var _tiles_by_cell: Dictionary = {}
 
 ## The ten artist reference sheets are preserved as an authored route library.
 ## Indices correspond to image.png, 2.png ... 10.png in
@@ -38,8 +58,7 @@ const REFERENCE_LAYOUT_NAMES := [
 ## route_count is a placement target, not a promise — see generate_layout().
 func generate_layout(route_count: int = 2) -> Array[PackedVector2Array]:
 	randomize()
-	for child in get_children():
-		child.queue_free()
+	_clear_network()
 	_build_grid()
 
 	var occupied: Dictionary = {}
@@ -54,6 +73,7 @@ func generate_layout(route_count: int = 2) -> Array[PackedVector2Array]:
 	if routes.size() < mini(route_count, 2):
 		routes = _fallback_routes(route_count)
 
+	_seed_graph_from_routes()
 	_render_all()
 	return routes
 
@@ -61,8 +81,7 @@ func generate_layout(route_count: int = 2) -> Array[PackedVector2Array]:
 ## sketches. Coordinates are integer cells on the live 9x12 board, so rails
 ## remain perfectly registered even though the source marks are freehand.
 func generate_campaign_layout(layout_index: int) -> Array[PackedVector2Array]:
-	for child in get_children():
-		child.queue_free()
+	_clear_network()
 	_build_grid()
 	var layouts := _reference_cell_layouts()
 	if layout_index < 0 or layout_index >= layouts.size():
@@ -78,6 +97,7 @@ func generate_campaign_layout(layout_index: int) -> Array[PackedVector2Array]:
 			world_route.append(Vector2(columns[cell.x], rows[cell.y]))
 		if world_route.size() >= 4:
 			routes.append(world_route)
+	_seed_graph_from_routes()
 	_render_all()
 	return routes
 
@@ -87,8 +107,7 @@ func generate_campaign_layout(layout_index: int) -> Array[PackedVector2Array]:
 ## It occupies only the bottom three battlefield rows and leaves the upper
 ## board entirely to the approaching spiders.
 func generate_bottom_figure_eight() -> Array[PackedVector2Array]:
-	for child in get_children():
-		child.queue_free()
+	_clear_network()
 	_build_grid()
 	var cells: Array[Vector2i] = [
 		Vector2i(4, 9),
@@ -103,6 +122,7 @@ func generate_bottom_figure_eight() -> Array[PackedVector2Array]:
 	for cell in cells:
 		figure_eight.append(Vector2(columns[cell.x], rows[cell.y]))
 	routes = [figure_eight]
+	_seed_graph_from_routes()
 	_render_all()
 	return routes
 
@@ -303,48 +323,597 @@ func _transform_shape(base_points: Array, rotation_quarter: int, mirror: bool) -
 		normalized.append(Vector2i(cell.x - min_x, cell.y - min_y))
 	return normalized
 
-func _render_all() -> void:
+# ---------------------------------------------------------------------------
+# Grid helpers
+# ---------------------------------------------------------------------------
+
+func in_bounds(cell: Vector2i) -> bool:
+	return cell.x >= 0 and cell.x < columns.size() and cell.y >= 0 and cell.y < rows.size()
+
+func world_of(cell: Vector2i) -> Vector2:
+	return Vector2(columns[cell.x], rows[cell.y])
+
+## Nearest grid cell to a world position. Callers check in_bounds() and
+## distance themselves; the pointer can hover between cells.
+func cell_of(world: Vector2) -> Vector2i:
+	return Vector2i(roundi((world.x - track_bounds.position.x) / path_step), roundi((world.y - track_bounds.position.y) / path_step))
+
+func is_rail(cell: Vector2i) -> bool:
+	return graph.has(cell)
+
+func is_built(cell: Vector2i) -> bool:
+	return built_cells.has(cell)
+
+func neighbours(cell: Vector2i) -> Array:
+	return graph.get(cell, [])
+
+func rail_cells() -> Array:
+	return graph.keys()
+
+func route_cells(route_index: int) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	if route_index < 0 or route_index >= routes.size():
+		return cells
+	for point in routes[route_index]:
+		cells.append(cell_of(point))
+	return cells
+
+## Index of the first route that drives through this cell, or -1 for a spur.
+func route_index_of(cell: Vector2i) -> int:
+	for route_index in range(routes.size()):
+		if cell in route_cells(route_index):
+			return route_index
+	return -1
+
+## Empty, in-board cells orthogonally adjacent to an existing rail cell —
+## exactly where the STATION hover shows its plus signs.
+func expansion_candidates(anchor: Vector2i) -> Array[Vector2i]:
+	var result: Array[Vector2i] = []
+	if not is_rail(anchor):
+		return result
+	for offset in ORTHOGONAL:
+		var candidate := anchor + offset
+		if in_bounds(candidate) and not is_rail(candidate):
+			result.append(candidate)
+	return result
+
+# ---------------------------------------------------------------------------
+# Rail graph
+# ---------------------------------------------------------------------------
+
+func _clear_network() -> void:
+	for child in get_children():
+		child.queue_free()
+	graph = {}
+	built_cells = {}
+	_tiles_by_cell = {}
+	revision += 1
+
+func _seed_graph_from_routes() -> void:
+	graph = {}
+	built_cells = {}
 	for route in routes:
-		_render_route(route)
+		var count := route.size()
+		for index in range(count):
+			var a := cell_of(route[index])
+			var b := cell_of(route[(index + 1) % count])
+			_add_edge(a, b)
+	revision += 1
 
-## Every route here is a closed ring, so the point "before" index 0 and the
-## point "after" the last index both wrap around — there is no open end to
-## treat differently.
-func _render_route(route_points: PackedVector2Array) -> void:
-	var count := route_points.size()
-	for index in range(count):
-		var point := route_points[index]
-		var previous_point := route_points[(index - 1 + count) % count]
-		var next_point := route_points[(index + 1) % count]
-		var previous_direction := (previous_point - point).normalized()
-		var next_direction := (next_point - point).normalized()
+func _add_edge(a: Vector2i, b: Vector2i) -> void:
+	if a == b:
+		return
+	if not graph.has(a):
+		graph[a] = []
+	if not graph.has(b):
+		graph[b] = []
+	if not (b in graph[a]):
+		graph[a].append(b)
+	if not (a in graph[b]):
+		graph[b].append(a)
 
+func _remove_edge(a: Vector2i, b: Vector2i) -> void:
+	if graph.has(a):
+		graph[a].erase(b)
+	if graph.has(b):
+		graph[b].erase(a)
+
+## Cells reachable from `start` through rail connections.
+func network_of(start: Vector2i) -> Dictionary:
+	var seen: Dictionary = {}
+	if not is_rail(start):
+		return seen
+	var frontier: Array[Vector2i] = [start]
+	seen[start] = true
+	while not frontier.is_empty():
+		var cell: Vector2i = frontier.pop_back()
+		for next in graph[cell]:
+			if not seen.has(next):
+				seen[next] = true
+				frontier.append(next)
+	return seen
+
+## Shortest rail path from `from` to `to`, avoiding `blocked` cells (the
+## endpoints are always allowed). Empty when no path exists.
+func shortest_path(from: Vector2i, to: Vector2i, blocked: Dictionary = {}) -> Array[Vector2i]:
+	var path: Array[Vector2i] = []
+	if not is_rail(from) or not is_rail(to):
+		return path
+	if from == to:
+		path.append(from)
+		return path
+	var previous: Dictionary = {}
+	previous[from] = from
+	var frontier: Array[Vector2i] = [from]
+	var head := 0
+	while head < frontier.size():
+		var cell := frontier[head]
+		head += 1
+		for next in graph[cell]:
+			if previous.has(next) or (blocked.has(next) and next != to):
+				continue
+			previous[next] = cell
+			if next == to:
+				var cursor := to
+				while cursor != from:
+					path.push_front(cursor)
+					cursor = previous[cursor]
+				path.push_front(from)
+				return path
+			frontier.append(next)
+	return path
+
+## Validates a build without changing anything. A new tile only ever
+## connects to the tile it is extended from; joining it to anything else is
+## the explicit link gesture below, so construction never surprises the
+## player by fusing to rail that merely happens to be adjacent.
+func evaluate_placement(anchor: Vector2i, cell: Vector2i) -> Dictionary:
+	if not in_bounds(cell):
+		return {"ok": false, "reason": "That tile is outside the courtyard."}
+	if is_rail(cell):
+		return {"ok": false, "reason": "That space already holds rail."}
+	if not is_rail(anchor) or (anchor - cell).length_squared() != 1:
+		return {"ok": false, "reason": "New rail must touch the rail you are extending."}
+	return {"ok": true, "reason": ""}
+
+## Lays one tile connected to `anchor`. Returns the evaluate_placement()
+## verdict; never reroutes, because a fresh tile is always a dead end.
+func place_rail(anchor: Vector2i, cell: Vector2i) -> Dictionary:
+	var verdict := evaluate_placement(anchor, cell)
+	if not verdict.ok:
+		return verdict
+	graph[cell] = []
+	_add_edge(cell, anchor)
+	built_cells[cell] = true
+	revision += 1
+	_render_all()
+	network_changed.emit()
+	return verdict
+
+func is_dead_end(cell: Vector2i) -> bool:
+	return is_rail(cell) and graph[cell].size() == 1
+
+## Pairs [cell, target] the link gesture offers while hovering `cell`: a dead
+## end can be joined to any adjacent unconnected rail of its own circuit, and
+## hovering that rail offers the same join from the other side.
+func link_candidates(cell: Vector2i) -> Array:
+	var pairs: Array = []
+	if not is_rail(cell):
+		return pairs
+	for offset in ORTHOGONAL:
+		var target := cell + offset
+		if evaluate_link(cell, target).ok:
+			pairs.append([cell, target])
+	return pairs
+
+func evaluate_link(a: Vector2i, b: Vector2i) -> Dictionary:
+	if not is_rail(a) or not is_rail(b):
+		return {"ok": false, "reason": "Both ends of a link must be rail."}
+	if (a - b).length_squared() != 1:
+		return {"ok": false, "reason": "Only touching rails can be joined."}
+	if b in graph[a]:
+		return {"ok": false, "reason": "Those rails are already joined."}
+	if not is_dead_end(a) and not is_dead_end(b):
+		return {"ok": false, "reason": "Only a dead end can be joined to other rail."}
+	if not network_of(a).has(b):
+		return {"ok": false, "reason": "That would join two separate circuits. Extend one circuit at a time."}
+	return {"ok": true, "reason": ""}
+
+## Joins a dead end to adjacent rail. If the join closes a detour off a
+## route and the detour is longer than the stretch it bypasses, the route is
+## rerouted through it and route_changed fires for the convoys driving it.
+## Returns the evaluate_link() verdict, extended with "rerouted": route
+## index or -1.
+func link_rail(a: Vector2i, b: Vector2i) -> Dictionary:
+	var verdict := evaluate_link(a, b)
+	if not verdict.ok:
+		return verdict
+	# Decide the reroute before the edge exists so the path between the two
+	# ends runs the long way round through the circuit.
+	var path := shortest_path(a, b)
+	var reroute := _reroute_from_cycle(path)
+	_add_edge(a, b)
+	revision += 1
+	verdict["rerouted"] = -1
+	if not reroute.is_empty():
+		var route_index: int = reroute.route_index
+		routes[route_index] = _cells_to_points(reroute.cells)
+		verdict["rerouted"] = route_index
+		route_changed.emit(route_index, routes[route_index])
+	_render_all()
+	network_changed.emit()
+	return verdict
+
+## Removes a player-built tile. Refuses authored rail, tiles a convoy is
+## standing on (the caller checks occupancy via `occupied`), and any removal
+## that would split the circuit or leave a route with no way round the gap.
+## Returns {"ok", "reason", "rerouted"}; a rerouted route emits route_changed.
+func remove_rail(cell: Vector2i, occupied: bool = false) -> Dictionary:
+	if not is_rail(cell):
+		return {"ok": false, "reason": "There is no rail there.", "rerouted": -1}
+	if not is_built(cell):
+		return {"ok": false, "reason": "The station's own rails cannot be removed.", "rerouted": -1}
+	if occupied:
+		return {"ok": false, "reason": "A train is standing on that rail. Wait for it to pass.", "rerouted": -1}
+	var route_index := route_index_of(cell)
+	var repaired: Array[Vector2i] = []
+	if route_index >= 0:
+		repaired = _route_without_cell(route_index, cell)
+		if repaired.is_empty():
+			return {"ok": false, "reason": "Removing that rail would break a train's circuit.", "rerouted": -1}
+	# Keep the network in one piece so no rail is ever stranded off the circuit.
+	var links: Array = graph[cell].duplicate()
+	if links.size() > 1:
+		var without: Dictionary = {}
+		without[cell] = true
+		var reach := _network_excluding(links[0], without)
+		for link in links:
+			if not reach.has(link):
+				return {"ok": false, "reason": "Removing that rail would strand the track beyond it.", "rerouted": -1}
+	for link in links:
+		_remove_edge(cell, link)
+	graph.erase(cell)
+	built_cells.erase(cell)
+	revision += 1
+	if route_index >= 0:
+		routes[route_index] = _cells_to_points(repaired)
+		route_changed.emit(route_index, routes[route_index])
+	_render_all()
+	network_changed.emit()
+	return {"ok": true, "reason": "", "rerouted": route_index}
+
+## Route that a locomotive dropped on `cell` can drive. An existing route is
+## returned as its index; a closed player-built detour that no route uses yet
+## becomes a new route. -1 when the rail dead-ends and cannot loop.
+func route_for_engine(cell: Vector2i) -> int:
+	var existing := route_index_of(cell)
+	if existing >= 0:
+		return existing
+	var cycle := _cycle_through(cell)
+	if cycle.size() < 4:
+		return -1
+	routes.append(_cells_to_points(cycle))
+	revision += 1
+	return routes.size() - 1
+
+func _cells_to_points(cells: Array[Vector2i]) -> PackedVector2Array:
+	var points := PackedVector2Array()
+	for cell in cells:
+		points.append(world_of(cell))
+	return points
+
+func _network_excluding(start: Vector2i, excluded: Dictionary) -> Dictionary:
+	var seen: Dictionary = {}
+	if not is_rail(start) or excluded.has(start):
+		return seen
+	var frontier: Array[Vector2i] = [start]
+	seen[start] = true
+	while not frontier.is_empty():
+		var cell: Vector2i = frontier.pop_back()
+		for next in graph[cell]:
+			if excluded.has(next) or seen.has(next):
+				continue
+			seen[next] = true
+			frontier.append(next)
+	return seen
+
+## `path` is the existing rail path between the two ends being joined; with
+## the new edge it forms a cycle. If the path runs along a route for one
+## contiguous stretch (a..b) and the rest of the cycle is player-built rail
+## longer than that stretch, the route adopts it as a detour. Everything else
+## — shortcuts, spur-only cycles, lobes touching a route at a single cell —
+## leaves routes alone.
+func _reroute_from_cycle(path: Array[Vector2i]) -> Dictionary:
+	if path.size() < 2:
+		return {}
+	for route_index in range(routes.size()):
+		var cells := route_cells(route_index)
+		var on_route: Array[int] = []
+		for index in range(path.size()):
+			if path[index] in cells:
+				on_route.append(index)
+		if on_route.size() < 2:
+			continue
+		# The route stretch must be one contiguous run in the middle of the
+		# path; a detour that dips onto the route twice is not a simple bump.
+		var start_index := on_route[0]
+		var end_index := on_route[-1]
+		if end_index - start_index != on_route.size() - 1:
+			continue
+		var a := path[start_index]
+		var b := path[end_index]
+		# The detour runs from b's side round the new edge to a's side.
+		var detour: Array[Vector2i] = []
+		for index in range(end_index + 1, path.size()):
+			detour.append(path[index])
+		for index in range(0, start_index):
+			detour.append(path[index])
+		# Only rail the player laid may become route; an authored siding never
+		# gets stitched back in as a zigzag.
+		var player_made := not detour.is_empty()
+		for detour_cell in detour:
+			if not is_built(detour_cell):
+				player_made = false
+				break
+		if not player_made:
+			continue
+		var arc_edges := end_index - start_index
+		var detour_edges := detour.size() + 1
+		if detour_edges <= arc_edges:
+			continue
+		var rerouted := _splice_detour(cells, a, b, detour)
+		if rerouted.is_empty():
+			continue
+		return {"route_index": route_index, "cells": rerouted}
+	return {}
+
+## Replaces the shorter route stretch between a and b with the detour, keeping
+## the rest of the ring in its original driving order.
+func _splice_detour(cells: Array[Vector2i], a: Vector2i, b: Vector2i, detour_from_b: Array[Vector2i]) -> Array[Vector2i]:
+	var count := cells.size()
+	var index_a := cells.find(a)
+	var index_b := cells.find(b)
+	if index_a < 0 or index_b < 0 or index_a == index_b:
+		return []
+	var forward_steps := (index_b - index_a + count) % count
+	var backward_steps := (index_a - index_b + count) % count
+	var result: Array[Vector2i] = []
+	if forward_steps <= backward_steps:
+		# The bypassed stretch runs a -> b in driving order. Keep b -> ... -> a,
+		# then take the detour from a back round to b.
+		var cursor := index_b
+		while true:
+			result.append(cells[cursor])
+			if cursor == index_a:
+				break
+			cursor = (cursor + 1) % count
+		var detour := detour_from_b.duplicate()
+		detour.reverse()
+		result.append_array(detour)
+	else:
+		var cursor := index_a
+		while true:
+			result.append(cells[cursor])
+			if cursor == index_b:
+				break
+			cursor = (cursor + 1) % count
+		result.append_array(detour_from_b)
+	if result.size() < 4 or not _ring_is_valid(result):
+		return []
+	return result
+
+func _ring_is_valid(cells: Array[Vector2i]) -> bool:
+	var seen: Dictionary = {}
+	for index in range(cells.size()):
+		if seen.has(cells[index]):
+			return false
+		seen[cells[index]] = true
+		var next := cells[(index + 1) % cells.size()]
+		if (next - cells[index]).length_squared() != 1:
+			return false
+	return true
+
+## Route ring after lifting `cell`. Lifting any tile of a player-built detour
+## drops the whole detour from the route: the stretch of consecutive built
+## cells around it is replaced by the shortest rail path between the
+## authored cells on either side (normally the stretch the detour bypassed).
+## The other detour tiles stay on the board as spurs. Empty when no such
+## path exists, meaning the route would be broken.
+func _route_without_cell(route_index: int, cell: Vector2i) -> Array[Vector2i]:
+	var cells := route_cells(route_index)
+	var index := cells.find(cell)
+	if index < 0:
+		return []
+	var count := cells.size()
+	var run_start := index
+	while is_built(cells[(run_start - 1 + count) % count]) and (run_start - 1 + count) % count != index:
+		run_start = (run_start - 1 + count) % count
+	var run_end := index
+	while is_built(cells[(run_end + 1) % count]) and (run_end + 1) % count != index:
+		run_end = (run_end + 1) % count
+	var run: Dictionary = {}
+	var cursor := run_start
+	while true:
+		run[cells[cursor]] = true
+		if cursor == run_end:
+			break
+		cursor = (cursor + 1) % count
+	if run.size() >= count - 1:
+		return []
+	var before := cells[(run_start - 1 + count) % count]
+	var after := cells[(run_end + 1) % count]
+	var blocked: Dictionary = {}
+	blocked[cell] = true
+	for other in cells:
+		if other != before and other != after and not run.has(other):
+			blocked[other] = true
+	var bridge := shortest_path(before, after, blocked)
+	if bridge.is_empty():
+		return []
+	var result: Array[Vector2i] = []
+	# Walk the ring from `after` round to `before`, then bridge back.
+	cursor = (run_end + 1) % count
+	while true:
+		result.append(cells[cursor])
+		if cells[cursor] == before:
+			break
+		cursor = (cursor + 1) % count
+	for bridge_index in range(1, bridge.size() - 1):
+		result.append(bridge[bridge_index])
+	if not _ring_is_valid(result):
+		return []
+	return result
+
+## Longest simple cycle through `cell`, found by bounded depth-first search.
+## Rail networks are tiny (at most 108 cells) and mostly loops, so the budget
+## is generous in practice and merely guards against pathological ladders.
+func _cycle_through(cell: Vector2i) -> Array[Vector2i]:
+	if not is_rail(cell) or graph[cell].size() < 2:
+		return []
+	var best: Array[Vector2i] = []
+	var budget := [6000]
+	var visited: Dictionary = {}
+	visited[cell] = true
+	var trail: Array[Vector2i] = [cell]
+	_cycle_search(cell, cell, visited, trail, best, budget)
+	return best
+
+func _cycle_search(origin: Vector2i, cell: Vector2i, visited: Dictionary, trail: Array[Vector2i], best: Array[Vector2i], budget: Array) -> void:
+	if budget[0] <= 0:
+		return
+	budget[0] -= 1
+	for next in graph[cell]:
+		if next == origin and trail.size() >= 4:
+			if trail.size() > best.size():
+				best.assign(trail)
+			continue
+		if visited.has(next):
+			continue
+		visited[next] = true
+		trail.append(next)
+		_cycle_search(origin, next, visited, trail, best, budget)
+		trail.pop_back()
+		visited.erase(next)
+
+# ---------------------------------------------------------------------------
+# Rendering
+# ---------------------------------------------------------------------------
+
+func _render_all() -> void:
+	for child in get_children():
+		child.queue_free()
+	_tiles_by_cell = {}
+	for cell in graph:
+		_render_cell(cell)
+
+## Draws one cell from its connection set rather than its position in a
+## route, so authored rings, junctions, crossings and dead ends all share one
+## rule: one straight per collinear pair, one curve per perpendicular pair,
+## and the buffer-stop end cap wherever only a single rail leaves the tile.
+func _render_cell(cell: Vector2i) -> void:
+	var point := world_of(cell)
+	var directions: Array[Vector2i] = []
+	for neighbour in graph[cell]:
+		directions.append(neighbour - cell)
+	var pieces: Array[Dictionary] = []
+	match directions.size():
+		0:
+			pieces.append({"kind": "end", "rotation": 0.0})
+		1:
+			pieces.append({"kind": "end", "rotation": _end_rotation(directions[0])})
+		2:
+			pieces.append(_pair_piece(directions[0], directions[1]))
+		_:
+			pieces = _junction_pieces(cell, directions)
+	var sprites: Array[Sprite2D] = []
+	for piece in pieces:
+		var texture: Texture2D = rail_texture
+		match String(piece.kind):
+			"curve": texture = curve_texture
+			"end": texture = end_texture
 		var shadow := Sprite2D.new()
-		shadow.texture = rail_texture
+		shadow.texture = texture
 		shadow.position = point + Vector2(0.0, 7.0)
 		shadow.modulate = Color(0.04, 0.035, 0.025, 0.38)
 		shadow.z_index = -7
+		shadow.scale = Vector2(tile_scale * 1.1, tile_scale * 1.06)
+		shadow.rotation = float(piece.rotation)
+		add_child(shadow)
 		var tile := Sprite2D.new()
+		tile.texture = texture
 		tile.position = point
 		tile.z_index = -5
-
-		if not previous_direction.is_equal_approx(-next_direction):
-			tile.texture = curve_texture
-			tile.scale = Vector2(tile_scale, tile_scale)
-			tile.rotation = _curve_rotation(previous_direction, next_direction)
-			shadow.texture = curve_texture
-			shadow.scale = tile.scale * 1.08
-			shadow.rotation = tile.rotation
-		else:
-			tile.texture = rail_texture
-			# Source art is vertical: keep its width narrow while extending its
-			# length slightly beyond the path step to eliminate seams.
-			tile.scale = Vector2(tile_scale, tile_scale)
-			tile.rotation = PI * 0.5 if absf(next_direction.x) > 0.5 else 0.0
-			shadow.scale = Vector2(tile_scale * 1.12, tile_scale * 1.05)
-			shadow.rotation = tile.rotation
-		add_child(shadow)
+		tile.scale = Vector2(tile_scale, tile_scale)
+		tile.rotation = float(piece.rotation)
+		tile.set_meta("piece", String(piece.kind))
 		add_child(tile)
+		sprites.append(tile)
+	_tiles_by_cell[cell] = sprites
+
+## Sprites currently drawn for a cell — used by tests and the rail builder's
+## hover treatment.
+func tiles_at(cell: Vector2i) -> Array:
+	return _tiles_by_cell.get(cell, [])
+
+func _pair_piece(a: Vector2i, b: Vector2i) -> Dictionary:
+	if a == -b:
+		return {"kind": "straight", "rotation": PI * 0.5 if a.x != 0 else 0.0}
+	return {"kind": "curve", "rotation": _curve_rotation(Vector2(a), Vector2(b))}
+
+## Three or four connections. A route driving through the cell decides how the
+## rails pair up (a lobe returning to its own junction is two curves, a
+## crossing is two straights); anything the routes do not explain falls back
+## to a straight through the collinear pair plus a curve for the odd branch.
+func _junction_pieces(cell: Vector2i, directions: Array[Vector2i]) -> Array[Dictionary]:
+	var pieces: Array[Dictionary] = []
+	var paired: Dictionary = {}
+	for pairing in _route_pairings(cell):
+		var a: Vector2i = pairing[0]
+		var b: Vector2i = pairing[1]
+		if paired.has(a) or paired.has(b) or not (a in directions) or not (b in directions):
+			continue
+		paired[a] = true
+		paired[b] = true
+		pieces.append(_pair_piece(a, b))
+	var remaining: Array[Vector2i] = []
+	for direction in directions:
+		if not paired.has(direction):
+			remaining.append(direction)
+	while remaining.size() >= 2:
+		var a: Vector2i = remaining.pop_front()
+		var partner_index := -1
+		for index in range(remaining.size()):
+			if remaining[index] == -a:
+				partner_index = index
+				break
+		if partner_index < 0:
+			partner_index = 0
+		var b: Vector2i = remaining[partner_index]
+		remaining.remove_at(partner_index)
+		pieces.append(_pair_piece(a, b))
+	if remaining.size() == 1:
+		# A branch with no partner still needs a curve into the through-line so
+		# the switch reads as connected rather than a floating stub.
+		var stub: Vector2i = remaining[0]
+		var through: Vector2i = directions[0] if directions[0] != stub else directions[1]
+		pieces.append(_pair_piece(stub, through))
+	return pieces
+
+func _route_pairings(cell: Vector2i) -> Array:
+	var pairings: Array = []
+	for route in routes:
+		var count := route.size()
+		for index in range(count):
+			if cell_of(route[index]) != cell:
+				continue
+			var previous := cell_of(route[(index - 1 + count) % count]) - cell
+			var next := cell_of(route[(index + 1) % count]) - cell
+			pairings.append([previous, next])
+	return pairings
+
+## Source art: buffer stop at the top, open rail at the bottom.
+func _end_rotation(open_direction: Vector2i) -> float:
+	return Vector2(open_direction).angle() - PI * 0.5
 
 func _curve_rotation(a: Vector2, b: Vector2) -> float:
 	var has_down := a.y > 0.5 or b.y > 0.5

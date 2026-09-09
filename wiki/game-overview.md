@@ -17,13 +17,16 @@ Challenge cards remix these rules, including the reverse Spider Assault mode.
 
 ## Core loop
 
-1. During the 45-second Station phase, buy cars or engines, edit consists, and select
-   a locomotive.
-2. Start the wave early or wait for departure. Spiders enter one of nine lanes.
+1. During the 45-second Station phase, buy cars or engines, edit consists, lay or
+   lift rail for Δ50 a tile, and select a locomotive.
+2. Press START WAVE or wait for departure. Spiders enter one of nine lanes.
 3. Trains cruise automatically. Up boosts the selected engine; a short Down press
    slows it to a crawl and holding Down reverses it.
 4. Combat cars attack automatically. The player changes coverage through train
-   composition, route, direction, and speed.
+   composition, route, direction, and speed. Spiders steer round trains when a
+   neighbouring lane is clear and bite the unit blocking them when it is not; a
+   destroyed car drops out of the train and a wrecked engine waits for a new
+   locomotive.
 5. Kills, wave bonuses, and Passenger Coaches generate Delta. Purchases are the main
    sink; invalid or overweight drops spend nothing.
 6. Surviving spiders attack the station until killed. Clearing a wave returns to the
@@ -34,7 +37,8 @@ Challenge cards remix these rules, including the reverse Spider Assault mode.
 - Gunner: reliable single-target damage.
 - Chaingunner: slow-cadence seven-shot burst.
 - Ballast Blaster: short-range group damage.
-- Coal Cannon: heavy direct hit plus splash.
+- Coal Cannon: heavy direct hit plus splash and knockback.
+- Mail Carrier: rapid envelopes, each at a random spider within 5×5.
 - Passenger Coach: recurring Delta income.
 - Brake Van: caps a train and improves combat and braking performance.
 - Tender: increases capacity when directly behind the engine.
@@ -55,6 +59,7 @@ permanent cross-run upgrades remain intentionally absent until baseline balance 
 
 - Target: Godot 4.7.2 Web, single player, 1280×720 logical viewport.
 - Armed cars use the original swivelling behavior following playtest feedback.
-- Rail editing, Barrier Car damage/pathfinding, and a discovery gallery are deferred.
+- STATIONS rail building and spider avoidance/biting are in as proposed design; the
+  Barrier Car, junction switching, and a discovery gallery are deferred.
 - Asset authorship and release permission must be established before public release.
 - Recovered facts, collaborator direction, and new decisions remain distinguished.

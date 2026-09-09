@@ -51,9 +51,17 @@ func _spawn_car(index: int) -> void:
 	car.global_position = get_viewport().get_mouse_position()
 	if car.has_method("set_convoy_transform"):
 		car.set_convoy_transform(car.global_position, Vector2.UP)
+	# Lab cars are obstacles with workbook health so spider avoidance and
+	# biting can be watched without a campaign train.
+	car.add_to_group("train_units")
+	var health := UnitHealth.attach_to(car, float(data.health), data.tower_name)
+	health.destroyed.connect(func(unit: Node2D) -> void:
+		_spawned.erase(unit)
+		unit.queue_free()
+	)
 	_spawned.append(car)
 	_last_car = car
-	_status.text = "Spawned %s. F flips; V compares static and swivel modes." % data.tower_name
+	_status.text = "Spawned %s (%d HP). F flips; V compares static and swivel modes." % [data.tower_name, data.health]
 
 func _spawn_spider(index: int) -> void:
 	if index >= EnemyRoster.PROFILES.size():

@@ -16,8 +16,8 @@ func _shoot() -> void:
 		return
 	AudioFX.play(preload("res://assets/audio/sfx/turret_shoot_ballast.wav"), -2.0)
 	_play_recoil(8.0)
-	for body in targeting_area.get_overlapping_bodies():
-		if body.has_method("take_damage") and global_position.distance_to(body.global_position) <= targeting_range:
+	for body in _spiders_in_range():
+		if body.has_method("take_damage"):
 			body.take_damage(BLAST_DAMAGE)
 	_spawn_ballast_spray(target.global_position)
 

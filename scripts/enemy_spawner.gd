@@ -38,6 +38,9 @@ var enemies_alive: int = 0
 var enemies_left_to_spawn: int = 0
 var eps: float = 0.0 ## enemies per second, current wave
 var is_spawning: bool = false
+## Set once the level's final wave clears. The level-complete flow reloads
+## the scene, so nothing here should ever start another wave underneath it.
+var level_finished: bool = false
 var telemetry: Dictionary = {}
 
 func _ready() -> void:
@@ -74,10 +77,10 @@ func _process(delta: float) -> void:
 		_end_wave()
 
 func can_start_next_wave() -> bool:
-	return not is_spawning
+	return not is_spawning and not level_finished
 
 func start_next_wave() -> void:
-	if is_spawning:
+	if not can_start_next_wave():
 		return
 	current_wave += 1
 	is_spawning = true
@@ -117,9 +120,11 @@ func _end_wave() -> void:
 	telemetry.net_delta = LevelManager.currency - int(telemetry.get("starting_delta", LevelManager.currency))
 	if OS.is_debug_build():
 		print("WAVE TELEMETRY %s" % telemetry)
+	if wave_target > 0 and current_wave >= wave_target:
+		level_finished = true
 	wave_cleared.emit(current_wave)
 	GameEvents.wave_completed.emit(current_wave)
-	if wave_target > 0 and current_wave >= wave_target:
+	if level_finished:
 		CampaignManager.complete_current_level()
 
 ## Debug-only jump used for balance passes. The requested wave becomes the next
@@ -145,6 +150,7 @@ func _spawn_enemy() -> void:
 	# The new courtyard uses 65.5-unit cells instead of the previous 90-unit
 	# board. Scale the complete enemy body, including collision, with the art.
 	enemy.scale = Vector2(0.54, 0.54)
+	enemy.set("lane_x_positions", lane_x_positions)
 	var lane_x: float = lane_x_positions[randi() % lane_x_positions.size()]
 	enemy.global_position = Vector2(lane_x, spawn_y)
 	if enemy.has_method("configure_difficulty") and String(profile.get("id", "generic")) == "generic":
@@ -173,6 +179,7 @@ func spawn_controlled_spider(profile_id: String, entrance: Vector2, destination:
 	get_tree().current_scene.add_child(enemy)
 	enemy.global_position = entrance
 	enemy.scale = Vector2(0.54, 0.54)
+	enemy.set("lane_x_positions", lane_x_positions)
 	enemy.set_meta("player_deployed", true)
 	if enemy.has_method("configure_archetype"):
 		enemy.configure_archetype(profile, 1, 2)

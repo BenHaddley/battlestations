@@ -176,12 +176,26 @@ func _shoot_sound() -> AudioStream:
 func _shoot_volume_db() -> float:
 	return -6.0
 
+## Workbook priority "Close": the nearest live spider inside targeting_range.
+## Measured directly rather than through the physics area so the range a
+## player sees previewed is exactly the range the gun acquires at — the
+## placed car's root scale used to shrink the area to about half its size.
 func _find_target() -> Node2D:
 	if not fixed_direction_enabled:
-		if targeting_area == null:
-			return null
-		var bodies := targeting_area.get_overlapping_bodies()
-		return bodies[0] if bodies.size() > 0 else null
+		var nearest: Node2D = null
+		var nearest_distance := targeting_range * targeting_range
+		for candidate in get_tree().get_nodes_in_group("spiders"):
+			var spider := candidate as Node2D
+			if spider == null or not is_instance_valid(spider) or spider.is_queued_for_deletion():
+				continue
+			var spider_health := spider.get_node_or_null("Health") as Health
+			if spider_health != null and spider_health.is_destroyed:
+				continue
+			var distance := global_position.distance_squared_to(spider.global_position)
+			if distance <= nearest_distance:
+				nearest_distance = distance
+				nearest = spider
+		return nearest
 	# Fixed guns use every live spider on the board, then reduce that set to a
 	# narrow forward corridor. Distance is deliberately not part of selection.
 	var nearest: Node2D = null
@@ -199,6 +213,17 @@ func _target_in_range() -> bool:
 	if fixed_direction_enabled:
 		return _is_in_fixed_firing_line(target)
 	return global_position.distance_to(target.global_position) <= targeting_range
+
+## Every live spider inside targeting_range, for area weapons.
+func _spiders_in_range() -> Array[Node2D]:
+	var result: Array[Node2D] = []
+	for candidate in get_tree().get_nodes_in_group("spiders"):
+		var spider := candidate as Node2D
+		if spider == null or not is_instance_valid(spider) or spider.is_queued_for_deletion():
+			continue
+		if global_position.distance_to(spider.global_position) <= targeting_range:
+			result.append(spider)
+	return result
 
 func _rotate_towards_target(delta: float) -> void:
 	if fixed_direction_enabled:

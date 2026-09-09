@@ -18,3 +18,8 @@ Move the mouse to the desired position, then use:
 This lab ignores prices, campaign unlocks, waves, and train capacity so combat interactions can be checked immediately.
 
 Mail Carrier is available on `8`, with a fresh random recipient per envelope.
+
+Spawned cars carry their workbook health and count as obstacles: a spider spawned
+above a car steps into a clear neighbouring lane, and with cars across every lane
+within three steps it stops and bites at 25 damage per second (the health bar and
+jaws marker appear on the bitten car, which is removed when destroyed).

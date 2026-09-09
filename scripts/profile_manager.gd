@@ -2,26 +2,46 @@ extends Node
 ## Three lightweight save slots. Feature-specific systems ask for profile_path()
 ## so campaign, discoveries, achievements, and tutorial state stay isolated.
 
-const ACTIVE_PATH := "user://active_profile.cfg"
+const ACTIVE_FILE := "active_profile.cfg"
 const SLOT_COUNT := 3
 var active_profile := 1
+## Every profile file lives under this root. Automated tests point it at a
+## scratch directory so a regression run never touches a real career.
+var root := "user://"
 
 func _ready() -> void:
 	var config := ConfigFile.new()
-	if config.load(ACTIVE_PATH) == OK:
+	if config.load(root.path_join(ACTIVE_FILE)) == OK:
 		active_profile = clampi(int(config.get_value("profiles", "active", 1)), 1, SLOT_COUNT)
 	_ensure_profile_dir(active_profile)
 	_migrate_legacy_profile_one()
 
 func profile_path(file_name: String, slot: int = active_profile) -> String:
-	return "user://profile_%d/%s" % [clampi(slot, 1, SLOT_COUNT), file_name]
+	return root.path_join("profile_%d/%s" % [clampi(slot, 1, SLOT_COUNT), file_name])
 
 func select_profile(slot: int) -> void:
 	active_profile = clampi(slot, 1, SLOT_COUNT)
 	_ensure_profile_dir(active_profile)
 	var config := ConfigFile.new()
 	config.set_value("profiles", "active", active_profile)
-	config.save(ACTIVE_PATH)
+	config.save(root.path_join(ACTIVE_FILE))
+
+## Redirects every profile-backed system to an isolated directory and reloads
+## them from it. Intended for headless regression runs only.
+func use_sandbox_root(sandbox_root: String) -> void:
+	root = sandbox_root
+	if not root.ends_with("/"):
+		root += "/"
+	var absolute := ProjectSettings.globalize_path(root)
+	if DirAccess.dir_exists_absolute(absolute):
+		_remove_directory_contents(absolute)
+	DirAccess.make_dir_recursive_absolute(absolute)
+	active_profile = 1
+	for slot in range(1, SLOT_COUNT + 1):
+		_ensure_profile_dir(slot)
+	AppSettings.load_settings()
+	DiscoveryTracker.load_discoveries()
+	AchievementTracker.load_progress()
 
 func profile_name(slot: int) -> String:
 	var config := ConfigFile.new()
@@ -36,7 +56,7 @@ func rename_profile(slot: int, new_name: String) -> void:
 	config.save(profile_path("profile.cfg", slot))
 
 func delete_profile(slot: int) -> void:
-	var dir_path := ProjectSettings.globalize_path("user://profile_%d" % clampi(slot, 1, SLOT_COUNT))
+	var dir_path := ProjectSettings.globalize_path(root.path_join("profile_%d" % clampi(slot, 1, SLOT_COUNT)))
 	if DirAccess.dir_exists_absolute(dir_path):
 		_remove_directory_contents(dir_path)
 	_ensure_profile_dir(slot)
@@ -50,7 +70,7 @@ func progress_summary(slot: int) -> String:
 	return "CAMPAIGN COMPLETE" if complete else "MISSION %d" % (index + 1)
 
 func _ensure_profile_dir(slot: int) -> void:
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("user://profile_%d" % clampi(slot, 1, SLOT_COUNT)))
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(root.path_join("profile_%d" % clampi(slot, 1, SLOT_COUNT))))
 
 func _remove_directory_contents(path: String) -> void:
 	var dir := DirAccess.open(path)
@@ -65,7 +85,7 @@ func _remove_directory_contents(path: String) -> void:
 func _migrate_legacy_profile_one() -> void:
 	# Preserve saves made before profile slots existed. Copy only into an empty
 	# slot-one destination, leaving both the old save and newer slot data intact.
-	if DisplayServer.get_name() == "headless":
+	if DisplayServer.get_name() == "headless" or root != "user://":
 		return
 	var slot_path := ProjectSettings.globalize_path("user://profile_1")
 	if not DirAccess.dir_exists_absolute(slot_path):

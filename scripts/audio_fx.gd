@@ -1,8 +1,20 @@
 extends Node
 ## Autoload. Fire-and-forget one-shot SFX playback, so callers don't each
-## need their own AudioStreamPlayer bookkeeping.
+## need their own AudioStreamPlayer bookkeeping. Crowded moments — a
+## Chaingunner burst landing while a wave dies — are kept readable by
+## capping how many copies of one sound play at once and ducking the
+## extras, on top of a limiter on the SFX bus (see AppSettings).
+
+## At most this many simultaneous players of the same stream; further
+## requests within the window are dropped so bursts cannot pile up.
+const MAX_VOICES_PER_STREAM := 4
+## Each extra simultaneous copy of a sound plays this much quieter.
+const STACK_DUCK_DB := -3.0
 
 var _cue_cache: Dictionary = {}
+## stream path (or object id) -> Array of live AudioStreamPlayer
+var _voices: Dictionary = {}
+var dropped_voices: int = 0
 
 func _ready() -> void:
 	pass
@@ -10,13 +22,34 @@ func _ready() -> void:
 func play(stream: AudioStream, volume_db: float = 0.0) -> void:
 	if stream == null:
 		return
+	var key := _voice_key(stream)
+	var live: Array = _voices.get(key, [])
+	live = live.filter(func(player) -> bool: return is_instance_valid(player) and player.playing)
+	if live.size() >= MAX_VOICES_PER_STREAM:
+		_voices[key] = live
+		dropped_voices += 1
+		return
 	var player := AudioStreamPlayer.new()
 	player.stream = stream
 	player.bus = &"SFX"
-	player.volume_db = volume_db
+	player.volume_db = volume_db + STACK_DUCK_DB * live.size()
 	get_tree().root.add_child(player)
 	player.play()
 	player.finished.connect(player.queue_free)
+	live.append(player)
+	_voices[key] = live
+
+## Live players for a stream — used by tests and the debug overlay.
+func active_voices(stream: AudioStream) -> int:
+	var live: Array = _voices.get(_voice_key(stream), [])
+	var count := 0
+	for player in live:
+		if is_instance_valid(player) and player.playing:
+			count += 1
+	return count
+
+func _voice_key(stream: AudioStream) -> String:
+	return stream.resource_path if not stream.resource_path.is_empty() else str(stream.get_instance_id())
 
 ## Short procedural UI cues avoid adding provenance-sensitive placeholder files.
 func play_cue(cue: StringName) -> void:

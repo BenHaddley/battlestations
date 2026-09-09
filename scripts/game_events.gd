@@ -10,3 +10,7 @@ signal station_attacked(damage: int)
 signal wave_completed(wave_number: int)
 signal purchase_made
 signal level_completed_detail(is_challenge: bool)
+## Train damage feedback for lessons and HUD copy.
+signal train_unit_bitten(unit: Node2D)
+signal train_unit_destroyed(label: String)
+signal engine_wrecked(convoy: Node2D)

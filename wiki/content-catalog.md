@@ -10,11 +10,12 @@ that its implied mechanic was designed or implemented.
 
 - Two full-board images: `BATTLE STATIONS BOARD.png` and the currently used
   `THE_BOARD.png`.
-- Rail tiles: curve and straight.
+- Rail tiles: curve, straight, and the buffer-stop end (`Rail End.png`).
 - Five numbered break pieces.
 - Three rocks.
 
-`THE_BOARD.png`, the straight rail tile, and the curved rail tile are used by active scenes.
+`THE_BOARD.png` and all three rail tiles are used by active scenes: the end piece caps
+every dead end the player builds during STATIONS.
 
 ## Engines
 
@@ -95,7 +96,8 @@ archetypes. Their implemented roles are recorded in
 - `assets/sprites/ui/game over ai placeholder/` is actively used despite its legacy
   directory name. Renaming it requires updating the preloads in `game_over_overlay.gd`.
 - The identical `BREAK 1.png` through `BREAK 5.png` files in `board/` and `effects/`
-  are retained for now because their intended ownership is unresolved.
+  are retained for now because their intended ownership is unresolved. The `effects/`
+  copies play as the debris burst when a train car or engine is destroyed.
 
 ## Audio
 

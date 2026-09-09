@@ -21,6 +21,171 @@ in the [roadmap unblock checklist](docs/roadmap-blockers.md).
 
 ---
 
+## Next priority — STATIONS rail building and train interaction
+
+Source: [Gubgub's rail-building and collision follow-up](wiki/sources/2026-09-09-rail-building-and-train-collision-notes.md),
+recorded 2026-09-09. Rail building is now the requested next feature, superseding
+its earlier deferred status. Tasks below remain unimplemented unless checked.
+
+### Restore the wave-start skip button
+
+- [x] Fix the reported missing **skip to the start of the wave** button from
+      **wave 2 onward**. Show it during the between-wave STATIONS countdown so the
+      player can start the next wave immediately; hide or disable it during BATTLE.
+      Verify it returns after each completed wave and cannot start a wave twice.
+      (`PhaseManager.request_wave_start()`; the button now reads START WAVE n /
+      WAVE n UNDERWAY / LEVEL COMPLETE. The cause was the tutorial restoring a stale
+      clock pause; lessons now use a separate hold. Regression-tested headless.)
+
+### Stop train controls from moving UI focus
+
+- [x] Fix the reported input conflict where **Up/Down**, while controlling a train,
+      also select or highlight UI buttons. Route directional input to the active
+      train controls without simultaneously moving interface focus. (HUD controls
+      cannot take focus; `Main._input` consumes `ui_up/down/left/right` while the
+      board is live.)
+- [x] Preserve intentional keyboard navigation in menus and dialogue. Verify train
+      control after clicking shop/HUD buttons, closing overlays, and resuming from
+      pause, including held keys and switching between trains. (Driving is disabled
+      while any card or dialogue is open, so their own focus navigation is untouched;
+      covered by the regression suite. A person still needs to try held keys in the
+      browser build — see the smoke-test checklist.)
+
+### Build connected rails during STATIONS
+
+- [x] Enable rail building during STATIONS only; disable construction and its plus
+      controls during BATTLE.
+- [x] Hover an existing rail tile to show clickable plus signs on surrounding empty
+      tiles; clicking a plus adds a connected rail tile. Settle adjacency rules.
+      (Orthogonal neighbours only; a new tile connects to the hovered tile; dead
+      ends are joined to adjacent rail by an explicit free click on a join ring.)
+- [x] Charge **Δ50 per rail tile provisionally**, with clear affordability feedback;
+      charge only for a valid placement. Workshop the final price after playtesting.
+- [x] Explain failed rail placements with a specific reason: insufficient Delta,
+      occupied space, or an invalid connection. Preserve the current railway and
+      wallet when placement fails.
+- [x] Keep purchased rails between waves. Before implementing persistence, define
+      what survives saving/loading, restarting, and replaying a level; verify each
+      transition preserves or resets the railway according to those rules. (Built
+      rail is run-local: it survives every wave and resets whenever the level scene
+      reloads — restart, replay, continue, next stop.)
+- [x] Define rail-editing cancellation, undo, removal, and refund rules, including
+      restrictions for occupied track; implement clear controls and feedback.
+      (Right-click lifts a laid tile for a full refund; authored rail, occupied rail,
+      and removals that strand track or break a circuit are refused with a reason.)
+- [x] Add a rail-building tutorial explaining hover/plus controls, the provisional
+      Δ50 cost, and construction availability during STATIONS only.
+- [x] Add buffer/end-cap art for dead ends and refresh neighboring connections after
+      placement (every cell is drawn from its connection set, including junctions).
+- [ ] Redraw rail pieces to fit the board grid exactly if the current 750 px tiles,
+      scaled slightly over the 65.5-unit cell to hide seams, are judged unacceptable.
+      Artist task; see the roadmap blockers.
+- [x] Define how extensions, junctions, and dead ends affect train routes before
+      rebinding convoys. Preserve safe movement while an extension is being built;
+      the requested dead ends cannot be treated as already-supported closed loops.
+      (Trains drive closed rings only; a joined, longer, player-built detour is
+      adopted and the convoy rebinds once its whole consist is on shared track; dead
+      ends are construction. Proposed design — see the wiki.)
+- [x] Verify phase gating, hover/plus placement, invalid/occupied cells, single-charge
+      purchases, insufficient funds, connection art, and safe route updates.
+      (`_test_rail_building` in the regression suite.)
+
+### Spiders avoid trains, then bite when blocked
+
+- [x] Make moving trains obstacles that spiders try to maneuver around to the left
+      or right; when no detour exists, attack the blocking unit instead.
+- [x] Use the workbook's unit health values and start biting at **about 25 damage
+      per second per spider**. Define tick timing and how simultaneous attackers stack.
+      (0.25 s ticks of 6.25; attackers stack linearly.)
+- [x] Add incidental train-impact damage of **about one bullet's worth** to a spider,
+      plus a small recoil on the train. Define the reference bullet, recoil amount,
+      and contact cooldown so ramming cannot replace the intended weapons. (One
+      Gunner bullet = 20; 2 s per spider per unit; only above 60% cruise; the train
+      drops to 35% speed and jolts back 8 units.)
+- [x] Handle destroyed cars/engines, convoy gaps, lost buffs/carry capacity, and
+      navigation updates without corrupting the train or wave state.
+- [x] Decide engine-destruction behavior before implementing train damage: what
+      happens to surviving attached cars, whether a stranded train can be recovered,
+      and how recovery works if supported. (A wreck: cars keep firing where they
+      stand, nothing couples, spiders walk past; dropping a Δ325 locomotive on the
+      wreck recovers the train at full engine health. Proposed design.)
+- [x] Add readable unit-health feedback: show damaged cars, identify the unit being
+      bitten, and clearly communicate car or engine destruction.
+- [x] Resolve whether empty rail tiles block spiders, the left/right search distance
+      (including the earlier three-block idea), and no-detour behavior near board edges.
+      (Empty rail never blocks; three lanes each side; lanes beyond the board edge are
+      simply unavailable, so an edge spider bites sooner.)
+- [ ] Playtest avoidance, multiple biting spiders, impact/recoil, and car destruction.
+      This revises the older specification that ordinary trains deal no impact damage.
+- [x] Recover spiders from stale paths or invalid attack targets after trains move,
+      rails change, or cars are destroyed. Recalculate movement or enter the valid
+      blocked/bite state so a frozen spider cannot prevent the wave from finishing.
+
+### Show attack range and the controlled train
+
+- [x] Show a car's actual attack range while placing or selecting it, including
+      Mail Carrier's 5×5 range. Keep previews consistent with targeting and upgrades,
+      and avoid showing an attack radius for non-attacking cars. (Guns now acquire
+      at the documented radius rather than through the scaled physics area, so the
+      preview is the real range; the upgrade card reports range in board tiles.)
+- [x] Clearly mark the train currently being controlled and show its current total
+      weight and carry capacity. Refresh the feedback when switching trains,
+      coupling/removing cars, or losing a unit or capacity bonus.
+
+### Verify campaign transitions and the complete run
+
+- [x] Verify final-wave completion, character dialogue, rewards, victory, and the
+      next station occur in the intended order without overlapping screens,
+      duplicate rewards, or starting the next encounter before dialogue finishes.
+      (Fixed: dismissing dialogue after the final wave could restart the station
+      clock under the level-complete card; the spawner now refuses waves after the
+      level finishes. Regression-tested headless; the in-person run below remains.)
+- [ ] Run a full campaign playtest covering every car unlock, Duck and Daisy lesson,
+      wave-skip button from wave 2 onward, and save/continue transition together.
+      Include rail edits and train damage as those systems become available; record
+      the build, observations, and failures, then recheck fixes.
+
+### Duck and Daisy guide the player throughout the campaign
+
+- [x] Map every player-facing feature and car to a level introduction. Duck and
+      Daisy should teach progressively as levels unlock content, building on earlier
+      lessons rather than stopping after the opening tutorial.
+- [x] Cover train placement/coupling, driving and selection, capacity and Tender
+      positioning, Delta income, upgrades/selling, wave-start skipping, and STATIONS
+      rail building. Introduce avoidance, biting, unit health, destruction, and
+      recovery alongside those systems when implemented.
+- [x] Give every unlocked car its own explanation and guided use: role, cost,
+      weight, range/targeting where applicable, special behavior, and a practical
+      reason to choose it. Include Mail Carrier and extend coverage to future cars.
+- [x] Pair dialogue with a highlighted control or unit and a small actionable task;
+      advance when the player performs the action. Keep lessons possible with the
+      player's available money, train capacity, and current board state.
+- [x] Schedule lessons during safe moments, preferably STATIONS, and coordinate
+      them with wave timing so combat cannot interrupt an unfinished instruction.
+- [x] Track completed lessons per profile; support skipping and replaying guidance,
+      and ensure continuing a save still introduces newly unlocked features/cars.
+      Reset the appropriate lesson progress for a new campaign.
+- [x] Make sure switching to a different profile restarts the tutorial on that
+      profile (a profile with no completed lessons of its own should see the
+      opening tutorial again, not inherit progress from the previously active
+      profile).
+- [ ] Verify the full campaign's teaching sequence with a fresh player, including
+      levels that unlock multiple cars, save/continue, skipped lessons, and replays.
+      Every available feature and car should have an introduction at a useful moment.
+
+### Correct Gunner and Chaingunner artwork
+
+- [ ] Import the updated Gunner/Chaingunner art from the shared Drive as separate
+      chassis and turret images and audit it against the placed cars. The repository
+      only holds the older chassis/turret pairs and the static directional sheets.
+- [x] Replace superseded active references and verify both placed cars match their
+      previews while still swivelling. (Every surface — shop row, drag preview,
+      placement ghost, almanac card, upgrade card — now renders the placed car's own
+      chassis/turret pair via `CarArt`; the static sheets remain only for the debug
+      directional toggle.)
+
+---
+
 ## Asset workbook — roster and production backlog
 
 Source: [Assets to make.xlsx](wiki/sources/Assets%20to%20make.xlsx),
@@ -37,6 +202,10 @@ release order. The following work groups are a proposed implementation sequence.
       feedback; retain the directional experiment only as a debug comparison.
 - [x] Add Mail Carrier with supplied chassis/turret/envelope artwork, 5×5 range,
       and independent random targeting for every projectile.
+- [x] Add a Mail Carrier unlock explanation and almanac entry covering its rapid
+      fire, 5×5 range, and independent random target selection for each envelope.
+      (Duck and Daisy car lesson, the level-complete card now names every car a stop
+      unlocks, and the almanac card uses the placed car's own artwork.)
 - [ ] Reconcile Steam Engine cost 250/carry 1200, Tender cost 75, Delta Coach cost
       100, Mail Car cost 125/weight 125, and Brake Van cost 175 against current values.
       Tender weight and capacity bonus are `N/A`, not replacements for existing values.
@@ -126,31 +295,36 @@ they improve the game.
 
 ### Next: build the full main menu
 
-- [ ] Implement the supplied main-menu graphic as a responsive navigation screen,
+- [x] Implement the supplied main-menu graphic as a responsive navigation screen,
       preserving its illustrated layout and adding keyboard-focus states alongside
-      pointer hit areas.
-- [ ] **Start Game:** begin the normal story campaign, including pre-round dialogue.
+      pointer hit areas. (`TitleScreen.tscn`: illustrated hit areas, Start focused on
+      entry, Enter/Space and Escape handling, focusable buttons throughout.)
+- [x] **Start Game:** begin the normal story campaign, including pre-round dialogue.
+      (Start continues the active profile's save or opens Daisy's new-game choice;
+      every stop opens with its Duck and Daisy introduction.)
 - [x] **Level Select:** list unlocked levels for replay and for retrying missed level
       challenges; locked levels must be visually distinct.
-- [ ] **Challenges:** show a clear coming-soon state until special handicap/mechanic
-      levels are designed.
+- [x] **Challenges:** the coming-soon state was superseded — six challenge job cards
+      (Last Train Standing, Heavy Haul, No Brakes, Sturdy Situation, Budget Railway,
+      Spider Assault) are designed, launchable and regression-tested.
 - [x] **Achievements:** show persisted medal tasks and their locked/unlocked state.
 - [x] **Almanac:** open the persisted discovery/reference collection from the main menu.
 - [x] **Settings (gear):** expose music/SFX volume and default battle speed preferences.
       preferences.
 - [x] **Profiles:** support three save profiles and make the active profile obvious;
       profile switching must isolate campaign progress and settings as specified.
-- [ ] **Quit (X):** quit native builds safely. For Web builds, explain that the tab
+- [x] **Quit (X):** quit native builds safely. For Web builds, explain that the tab
       can be closed or return to a harmless title state instead of calling an
-      unsupported quit operation.
+      unsupported quit operation. (`TitleScreen._quit_game()`.)
 
 ### Later audio-readability pass
 
 - [ ] When placeholder sounds are supplied, add distinct cues for the Coal Cannon
       power shot, Jumping Spider hop, Wolf Spider half-health mode, car placement,
       and other small but important board events.
-- [ ] Normalize simultaneous sound playback so bursts and crowded waves remain clear
-      and do not clip or become unexpectedly loud.
+- [x] Normalize simultaneous sound playback so bursts and crowded waves remain clear
+      and do not clip or become unexpectedly loud. (At most four voices per sound
+      with each extra copy ducked 3 dB, and a limiter on the SFX bus.)
 
 **Sprint exit criterion:** the reported Chaingunner, Jumping Spider, Coal Cannon,
 font, and placement-message issues are fixed and regression-tested; the sandbox has
@@ -462,9 +636,9 @@ and wave transitions without relying on debug output.
 - [x] Add a seven-stop campaign followed by endless Open Rails play.
 - [x] Persist campaign progress in Web storage.
 - [x] Add deterministic campaign board layouts and challenge variations.
-- [ ] Design and implement the explicitly deferred between-wave rail-expansion system,
-      including costs, placement/removal rules, route validation, and rebinding trains
-      safely when the railway changes.
+- [x] Implement the now-prioritized STATIONS rail-expansion system: hover-to-reveal
+      plus controls, provisional Δ50 tiles, buffer art, route validation, and safe
+      convoy rebinding. See the next-priority section above.
 - [x] Add event-driven onboarding that teaches coupling a Gunner, starting a wave,
       automatic firing, Delta payouts, train weight, and each newly unlocked car.
 - [x] Keep upgrades run-local; campaign persistence records progress only and adds no
@@ -499,13 +673,17 @@ has no unresolved asset-rights questions, and communicates what the game is.
 
 ## Next five tasks
 
-These priorities follow the newly documented workbook; outstanding browser, rights,
-and playtest gates remain in the [unblock checklist](docs/roadmap-blockers.md).
+These priorities follow Gubgub's latest written direction; the workbook expansion
+backlog and existing release gates remain tracked above. The 2026-09-09 systems are
+built and regression-tested; what remains needs a person, an asset, or a decision.
 
-1. Reconcile the workbook's existing-unit costs, carry capacity, and Brake Van buff
-   with the active build, starting with Mail Carrier's provisional cost and weight.
-2. Audit the 25-unit register against supplied assets and record missing deliverables.
-3. Specify per-car health/destruction and support-effect stacking/removal rules.
-4. Define numeric attack cadence/power, targeting priorities, and board-effect rules
-   for the first approved new units.
-5. Playtest the reconciled roster and select the first asset-ready expansion group.
+1. Playtest rail building, avoidance, biting, ramming recoil and car destruction in
+   the browser build; record observations and approve or replace the provisional
+   Δ50, 25 DPS, 20-damage and recoil values.
+2. Confirm or amend the proposed rail rules (explicit joins, detour adoption, full
+   refunds, run-local persistence, no junction switching) and the wreck/recover rule.
+3. Import the updated Gunner/Chaingunner Drive artwork as chassis/turret pairs.
+4. Run the fresh-player campaign pass covering every car lesson, save/continue,
+   skipped and replayed lessons, and profile switching.
+5. Decide the workbook cost/carry/buff differences and spider bounty targets, then
+   start the first expansion group (Barrier Car plugs into the obstacle rules).

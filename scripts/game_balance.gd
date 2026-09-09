@@ -19,6 +19,29 @@ class_name GameBalance
 @export var passenger_income: int = 32
 @export var passenger_income_interval: float = 8.0
 @export var locomotive_cost: int = 325
+## Provisional STATIONS rail price per tile (2026-09-09 notes); to be
+## workshopped after playtesting. Removal refunds the same amount.
+@export var rail_tile_cost: int = 50
+
+@export_group("Train Damage")
+## Workbook STEAM ENGINE health.
+@export var engine_health: int = 300
+## Provisional 2026-09-09 direction: about 25 damage per second per spider
+## chewing on a blocked unit, applied in fixed ticks; several spiders stack
+## linearly.
+@export var bite_damage_per_second: float = 25.0
+@export var bite_tick_seconds: float = 0.25
+## A spider struck by a moving train takes about one Gunner bullet's worth
+## (Bullet.tscn deals 20) and the train recoils a little. Each spider can be
+## struck by the same unit only once per cooldown so ramming cannot replace
+## the guns.
+@export var impact_damage: int = 20
+@export var impact_cooldown_seconds: float = 2.0
+## Below this fraction of cruise speed a train nudges spiders aside without
+## hurting them.
+@export var impact_minimum_speed_fraction: float = 0.6
+@export var impact_recoil_distance: float = 8.0
+@export var impact_speed_retained: float = 0.35
 
 @export_group("Train")
 @export var cruise_speed: float = 46.0

@@ -136,12 +136,15 @@ func show_for(level: LevelData, is_finale: bool) -> void:
 	else:
 		_title_label.text = "LEVEL COMPLETE"
 		_subtitle_label.text = "%s cleared." % level.level_name
-		if level.new_tower_index >= 0 and level.new_tower_index < BuildManager.towers.size():
-			var reward: TowerData = BuildManager.towers[level.new_tower_index]
-			_reward_label.text = "NEW UNIT UNLOCKED: %s" % reward.tower_name
-			_reward_label.get_parent().visible = true
-		else:
+		var names: Array[String] = []
+		for tower_index in level.new_tower_indices:
+			if tower_index >= 0 and tower_index < BuildManager.towers.size():
+				names.append(BuildManager.towers[tower_index].tower_name)
+		if names.is_empty():
 			_reward_label.get_parent().visible = false
+		else:
+			_reward_label.text = ("NEW UNIT UNLOCKED: %s" if names.size() == 1 else "NEW UNITS UNLOCKED: %s") % " + ".join(names)
+			_reward_label.get_parent().visible = true
 	visible = true
 
 func _on_continue_pressed() -> void:

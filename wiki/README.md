@@ -17,7 +17,7 @@ as settled design.
 | [History and sources](history-and-sources.md) | Project timeline, evidence, provenance, and missing leads |
 | [Asset workbook](asset-workbook.md) | All 25 spreadsheet unit concepts, stats, build differences, and production dependencies |
 | [Asset provenance](asset-provenance.md) | Release-rights register and evidence still required for art, audio, and fonts |
-| [Future rails and navigation](future-runtime-rails-and-navigation.md) | Prepared architecture and validation rules for later rail editing and obstacle-aware spiders |
+| [Rails and navigation](future-runtime-rails-and-navigation.md) | Architecture and reasoning behind STATIONS rail building, route adoption, safe rebinding, and obstacle-aware spiders, plus what is still open |
 | [Open questions](open-questions.md) | Decisions and missing information still needing an answer |
 | [Roadmap](../roadmap.md) | The implementation plan |
 
@@ -35,4 +35,4 @@ When a mechanic changes, update the relevant wiki page in the same change. Inclu
 file link for implementation claims, keep proposals out of the implemented sections,
 and add newly recovered source material to [History and sources](history-and-sources.md).
 
-Last repository audit: **2026-08-31**.
+Last repository audit: **2026-09-09**.

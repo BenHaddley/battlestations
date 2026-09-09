@@ -12,3 +12,4 @@ scene = ExtResource("2")
 summary = "Powerful cannonball at a slow rate; coal-dust splash to nearby spiders."
 icon = ExtResource("3")
 weight = 225.0
+health = 225

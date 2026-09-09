@@ -10,6 +10,8 @@ const BRANCHES := [
 	{"name": "SUPPORT", "color": Color("376a82"), "nodes": [["Supply Link", "+10% Fire Rate"], ["Repair Pulse", "Repairs nearby cars"], ["Overcharge", "+10% Damage"], ["Cargo Hold", "+15% train HP"]]},
 ]
 const COSTS := [120, 180, 300, 400]
+## Courtyard grid pitch; ranges are shown in board tiles.
+const BOARD_CELL := 65.5
 
 var unit: Node2D
 var convoy: Node2D
@@ -36,7 +38,7 @@ func open_for(selected_unit: Node2D, selected_convoy: Node2D, data: TowerData) -
 	unit_data = data
 	unit.modulate = Color(1.25, 1.15, 0.35, 1.0)
 	title_label.text = "%s UPGRADES" % data.tower_name.to_upper()
-	preview.texture = data.icon
+	preview.texture = CarArt.icon_for(data)
 	sell_button.text = "SELL\n+%d Δ" % int(round(data.cost * 0.5))
 	visible = true
 	_refresh()
@@ -220,9 +222,14 @@ func _refresh() -> void:
 	if not is_instance_valid(unit): return
 	var levels := _levels()
 	var bps: float = float(unit.get("bps")) if unit.get("bps") != null else 0.0
-	var range_value: float = float(unit.get("targeting_range")) / 90.0 if unit.get("targeting_range") != null else 0.0
+	var range_value: float = float(unit.get("targeting_range")) / BOARD_CELL if unit.get("targeting_range") != null else 0.0
 	var damage := float(unit.get_meta("damage_multiplier", 1.0))
-	stats_label.text = "DAMAGE   %.1fx\nFIRE RATE   %.2f/s\nRANGE   %.1f tiles" % [damage, bps, range_value]
+	var health := UnitHealth.of(unit)
+	var health_line := "\nHP   %d / %d" % [ceili(health.hit_points), roundi(health.max_hit_points)] if health else ""
+	if range_value > 0.0:
+		stats_label.text = "DAMAGE   %.1fx\nFIRE RATE   %.2f/s\nRANGE   %.1f tiles%s" % [damage, bps, range_value, health_line]
+	else:
+		stats_label.text = "NO WEAPON\nSUPPORT CAR%s" % health_line
 	for button in node_buttons:
 		var branch := int(button.get_meta("branch"))
 		var level := int(button.get_meta("level"))
