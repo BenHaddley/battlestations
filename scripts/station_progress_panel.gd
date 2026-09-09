@@ -82,22 +82,30 @@ func _build_elements() -> void:
 	track.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	stack.add_child(track)
 
-	phase_label = _label(phase_text, 23, Color("fff7dd"), 3)
+	# One combined "STATION — 00:23" line leaves room for the instruction to be
+	# a readable sentence rather than a caption under a caption.
+	phase_label = _label(phase_text, 21, Color("fff7dd"), 3)
 	phase_label.rotation = 0.012
 	stack.add_child(phase_label)
-	status_label = _label(status_text, 14, Color("fff5dc"), 2)
+	status_label = _label(status_text, 15, Color("fff5dc"), 2)
 	stack.add_child(status_label)
-	subtitle_label = _label(subtitle_text, 9, Color("f7edd5"), 1)
+	subtitle_label = _label(subtitle_text, 11, Color("fdf6e4"), 2)
+	subtitle_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	stack.add_child(subtitle_label)
 
 	skip_button = Button.new()
-	skip_button.custom_minimum_size = Vector2(0.0, 25.0)
-	skip_button.text = "SKIP WAIT"
+	skip_button.custom_minimum_size = Vector2(0.0, 42.0)
+	skip_button.text = "START WAVE"
+	skip_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	skip_button.add_theme_font_override("font", FONT)
-	skip_button.add_theme_font_size_override("font_size", 13)
-	skip_button.add_theme_color_override("font_color", Color("fff2d2"))
-	skip_button.add_theme_stylebox_override("normal", _button_style(Color("79201b")))
-	skip_button.add_theme_stylebox_override("hover", _button_style(Color("a52d24")))
+	skip_button.add_theme_font_size_override("font_size", 21)
+	skip_button.add_theme_color_override("font_color", Color("fff6dc"))
+	skip_button.add_theme_color_override("font_hover_color", Color("ffffff"))
+	skip_button.add_theme_color_override("font_disabled_color", Color("cfd4d6"))
+	skip_button.add_theme_color_override("font_outline_color", Color("2b0806"))
+	skip_button.add_theme_constant_override("outline_size", 4)
+	skip_button.add_theme_stylebox_override("normal", _button_style(Color("a3261d")))
+	skip_button.add_theme_stylebox_override("hover", _button_style(Color("d4372a")))
 	skip_button.add_theme_stylebox_override("disabled", _button_style(Color("4a5155")))
 	skip_button.pressed.connect(func() -> void: skip_wait_pressed.emit())
 	stack.add_child(skip_button)

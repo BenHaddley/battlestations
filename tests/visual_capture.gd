@@ -7,7 +7,6 @@ const TitleScene := preload("res://scenes/TitleScreen.tscn")
 
 func _ready() -> void:
 	var arguments := OS.get_cmdline_user_args()
-	print("VISUAL ARGS: ", arguments)
 	if "--title" in arguments:
 		var title := TitleScene.instantiate()
 		add_child(title)
@@ -50,6 +49,20 @@ func _ready() -> void:
 			director._advance()
 			director._advance()
 		await get_tree().process_frame
+	if "--hover-shop" in arguments:
+		# Hover a shop row: the old build drew a full-width native tooltip here.
+		var row: Button = main.menu.passenger_button
+		main.menu._show_shop_detail(3)
+		Input.warp_mouse(row.get_global_rect().get_center())
+		for frame in range(8):
+			await get_tree().process_frame
+	if "--build-mode" in arguments:
+		LevelManager.currency = 1000
+		main.menu.set_build_track(true)
+		var anchor_cell := Vector2i(3, 2)
+		Input.warp_mouse(main.get_viewport().get_canvas_transform() * main.track.world_of(anchor_cell))
+		for frame in range(8):
+			await get_tree().process_frame
 	if "--rails-demo" in arguments:
 		# Boiler Room loop A: a detour off its top edge plus a dead-end spur,
 		# then hover a rail tile so the plus signs and join marker render.

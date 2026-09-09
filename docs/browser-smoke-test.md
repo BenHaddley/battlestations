@@ -26,9 +26,14 @@ editor has — see [Current build](../wiki/current-build.md#running-the-project)
 - [ ] START WAVE is offered in every STATION window (including before wave two), is
       disabled during BATTLE, and cannot start a wave twice.
 - [ ] Up/Down drive the train without moving the highlight through the Train Yard.
+- [ ] Hovering a shop row fills the description card in the Train Yard — no tooltip
+      appears over the board.
+- [ ] BUILD TRACK arms construction: only then do plus signs appear on the hovered
+      rail, the circuit outlines, and the panels step back. Starting a wave disarms it.
 - [ ] During STATIONS, hovering a rail shows plus signs; laying a tile costs Δ50, a
       dead end shows the buffer stop, a join ring closes a detour, and right-click
       lifts a laid tile for a refund. Nothing of this is available during BATTLE.
+- [ ] Selecting an engine draws direction arrows around the loop it drives.
 - [ ] A spider steps into a clear neighbouring lane round a train and bites a unit
       when boxed in; the bitten unit shows its health bar and jaws marker.
 - [ ] A destroyed car leaves the train with a debris burst; a wrecked engine shows

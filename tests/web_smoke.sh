@@ -9,7 +9,9 @@
 # logged. Chromium is found via $CHROME_BIN or the Playwright browser cache.
 set -u
 WEB_DIR="${1:-export/web}"
-WAIT_SECONDS="${2:-60}"
+# Booting a 20 MB pack plus the WASM under software rendering is slow on a busy
+# machine; too small a budget screenshots a blank page and looks like a failure.
+WAIT_SECONDS="${2:-150}"
 PORT="${PORT:-8123}"
 CHROME_BIN="${CHROME_BIN:-$(ls -d "$HOME"/.cache/ms-playwright/chromium_headless_shell-*/chrome-linux/headless_shell 2>/dev/null | sort | tail -1)}"
 if [ -z "$CHROME_BIN" ] || [ ! -x "$CHROME_BIN" ]; then

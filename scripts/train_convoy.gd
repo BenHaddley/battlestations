@@ -39,7 +39,7 @@ class_name TrainConvoy
 ## Turret art occupies a 1500px square at 0.085 scale (127.5 world units).
 ## Engine liveries exist as both 750px and 1500px sources, so derive their
 ## scale from the texture instead of inheriting the old 750px-only value.
-const ENGINE_TOKEN_SIZE := 68.0
+const ENGINE_TOKEN_SIZE := 80.0
 
 var path: PackedVector2Array
 var path_index: int = 0
@@ -532,10 +532,12 @@ func remove_car(car: Node2D) -> bool:
 
 func _draw() -> void:
 	var previous := Vector2.ZERO
+	_draw_consist_presence()
 	if wrecked:
 		draw_arc(Vector2.ZERO, 46.0, 0.0, TAU, 8, Color(1.0, 0.45, 0.3, 0.8), 3.0, false)
 		_draw_caption("WRECKED — DROP A LOCOMOTIVE HERE", Vector2(0.0, -58.0), Color(1.0, 0.82, 0.7, 1.0))
 	if selected:
+		_draw_route_direction()
 		draw_circle(Vector2.ZERO, 43.0, Color(0.15, 0.78, 1.0, 0.12))
 		draw_arc(Vector2.ZERO, 44.0, 0.04, TAU - 0.08, 30, Color("35d9ff"), 4.0, true)
 		draw_arc(Vector2(1.5, -1.0), 48.0, 0.2, TAU - 0.16, 27, Color(0.04, 0.03, 0.02, 0.9), 2.5, true)
@@ -557,6 +559,48 @@ func _draw() -> void:
 		if drag_active and not capped:
 			_draw_attach_target(car_local)
 		previous = car_local
+
+## Grounding shadow and ink ring under the engine and every car, so the train
+## reads as a solid object on top of the railway rather than another rail
+## tile. During STATION it also gets a soft warm halo, because that is when
+## the player is looking for it.
+func _draw_consist_presence() -> void:
+	var station_glow := PhaseManager.is_station() and not wrecked
+	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 420.0)
+	var tokens: Array[Vector2] = [Vector2.ZERO]
+	for car in followers:
+		if is_instance_valid(car) and car.visible:
+			tokens.append(to_local(car.global_position))
+	for index in range(tokens.size()):
+		var token := tokens[index]
+		draw_circle(token + Vector2(0.0, 6.0), 27.0, Color(0.05, 0.04, 0.03, 0.30))
+		if station_glow:
+			draw_circle(token, 33.0, Color(1.0, 0.86, 0.45, 0.05 + 0.05 * pulse))
+		draw_arc(token, 25.0, 0.0, TAU, 26, Color(0.08, 0.06, 0.04, 0.55), 3.0, true)
+	# The whole consist as one connected object: a spine through every token.
+	if tokens.size() > 1:
+		draw_polyline(PackedVector2Array(tokens), Color(0.08, 0.06, 0.04, 0.35), 13.0, true)
+
+## Arrows around the ring this train drives, so the player can see at a glance
+## which track belongs to it and which way it runs. Shown while selected.
+func _draw_route_direction() -> void:
+	if path.size() < 2 or route_length <= 0.0:
+		return
+	var spacing := 78.0
+	var travelled := 0.0
+	var facing := 1.0 if cruise_direction >= 0 else -1.0
+	while travelled < route_length:
+		var sample := _sample_route(route_distance + travelled)
+		var point: Vector2 = to_local(sample.position)
+		var heading: Vector2 = sample.direction * facing
+		var side := heading.orthogonal()
+		var tip := point + heading * 9.0
+		draw_colored_polygon(PackedVector2Array([
+			tip,
+			point - heading * 5.0 + side * 6.0,
+			point - heading * 5.0 - side * 6.0,
+		]), Color(0.24, 0.86, 1.0, 0.62))
+		travelled += spacing
 
 const CAPTION_FONT := preload("res://assets/fonts/ArchitectsDaughter-Regular.ttf")
 

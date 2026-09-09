@@ -46,14 +46,23 @@ func configure(game: Node, track_renderer: TrackRenderer, hud: Menu) -> void:
 
 ## Construction is a STATION activity, and only while the board itself is
 ## the active surface (no card open, no shop drag, no remove mode).
+## Construction is a STATION activity the player arms with BUILD TRACK, and
+## only while the board itself is the active surface (no card open, no shop
+## drag, no remove mode). Arming it deliberately keeps the plus and remove
+## markers off the board during ordinary play.
 func active() -> bool:
 	if track == null or main == null:
 		return false
 	if not PhaseManager.rail_building_enabled or not PhaseManager.is_station():
 		return false
+	if menu != null and not menu.building_track:
+		return false
 	return bool(main.board_interaction_enabled())
 
 func _process(_delta: float) -> void:
+	if menu != null and menu.building_track and not (PhaseManager.rail_building_enabled and PhaseManager.is_station()):
+		# A wave started while building was armed; drop back to normal play.
+		menu.set_build_track(false)
 	if not active():
 		if has_anchor or has_hovered_removable:
 			_clear_hover()
@@ -202,9 +211,21 @@ func _feedback(message: String, success: bool) -> void:
 		menu.show_placement_feedback(message, success)
 
 func _draw() -> void:
-	if not active() or not has_anchor:
+	if not active():
 		return
 	var half := track.path_step * 0.5
+	if not has_anchor:
+		# Armed but not over a rail: outline the buildable network so the player
+		# can see where construction is possible before committing to a tile.
+		for cell in track.rail_cells():
+			var outline_world: Vector2 = track.world_of(cell)
+			draw_rect(Rect2(outline_world - Vector2(half, half), Vector2(track.path_step, track.path_step)), Color(0.42, 0.95, 0.72, 0.10), true)
+		_draw_tag(Vector2(0.0, track.track_bounds.position.y - 18.0), "HOVER A RAIL TO EXTEND IT", READY_COLOR)
+		return
+	# The circuit the hovered rail belongs to reads as one connected object.
+	for cell in track.network_of(anchor):
+		var glow_world: Vector2 = track.world_of(cell)
+		draw_rect(Rect2(glow_world - Vector2(half, half), Vector2(track.path_step, track.path_step)), Color(0.42, 0.95, 0.72, 0.13), true)
 	var anchor_world := track.world_of(anchor)
 	draw_rect(Rect2(anchor_world - Vector2(half, half), Vector2(track.path_step, track.path_step)), Color(1.0, 0.92, 0.55, 0.16), true)
 	draw_rect(Rect2(anchor_world - Vector2(half - 2.0, half - 2.0), Vector2(track.path_step - 4.0, track.path_step - 4.0)), Color(1.0, 0.92, 0.55, 0.7), false, 2.5)
@@ -215,6 +236,8 @@ func _draw() -> void:
 		if verdict.ok:
 			color = READY_COLOR if affordable else POOR_COLOR
 		var hovered := has_hovered_candidate and candidate == hovered_candidate
+		if hovered and verdict.ok:
+			_draw_preview_tile(track.world_of(candidate), candidate - anchor, color)
 		_draw_plus(track.world_of(candidate), color, hovered)
 		if hovered:
 			var tag := "Δ%d" % rail_cost if verdict.ok else "BLOCKED"
@@ -240,6 +263,20 @@ func _draw_plus(center: Vector2, color: Color, hovered: bool) -> void:
 	draw_line(center + Vector2(-arm, 0), center + Vector2(arm, 0), color, 4.5 if hovered else 3.5, true)
 	draw_line(center + Vector2(0, -arm), center + Vector2(0, arm), color, 4.5 if hovered else 3.5, true)
 	draw_arc(center, radius, 0.0, TAU, 28, color, 2.0, true)
+
+## Translucent picture of the tile that would be laid, oriented like the rail
+## it extends, so the player sees the result before paying for it.
+func _draw_preview_tile(center: Vector2, direction: Vector2i, color: Color) -> void:
+	var texture: Texture2D = track.rail_texture
+	if texture == null:
+		return
+	var size := texture.get_size() * track.tile_scale
+	var rotation := PI * 0.5 if direction.x != 0 else 0.0
+	draw_set_transform(center, rotation, Vector2.ONE)
+	draw_texture_rect(texture, Rect2(-size * 0.5, size), false, Color(1.0, 1.0, 1.0, 0.45))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var half := track.path_step * 0.5
+	draw_rect(Rect2(center - Vector2(half, half), Vector2(track.path_step, track.path_step)), Color(color.r, color.g, color.b, 0.5), false, 2.0)
 
 ## Two interlocked rings between the dead end and the rail it can join.
 func _draw_link(center: Vector2, hovered: bool) -> void:

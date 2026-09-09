@@ -317,6 +317,39 @@ they improve the game.
       can be closed or return to a harmless title state instead of calling an
       unsupported quit operation. (`TitleScreen._quit_game()`.)
 
+### STATION readability pass
+
+Source: 2026-09-09 review of the deployed build. The board was legible but the
+interface competed with it; the railway, not the panels, should lead the eye.
+
+- [x] Remove the full-width unit tooltip. Godot's native tooltip drew the authored
+      multi-paragraph blurbs across the board, Train Yard and right panel; the copy
+      now lives in a description card inside the Train Yard above REMOVE UNIT, and no
+      shop control carries `tooltip_text`.
+- [x] Raise Train Yard contrast: the LOCOMOTIVE heading is inked and outlined, price
+      text is stronger, and locked cars grey their art and slate their price plate
+      instead of merely darkening.
+- [x] Make track construction a mode. BUILD TRACK arms it; only then do plus signs,
+      link rings and the remove marker appear. Starting a wave disarms it.
+- [x] Clarify connections while building: valid points green (amber when unaffordable,
+      red when blocked), a translucent preview of the tile under the cursor, and a
+      subtle outline around the circuit the hovered rail belongs to.
+- [x] Separate the building state from normal play by stepping the Train Yard,
+      conductor portrait and to-do list back while track is being laid.
+- [x] Make the authored main line dominant and player-built rail lighter and less
+      saturated, and thin the lane guides so the railway reads first.
+- [x] Give the train presence: larger engine token, grounding shadow and ink ring on
+      every unit, a spine through the consist, and a soft STATION halo.
+- [x] Show the route. Selecting an engine draws direction arrows around the ring it
+      drives, so which track belongs to it and which way it runs are obvious.
+- [x] Say what STATION is for: "STATION — 00:23 / BUILD & PREPARE YOUR TRAIN / Buy
+      Cars • Extend Track • Couple Train", with a larger, clearly clickable START WAVE.
+- [ ] Resolve the bottom-of-board duplication: Boiler Room's second circuit runs along
+      the station edge, so the playable loop and the station infrastructure read as two
+      railways in the same space. Needs a level-layout or board-art decision.
+- [ ] Playtest the readability pass and confirm the eye now travels
+      currency → shop → train → railway → timer → START WAVE.
+
 ### Later audio-readability pass
 
 - [ ] When placeholder sounds are supplied, add distinct cues for the Coal Cannon

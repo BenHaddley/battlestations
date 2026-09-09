@@ -6,7 +6,7 @@ extends Node2D
 const TrainConvoyScene := preload("res://scenes/TrainConvoy.tscn")
 const GameOverOverlayScene := preload("res://scenes/ui/GameOverOverlay.tscn")
 const SpiderAssaultControllerScript := preload("res://scripts/spider_assault_controller.gd")
-const NEW_BOARD_CAR_SCALE := Vector2(0.54, 0.54)
+const NEW_BOARD_CAR_SCALE := Vector2(0.60, 0.60)
 const PlacementGhostScript := preload("res://scripts/car_placement_ghost.gd")
 const RailBuilderScript := preload("res://scripts/rail_builder.gd")
 const RangePreviewScript := preload("res://scripts/range_preview.gd")

@@ -49,6 +49,7 @@ func _run() -> void:
 	_check((await _test_lessons_and_profiles()) == true, "_test_lessons_and_profiles aborted on a script error")
 	_check(_test_audio_normalization() == true, "_test_audio_normalization aborted on a script error")
 	_check(_test_export_preset_covers_preloads() == true, "_test_export_preset_covers_preloads aborted on a script error")
+	_check((await _test_train_yard_readability()) == true, "_test_train_yard_readability aborted on a script error")
 	# Let short procedural/audio one-shots finish and release their players before
 	# ObjectDB performs its exit leak check.
 	await get_tree().create_timer(0.25).timeout
@@ -627,14 +628,14 @@ func _test_wave_button_and_phase_clock() -> bool:
 	main.menu.pause_menu.open()
 	_check(not main.train_driving_enabled(), "arrow keys still drive trains while the pause card is open")
 	main.menu.pause_menu.close()
-	_check(PhaseManager.is_station() and button.text == "START WAVE 1" and not button.disabled, "wave one start button is missing before the first wave, saw '%s'" % button.text)
+	_check(PhaseManager.is_station() and button.text == "START WAVE 1 !" and not button.disabled, "wave one start button is missing before the first wave, saw '%s'" % button.text)
 	_check(PhaseManager.request_wave_start(), "START WAVE did not start wave one")
 	_check(not PhaseManager.request_wave_start(), "a second press started a wave while one was underway")
 	await get_tree().process_frame
 	_check(main.spawner.current_wave == 1 and button.disabled and button.text == "WAVE 1 UNDERWAY", "wave button stayed enabled during BATTLE, saw '%s'" % button.text)
 	main.spawner._end_wave()
 	await get_tree().process_frame
-	_check(PhaseManager.is_station() and button.text == "START WAVE 2" and not button.disabled, "wave button did not return before wave two, saw '%s'" % button.text)
+	_check(PhaseManager.is_station() and button.text == "START WAVE 2 !" and not button.disabled, "wave button did not return before wave two, saw '%s'" % button.text)
 	# A lesson holds the departure clock but never removes the player's control.
 	PhaseManager.dialogue_hold = true
 	PhaseManager._process(1000.0)
@@ -684,7 +685,10 @@ func _test_rail_building() -> bool:
 	var candidates: Array[Vector2i] = track.expansion_candidates(Vector2i(2, 2))
 	_check(candidates.size() == 2 and Vector2i(2, 1) in candidates and Vector2i(1, 2) in candidates, "corner hover did not offer exactly its two empty neighbours")
 	_check(track.expansion_candidates(Vector2i(4, 4)).is_empty(), "an empty tile offered plus signs")
-	_check(builder.active() and PhaseManager.is_station(), "rail builder is inactive during STATION")
+	# Construction markers stay off the board until the player arms BUILD TRACK.
+	_check(PhaseManager.is_station() and not builder.active(), "rail builder was live before BUILD TRACK was armed")
+	main.menu.set_build_track(true)
+	_check(main.menu.building_track and builder.active(), "arming BUILD TRACK did not enable construction")
 
 	# Dead-end spur: charged once, capped with the buffer-stop art.
 	LevelManager.currency = 300
@@ -711,10 +715,13 @@ func _test_rail_building() -> bool:
 	_check(LevelManager.currency == cost - 1 and track.graph.size() == before_cells, "refused placement changed the wallet or railway")
 	LevelManager.currency = before_currency
 	_check(PhaseManager.request_wave_start(), "could not start a wave for the BATTLE gating check")
+	main.menu._on_phase_changed("battle")
 	_check(not builder.active(), "rail builder stayed active during BATTLE")
 	_check(not builder.attempt_build(Vector2i(2, 0), Vector2i(1, 0)), "rail was laid during BATTLE")
 	_check(track.graph.size() == before_cells and LevelManager.currency == before_currency, "BATTLE placement attempt changed state")
+	_check(not main.menu.building_track, "BUILD TRACK stayed armed into BATTLE")
 	main.spawner._end_wave()
+	main.menu.set_build_track(true)
 	_check(PhaseManager.is_station() and builder.active(), "rail builder did not return after the wave")
 	LevelManager.currency = 1000
 
@@ -1228,6 +1235,63 @@ func _matches_include_filter(relative_path: String, patterns: PackedStringArray)
 		if relative_path.match(trimmed):
 			return true
 	return false
+
+## Unit copy belongs in the Train Yard. Godot's native tooltip rendered these
+## multi-paragraph blurbs as a banner across the board, the train yard and the
+## right-hand UI, so no shop control may carry tooltip_text any more.
+func _test_train_yard_readability() -> bool:
+	var main = await _start_campaign_scene(0, false)
+	var menu: Menu = main.menu
+	(main.get_node("TutorialDirector") as TutorialDirector)._skip_all()
+	var engine_row: Button = menu.get_node("LeftPanel/Margin/VBox/ScrollContainer/ShopList/EngineRow")
+	for button_name in Menu.TOWER_BUTTONS:
+		var button: Button = menu.get(button_name)
+		_check(button.tooltip_text.is_empty(), "%s still carries a native tooltip" % button_name)
+	_check(engine_row.tooltip_text.is_empty(), "the locomotive row still carries a native tooltip")
+	_check(menu.shop_detail_panel != null and menu.shop_detail_panel.get_parent() == menu.get_node("LeftPanel/Margin/VBox"), "unit descriptions are not inside the Train Yard panel")
+	_check(menu.shop_detail_panel.get_index() < menu.remove_button.get_index(), "the description card should sit above REMOVE UNIT")
+
+	# Hovering a row fills the card with that unit's name, stats and blurb.
+	# A locked car still explains itself; only its availability line changes.
+	menu._show_shop_detail(3)
+	_check(menu.shop_detail_name.text == "PASSENGER COACH", "detail card did not name the hovered unit, saw '%s'" % menu.shop_detail_name.text)
+	_check(menu.shop_detail_body.text.contains("currency generation"), "detail card lost the authored Passenger Coach copy")
+	_check(menu.shop_detail_body.text.contains("UNLOCKS AT STOP 2"), "a locked car does not say when it unlocks, saw '%s'" % menu.shop_detail_body.text)
+	_check(menu.shop_detail_stats.text.contains("Δ110") and menu.shop_detail_stats.text.contains("175 HP"), "a locked car should still show its cost and health, saw '%s'" % menu.shop_detail_stats.text)
+	menu._show_shop_detail(0)
+	_check(menu.shop_detail_stats.text.contains("Δ150") and menu.shop_detail_stats.text.contains("150 WEIGHT") and menu.shop_detail_stats.text.contains("200 HP"), "detail card stats are wrong: '%s'" % menu.shop_detail_stats.text)
+	# Ranges are quoted in the cards' grid notation, matching the lessons.
+	_check(menu.shop_detail_stats.text.contains("7×7 RANGE"), "the Gunner should advertise its 7×7 card range, saw '%s'" % menu.shop_detail_stats.text)
+	menu._show_shop_detail(7)
+	_check(menu.shop_detail_stats.text.contains("5×5 RANGE"), "the Mail Carrier should advertise its 5×5 card range, saw '%s'" % menu.shop_detail_stats.text)
+	menu._show_shop_detail(2)
+	_check(menu.shop_detail_stats.text.contains("3×3 RANGE"), "the Ballast Blaster should advertise its 3×3 card range, saw '%s'" % menu.shop_detail_stats.text)
+	menu._show_shop_detail(0)
+	_check(menu.shop_detail_body.text.contains("most basic attacking unit"), "detail card lost the authored Gunner copy")
+	menu._show_shop_detail(-1)
+	_check(menu.shop_detail_name.text == "LOCOMOTIVE" and menu.shop_detail_stats.text.contains("Δ%d" % Menu.ENGINE_COST), "the locomotive row has no description")
+
+	# BUILD TRACK is a mode, and it steps the panels back while it is on.
+	_check(menu.build_track_button != null and not menu.building_track, "BUILD TRACK button is missing or armed at level start")
+	var shop_scroll: Control = menu.get_node("LeftPanel/Margin/VBox/ScrollContainer")
+	_check(shop_scroll.modulate.is_equal_approx(Color.WHITE), "the Train Yard starts dimmed")
+	menu.set_build_track(true)
+	_check(menu.building_track and menu.build_track_button.text == "DONE BUILDING", "BUILD TRACK did not arm")
+	_check(shop_scroll.modulate.r < 0.9 and menu.get_node("RightPanel/Margin/VBox/PortraitPanel").modulate.r < 0.9, "building track did not step the panels back")
+	_check(menu.shop_detail_name.text == "BUILDING TRACK", "the detail card does not explain track building while it is armed")
+	menu.set_build_track(false)
+	_check(shop_scroll.modulate.is_equal_approx(Color.WHITE), "the Train Yard stayed dimmed after building ended")
+
+	# Locked cars read as unavailable rather than merely dark.
+	menu._process(0.0)
+	var locked: Button = menu.get(Menu.TOWER_BUTTONS[1])
+	_check(locked.disabled and locked.modulate.r < 0.7, "a locked car is not clearly disabled")
+	_check(menu._phase_heading(false).begins_with("STATION —") and menu._phase_instruction(false) == "BUILD & PREPARE YOUR TRAIN", "the STATION panel does not say what to do, saw '%s'" % menu._phase_heading(false))
+	_check(menu.station_progress_panel.skip_button.custom_minimum_size.y >= 40.0, "START WAVE is too small to read as the primary action")
+	main.queue_free()
+	await get_tree().process_frame
+	PhaseManager.reset()
+	return true
 
 func _test_mail_carrier() -> bool:
 	var mail: Turret = preload("res://scenes/MailCarrier.tscn").instantiate()

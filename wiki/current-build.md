@@ -110,7 +110,25 @@ kept alongside them.
   environmental painting deliberately secondary to the tabletop play area.
 - The left panel is a scrollable Train Yard list of illustrated shop rows (icon, name,
   Delta price pill) rather than a fixed grid, so the roster can grow without the tray
-  itself changing shape.
+  itself changing shape. Beneath it sits a description card — unit name, cost/weight/
+  health/range, and the authored blurb — followed by BUILD TRACK and REMOVE UNIT.
+  **No shop control carries `tooltip_text`:** Godot's native tooltip rendered those
+  multi-paragraph blurbs as a banner across the board, the Train Yard and the right
+  panel, so the copy was moved into the card and the tooltips emptied. A locked card
+  keeps its numbers and blurb and adds an "UNLOCKS AT STOP n" note. Every label in the
+  card must wrap — a single-line label's minimum width would widen the whole column
+  past its illustrated frame. Shop ranges are quoted in the cards' NxN grid notation
+  (converted with the original 90-unit cell: 315 → 7×7), matching the lessons.
+- **BUILD TRACK is a mode.** Construction markers are off the board during ordinary
+  play; arming it shows plus signs on the hovered rail's free neighbours, outlines the
+  circuit that rail belongs to, previews the tile under the cursor, and steps the
+  Train Yard, portrait and to-do list back so the board is what reads. Starting a wave
+  disarms it.
+- The authored main line stays fully saturated; player-built rail is drawn lighter and
+  less saturated (`TrackRenderer.PLAYER_BUILT_TINT`) so the two are never confused.
+  Lane guides are deliberately faint, and the engine and every car carry a grounding
+  shadow, an ink ring and a soft STATION halo so the train reads above the railway.
+  Selecting an engine also draws direction arrows around the ring it drives.
 - The right panel runs a STATION/BATTLE schedule panel (phase dots, a conductor
   portrait that swaps per phase, and a SKIP WAIT / IN PROGRESS action button) above a
   to-do checklist tracking the run's live objectives.

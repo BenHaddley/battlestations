@@ -73,6 +73,16 @@ var removing_mode: bool = false
 var _wave_start_health: int = -1
 var _wave_start_enemy_count: int = 0
 var _hovered_removable: Node2D = null
+## Shop copy moved out of Godot's native tooltip, which rendered these
+## multi-paragraph strings as a banner across the whole screen.
+var _shop_descriptions: Dictionary = {}
+var shop_detail_panel: PanelContainer
+var shop_detail_name: Label
+var shop_detail_stats: Label
+var shop_detail_body: Label
+var build_track_button: Button
+var building_track: bool = false
+var _detail_index: int = -99
 var station_progress_panel: StationProgressPanel
 var speed_caption: Label
 var pause_caption: Label
@@ -109,22 +119,30 @@ func _ready() -> void:
 	_install_placement_banner()
 	_install_mail_carrier_row()
 	_style_train_yard()
+	_install_shop_detail_panel()
 	for index in range(TOWER_BUTTONS.size()):
 		var button: Button = get(TOWER_BUTTONS[index])
 		var unlocked := CampaignManager.is_tower_unlocked(index)
+		# The authored blurb lives on the scene's tooltip_text. Keep the words,
+		# drop the native tooltip: it drew a full-width banner over the board.
+		_shop_descriptions[index] = button.tooltip_text
+		button.tooltip_text = ""
 		button.pressed.connect(_select_tower.bind(index))
 		button.gui_input.connect(_on_tower_gui_input.bind(index))
+		button.mouse_entered.connect(_show_shop_detail.bind(index))
+		button.mouse_exited.connect(_clear_shop_detail)
 		button.visible = true
 		button.disabled = not unlocked or not CampaignManager.challenge_shop_enabled()
 		if not CampaignManager.challenge_shop_enabled():
 			_set_price_text(button, "FIXED")
-			button.tooltip_text = "This challenge uses a fixed train."
+			_shop_descriptions[index] = "This challenge uses a fixed train."
 			continue
 		if unlocked:
 			_set_price_text(button, "%d" % (BuildManager.towers[index].cost if index < BuildManager.towers.size() else 0))
 		else:
 			_set_price_text(button, "STOP %d" % CampaignManager.tower_unlock_level(index))
-			button.tooltip_text = "%s. Unlocks at campaign stop %d." % [BuildManager.towers[index].tower_name, CampaignManager.tower_unlock_level(index)]
+	_show_shop_detail(BuildManager.selected_tower)
+	_install_build_track_button()
 	remove_button.pressed.connect(_toggle_remove_mode)
 	if not CampaignManager.challenge_train_edit_enabled():
 		remove_button.disabled = true
@@ -159,6 +177,157 @@ func _release_hud_focus() -> void:
 	scroll.focus_mode = Control.FOCUS_NONE
 	if scroll.get_v_scroll_bar():
 		scroll.get_v_scroll_bar().focus_mode = Control.FOCUS_NONE
+
+## Track construction is a deliberate mode rather than something that happens
+## whenever the pointer crosses a rail: the plus and remove markers only exist
+## while it is armed, and the board is emphasised over the panels while it is.
+func _install_build_track_button() -> void:
+	build_track_button = Button.new()
+	build_track_button.name = "BuildTrackButton"
+	build_track_button.text = "BUILD TRACK"
+	build_track_button.custom_minimum_size.y = 40
+	build_track_button.focus_mode = Control.FOCUS_NONE
+	build_track_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	build_track_button.add_theme_font_size_override("font_size", 20)
+	build_track_button.add_theme_color_override("font_color", Color("eafaf1"))
+	build_track_button.add_theme_color_override("font_outline_color", Color("06170f"))
+	build_track_button.add_theme_constant_override("outline_size", 3)
+	build_track_button.add_theme_stylebox_override("normal", _build_button_style(false))
+	build_track_button.add_theme_stylebox_override("hover", _build_button_style(true))
+	build_track_button.add_theme_stylebox_override("disabled", _build_button_style(false, true))
+	build_track_button.pressed.connect(_toggle_build_track)
+	var column: VBoxContainer = $LeftPanel/Margin/VBox
+	column.add_child(build_track_button)
+	column.move_child(build_track_button, remove_button.get_index())
+
+func _build_button_style(hovered: bool, disabled: bool = false) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("3c5f4a") if disabled else (Color("2f7d52") if hovered else Color("246142"))
+	style.border_color = Color("8ff0b6") if hovered else Color("0d2a1b")
+	style.set_border_width_all(4)
+	style.corner_radius_top_left = 2
+	style.corner_radius_top_right = 6
+	style.corner_radius_bottom_left = 5
+	style.corner_radius_bottom_right = 2
+	return style
+
+func _toggle_build_track() -> void:
+	set_build_track(not building_track)
+
+func set_build_track(active: bool) -> void:
+	if active and removing_mode:
+		_exit_remove_mode()
+	building_track = active and PhaseManager.rail_building_enabled and PhaseManager.is_station()
+	build_track_button.text = "DONE BUILDING" if building_track else "BUILD TRACK"
+	build_track_button.add_theme_stylebox_override("normal", _build_button_style(building_track))
+	AudioFX.play_cue(&"ui")
+	if building_track:
+		_show_shop_detail(-2)
+	else:
+		_clear_shop_detail()
+	_apply_focus_dimming()
+
+## While laying track the board is what matters, so the shop and the conductor
+## portrait step back; they return the moment building ends.
+func _apply_focus_dimming() -> void:
+	var panels_tint := Color(0.62, 0.6, 0.58, 1.0) if building_track else Color.WHITE
+	$LeftPanel/Margin/VBox/ScrollContainer.modulate = panels_tint
+	$RightPanel/Margin/VBox/PortraitPanel.modulate = panels_tint
+	$RightPanel/Margin/VBox/TodoPanel.modulate = panels_tint
+
+## Unit copy lives in the Train Yard, directly above REMOVE UNIT, so reading
+## about a car never covers the railway the player is looking at.
+func _install_shop_detail_panel() -> void:
+	shop_detail_panel = PanelContainer.new()
+	shop_detail_panel.name = "ShopDetail"
+	shop_detail_panel.custom_minimum_size.y = 132
+	shop_detail_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("2a1a10")
+	style.border_color = Color("e8c66d")
+	style.set_border_width_all(3)
+	style.corner_radius_top_left = 3
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 7
+	style.corner_radius_bottom_right = 2
+	style.content_margin_left = 9
+	style.content_margin_right = 9
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	shop_detail_panel.add_theme_stylebox_override("panel", style)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 1)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shop_detail_panel.add_child(box)
+	shop_detail_name = _detail_label(19, Color("ffe9ae"))
+	box.add_child(shop_detail_name)
+	shop_detail_stats = _detail_label(14, Color("9fe0c0"))
+	# Every label here must wrap. A single-line label's minimum width is the
+	# whole string, which would push the Train Yard column wider than the
+	# illustrated frame it sits in.
+	shop_detail_stats.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(shop_detail_stats)
+	shop_detail_body = _detail_label(13, Color("efe0c2"))
+	shop_detail_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	shop_detail_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(shop_detail_body)
+	var column: VBoxContainer = $LeftPanel/Margin/VBox
+	column.add_child(shop_detail_panel)
+	column.move_child(shop_detail_panel, remove_button.get_index())
+
+func _detail_label(font_size: int, color: Color) -> Label:
+	var label := Label.new()
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", color)
+	label.add_theme_color_override("font_outline_color", Color("140a06"))
+	label.add_theme_constant_override("outline_size", 3)
+	return label
+
+## index -1 is the locomotive row; -99 clears back to the selected car.
+func _show_shop_detail(index: int) -> void:
+	if shop_detail_panel == null:
+		return
+	_detail_index = index
+	if index == -2:
+		shop_detail_name.text = "BUILDING TRACK"
+		shop_detail_stats.text = "Δ%d PER TILE   ·   STATION ONLY" % (main_rail_cost())
+		shop_detail_body.text = "Hover a rail to show its connection points, then click one to lay track. Click a link ring to join a dead end back onto the circuit. Right-click your own track to lift it for a refund."
+		return
+	if index == -1:
+		shop_detail_name.text = "LOCOMOTIVE"
+		shop_detail_stats.text = "Δ%d   ·   ENGINE" % ENGINE_COST
+		shop_detail_body.text = "Drag onto an empty stretch of railway to start an independent train, or onto a wrecked engine to put it back into service."
+		return
+	if index < 0 or index >= BuildManager.towers.size():
+		return
+	var tower: TowerData = BuildManager.towers[index]
+	var unlocked := CampaignManager.is_tower_unlocked(index)
+	shop_detail_name.text = tower.tower_name.to_upper()
+	var range_radius := float(CarArt.for_tower(tower).get("range", 0.0))
+	var stats := "Δ%d · %d WEIGHT · %d HP" % [tower.cost, roundi(tower.weight), tower.health]
+	if range_radius > 0.0:
+		stats += " · %d×%d RANGE" % [_card_range_grid(range_radius), _card_range_grid(range_radius)]
+	shop_detail_stats.text = stats
+	# A locked card keeps its numbers and its blurb — knowing what a car costs
+	# and does is half the reason to look at one before it unlocks. Only the
+	# availability note is added.
+	var blurb := String(_shop_descriptions.get(index, tower.summary))
+	shop_detail_body.text = blurb if unlocked else "UNLOCKS AT STOP %d.  %s" % [CampaignManager.tower_unlock_level(index), blurb]
+
+## Shop ranges are quoted in the infowiki/workbook's NxN grid notation, the
+## same wording Duck and Daisy use. The shipped radii were converted with the
+## original 90-unit board cell (7×7 → 315), so that is the divisor here even
+## though the courtyard now uses 65.5-unit cells.
+func _card_range_grid(radius: float) -> int:
+	return maxi(1, roundi(radius / 45.0))
+
+func _clear_shop_detail() -> void:
+	_show_shop_detail(-2 if building_track else BuildManager.selected_tower)
+
+func main_rail_cost() -> int:
+	var builder = get_tree().current_scene.get("rail_builder") if get_tree().current_scene else null
+	return int(builder.rail_cost) if builder != null else 50
 
 func _install_wave_banner() -> void:
 	wave_banner = Label.new()
@@ -394,9 +563,9 @@ func _style_train_yard() -> void:
 
 		var price_label := button.find_child("PriceLabel", true, false) as Label
 		if price_label:
-			price_label.add_theme_color_override("font_color", Color(1.0, 0.98, 0.9))
-			price_label.add_theme_color_override("font_outline_color", Color(0.08, 0.055, 0.035))
-			price_label.add_theme_constant_override("outline_size", 3)
+			price_label.add_theme_color_override("font_color", Color(1.0, 0.99, 0.94))
+			price_label.add_theme_color_override("font_outline_color", Color(0.05, 0.035, 0.02))
+			price_label.add_theme_constant_override("outline_size", 4)
 			price_label.add_theme_font_size_override("font_size", 22)
 
 func _train_yard_row_style(index: int, hovered: bool) -> StyleBoxFlat:
@@ -474,7 +643,6 @@ func _process(_delta: float) -> void:
 		_refresh_remove_hover()
 
 	if spawner:
-		var live_status := PhaseManager.status_text()
 		var is_battle: bool = PhaseManager.phase == PhaseManager.Phase.BATTLE
 		var total_waves := spawner.wave_target if spawner.wave_target > 0 else 7
 		var journey_progress := float(spawner.current_wave) / float(total_waves)
@@ -485,7 +653,7 @@ func _process(_delta: float) -> void:
 			journey_progress = (float(spawner.current_wave - 1) + wave_fraction) / float(total_waves)
 		# One node is the departure point, followed by one checkpoint per wave.
 		station_progress_panel.set_progress_fraction(journey_progress, total_waves + 1)
-		station_progress_panel.set_phase("BATTLE" if is_battle else "STATION", live_status, "DEFEND • FIRE • SURVIVE" if is_battle else "PREPARE • BUY • COUPLE")
+		station_progress_panel.set_phase(_phase_heading(is_battle), _phase_instruction(is_battle), _phase_actions(is_battle))
 		_refresh_wave_button(is_battle)
 		_refresh_objectives()
 
@@ -501,7 +669,7 @@ func _refresh_wave_button(is_battle: bool) -> void:
 	elif is_battle:
 		station_progress_panel.set_button_state("WAVE %d UNDERWAY" % spawner.current_wave, true)
 	else:
-		station_progress_panel.set_button_state("START WAVE %d" % (spawner.current_wave + 1), not PhaseManager.can_start_wave())
+		station_progress_panel.set_button_state("START WAVE %d !" % (spawner.current_wave + 1), not PhaseManager.can_start_wave())
 
 func _refresh_hp_rail() -> void:
 	var fraction: float = float(station.current_health) / float(maxi(station.max_health, 1))
@@ -516,10 +684,28 @@ func _refresh_objectives() -> void:
 			best_car_count = maxi(best_car_count, train.car_count())
 	task_train.button_pressed = best_car_count >= 3
 
+## The heading carries the clock so the instruction line underneath can say
+## what the player is actually meant to do with the time.
+func _phase_heading(is_battle: bool) -> String:
+	if is_battle:
+		return "BATTLE"
+	var seconds := int(ceil(PhaseManager.phase_timer))
+	return "STATION — HELD" if PhaseManager.dialogue_hold else "STATION — %02d:%02d" % [seconds / 60, seconds % 60]
+
+func _phase_instruction(is_battle: bool) -> String:
+	return "DEFEND THE STATION" if is_battle else "BUILD & PREPARE YOUR TRAIN"
+
+func _phase_actions(is_battle: bool) -> String:
+	return "%d spiders left" % spawner.enemies_remaining() if is_battle else "Buy Cars • Extend Track • Couple Train"
+
 func _on_phase_changed(phase_name: String) -> void:
 	var is_battle: bool = phase_name == "battle"
 	if station_progress_panel:
-		station_progress_panel.set_phase("BATTLE" if is_battle else "STATION", PhaseManager.status_text(), "DEFEND • FIRE • SURVIVE" if is_battle else "PREPARE • BUY • COUPLE")
+		station_progress_panel.set_phase(_phase_heading(is_battle), _phase_instruction(is_battle), _phase_actions(is_battle))
+	if is_battle and building_track:
+		set_build_track(false)
+	if build_track_button:
+		build_track_button.disabled = is_battle
 	portrait.texture = PORTRAIT_BATTLE if is_battle else PORTRAIT_STATION
 
 func _schedule_style(is_battle: bool) -> StyleBox:
@@ -622,6 +808,7 @@ func _on_pause_menu_resumed() -> void:
 
 func _select_tower(index: int) -> void:
 	BuildManager.set_selected_tower(index)
+	_show_shop_detail(index)
 
 func _on_tower_gui_input(event: InputEvent, index: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -640,13 +827,19 @@ func _install_engine_shop_row() -> void:
 	var shop_list: VBoxContainer = $LeftPanel/Margin/VBox/ScrollContainer/ShopList
 	var button := Button.new()
 	button.name = "EngineRow"
-	button.text = "LOCOMOTIVE                         Δ%d" % ENGINE_COST
-	button.tooltip_text = "Drag onto an empty stretch of railway to start an independent train."
+	button.text = "LOCOMOTIVE        Δ%d" % ENGINE_COST
 	button.custom_minimum_size.y = 65
-	button.add_theme_font_size_override("font_size", 16)
+	button.add_theme_font_size_override("font_size", 20)
+	# The heading sat almost invisible against the paper card; ink it properly.
+	button.add_theme_color_override("font_color", Color("2a1408"))
+	button.add_theme_color_override("font_hover_color", Color("140a04"))
+	button.add_theme_color_override("font_outline_color", Color("ffeaba"))
+	button.add_theme_constant_override("outline_size", 4)
 	button.add_theme_stylebox_override("normal", _train_yard_row_style(7, false))
 	button.add_theme_stylebox_override("hover", _train_yard_row_style(7, true))
 	button.gui_input.connect(_on_engine_gui_input)
+	button.mouse_entered.connect(_show_shop_detail.bind(-1))
+	button.mouse_exited.connect(_clear_shop_detail)
 	shop_list.add_child(button)
 	shop_list.move_child(button, 0)
 
@@ -712,10 +905,18 @@ func _style_tower_button(button: Button, index: int) -> void:
 	button.set_meta("train_yard_style_state", style_state)
 	if not unlocked:
 		button.disabled = true
-		# Keep the supplied turret drawing readable. The muted card and STOP label
-		# communicate locking without blacking out the art itself.
-		button.modulate = Color(0.82, 0.82, 0.82, 1.0)
+		# A locked card should read as unavailable at a glance, not merely dark:
+		# the art greys back and the price pill becomes a slate STOP plate.
+		button.modulate = Color(0.66, 0.63, 0.6, 1.0)
 		button.add_theme_stylebox_override("disabled", _locked_train_yard_style(index))
+		var locked_icon := button.get_node_or_null("TrayIcon") as TextureRect
+		if locked_icon:
+			locked_icon.modulate = Color(0.55, 0.53, 0.5, 0.72)
+		var locked_pill := button.find_child("PricePill", true, false) as PanelContainer
+		if locked_pill:
+			var slate := _train_yard_price_style(index)
+			slate.bg_color = Color("5b5750")
+			locked_pill.add_theme_stylebox_override("panel", slate)
 		return
 	var style := _train_yard_row_style(index, is_selected)
 	if is_selected:

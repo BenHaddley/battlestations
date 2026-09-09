@@ -35,6 +35,8 @@ signal route_changed(route_index: int, path: PackedVector2Array)
 @export var loop_margin: int = 1
 
 const ORTHOGONAL: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
+## Player-laid rail: lighter and less saturated than the authored main line.
+const PLAYER_BUILT_TINT := Color(0.88, 0.86, 0.80, 0.86)
 
 var columns: Array[float] = []
 var rows: Array[float] = []
@@ -828,6 +830,10 @@ func _render_cell(cell: Vector2i) -> void:
 			pieces.append(_pair_piece(directions[0], directions[1]))
 		_:
 			pieces = _junction_pieces(cell, directions)
+	# The authored railway is the main line and stays fully saturated; track the
+	# player added reads as lighter, newer siding so the two are never confused.
+	var player_built := is_built(cell)
+	var tint := PLAYER_BUILT_TINT if player_built else Color.WHITE
 	var sprites: Array[Sprite2D] = []
 	for piece in pieces:
 		var texture: Texture2D = rail_texture
@@ -837,7 +843,7 @@ func _render_cell(cell: Vector2i) -> void:
 		var shadow := Sprite2D.new()
 		shadow.texture = texture
 		shadow.position = point + Vector2(0.0, 7.0)
-		shadow.modulate = Color(0.04, 0.035, 0.025, 0.38)
+		shadow.modulate = Color(0.04, 0.035, 0.025, 0.24 if player_built else 0.38)
 		shadow.z_index = -7
 		shadow.scale = Vector2(tile_scale * 1.1, tile_scale * 1.06)
 		shadow.rotation = float(piece.rotation)
@@ -848,7 +854,9 @@ func _render_cell(cell: Vector2i) -> void:
 		tile.z_index = -5
 		tile.scale = Vector2(tile_scale, tile_scale)
 		tile.rotation = float(piece.rotation)
+		tile.modulate = tint
 		tile.set_meta("piece", String(piece.kind))
+		tile.set_meta("player_built", player_built)
 		add_child(tile)
 		sprites.append(tile)
 	_tiles_by_cell[cell] = sprites
