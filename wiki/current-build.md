@@ -126,9 +126,19 @@ kept alongside them.
   disarms it.
 - The authored main line stays fully saturated; player-built rail is drawn lighter and
   less saturated (`TrackRenderer.PLAYER_BUILT_TINT`) so the two are never confused.
-  Lane guides are deliberately faint, and the engine and every car carry a grounding
-  shadow, an ink ring and a soft STATION halo so the train reads above the railway.
-  Selecting an engine also draws direction arrows around the ring it drives.
+  Lane guides are deliberately faint. Each vehicle carries a small contact shadow and
+  an ink ring — wider and darker on the locomotive, which is also drawn at a larger
+  token size so it outranks its cars — with a slim drawbar coupler between them and a
+  quiet spine threading the consist into one object. A brass stud marks every cell
+  where three or more rails meet, so a junction never reads as two circuits passing
+  close by. The station nameplate stands on posts in the band below the railway
+  rather than on the sleepers.
+- **Selection is a layer, not an overlay on the train.** Unselected: no arrows, no
+  card, no track fading. Selected: four cyan corner brackets and a thin outline around
+  the locomotive (never a filled disc over it), a compact card floating clear above it
+  with the engine number and a weight bar, widely spaced direction arrows on that
+  route only, and `TrackRenderer.set_route_focus()` lifting the ring that train drives
+  while every other rail fades. `Main` sets and clears the focus with the selection.
 - The right panel runs a STATION/BATTLE schedule panel (phase dots, a conductor
   portrait that swaps per phase, and a SKIP WAIT / IN PROGRESS action button) above a
   to-do checklist tracking the run's live objectives.

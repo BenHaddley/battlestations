@@ -644,6 +644,7 @@ func _select_convoy(convoy: TrainConvoy) -> void:
 	_clear_train_selection()
 	selected_convoy = convoy
 	selected_convoy.set_selected(true, convoys.find(convoy) + 1)
+	track.set_route_focus(selected_convoy.route_index)
 	train_control_panel.show_for(convoy, convoys.find(convoy) + 1)
 
 func _clear_train_selection() -> void:
@@ -651,6 +652,7 @@ func _clear_train_selection() -> void:
 		selected_convoy.release_driver_controls()
 		selected_convoy.set_selected(false)
 	selected_convoy = null
+	track.set_route_focus(-1)
 	if train_control_panel:
 		train_control_panel.clear()
 

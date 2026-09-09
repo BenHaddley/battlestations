@@ -344,6 +344,14 @@ interface competed with it; the railway, not the panels, should lead the eye.
       drives, so which track belongs to it and which way it runs are obvious.
 - [x] Say what STATION is for: "STATION — 00:23 / BUILD & PREPARE YOUR TRAIN / Buy
       Cars • Extend Track • Couple Train", with a larger, clearly clickable START WAVE.
+- [x] Separate the selection UI from the train it describes: corner brackets and a
+      thin outline instead of a disc over the locomotive, a compact engine card
+      floating clear above it, slim couplers, small contact shadows, a larger
+      locomotive token, far sparser direction arrows, and route focus that lifts the
+      selected train's ring while other track fades. Unselected shows none of it.
+- [x] Move the STATION nameplate off the rails onto its own posted sign.
+- [x] Mark junctions with a brass stud so connected track is distinguishable from
+      track that merely passes nearby.
 - [ ] Resolve the bottom-of-board duplication: Boiler Room's second circuit runs along
       the station edge, so the playable loop and the station infrastructure read as two
       railways in the same space. Needs a level-layout or board-art decision.

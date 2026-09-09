@@ -1030,6 +1030,17 @@ func _test_range_preview_and_readout() -> bool:
 	starter.set("targeting_range", 315.0)
 	main.range_preview.follow(null)
 	_check(not main.range_preview.visible, "range ring lingered with nothing hovered")
+	# Selecting an engine lifts the ring it drives and fades everything else,
+	# so the player can see which track belongs to this train.
+	var own_cell: Vector2i = main.track.cell_of(convoy.path[0])
+	var other_cell: Vector2i = main.track.route_cells(0)[0] if convoy.route_index != 0 else main.track.route_cells(1)[0]
+	main._select_convoy(convoy)
+	var own_tint: Color = main.track.tiles_at(own_cell)[0].modulate
+	var other_tint: Color = main.track.tiles_at(other_cell)[0].modulate
+	_check(other_tint.a < 0.95 and other_tint.r < 0.95, "unrelated track did not fade when a train was selected, saw %s" % other_tint)
+	_check(own_tint.b > other_tint.b and own_tint.a > other_tint.a, "the selected train's own route was not lifted above the rest")
+	main._clear_train_selection()
+	_check(main.track.tiles_at(other_cell)[0].modulate.is_equal_approx(Color.WHITE), "track stayed faded after deselecting")
 	main._select_convoy(convoy)
 	var status: String = main.train_control_panel.status_line()
 	_check(status.contains("WEIGHT 150 / 1000") and status.contains("ENGINE HP 300 / 300"), "controlled-train readout is wrong: '%s'" % status)

@@ -37,6 +37,10 @@ signal route_changed(route_index: int, path: PackedVector2Array)
 const ORTHOGONAL: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
 ## Player-laid rail: lighter and less saturated than the authored main line.
 const PLAYER_BUILT_TINT := Color(0.88, 0.86, 0.80, 0.86)
+## Selecting a train lifts the ring it drives and pushes everything else back,
+## so "which track is mine" is answered without reading the layout.
+const FOCUS_TINT := Color(0.78, 0.97, 1.0)
+const UNFOCUSED_TINT := Color(0.80, 0.79, 0.76, 0.78)
 
 var columns: Array[float] = []
 var rows: Array[float] = []
@@ -50,6 +54,8 @@ var built_cells: Dictionary = {}
 var revision: int = 0
 
 var _tiles_by_cell: Dictionary = {}
+var _focus_cells: Dictionary = {}
+var _focus_active := false
 
 ## The ten artist reference sheets are preserved as an authored route library.
 ## Indices correspond to image.png, 2.png ... 10.png in
@@ -810,6 +816,40 @@ func _render_all() -> void:
 	_tiles_by_cell = {}
 	for cell in graph:
 		_render_cell(cell)
+	_apply_focus_tints()
+	queue_redraw()
+
+## Lifts one route and fades the rest. -1 restores every tile to its own tint.
+func set_route_focus(route_index: int) -> void:
+	_focus_cells = {}
+	_focus_active = route_index >= 0 and route_index < routes.size()
+	if _focus_active:
+		for cell in route_cells(route_index):
+			_focus_cells[cell] = true
+	_apply_focus_tints()
+
+func _base_tint(cell: Vector2i) -> Color:
+	return PLAYER_BUILT_TINT if is_built(cell) else Color.WHITE
+
+func _apply_focus_tints() -> void:
+	for cell in _tiles_by_cell:
+		var tint := _base_tint(cell)
+		if _focus_active:
+			tint = tint.lerp(FOCUS_TINT, 0.30) if _focus_cells.has(cell) else tint * UNFOCUSED_TINT
+		for sprite in _tiles_by_cell[cell]:
+			if is_instance_valid(sprite):
+				sprite.modulate = tint
+
+## A brass stud wherever three or more rails meet, so a real junction is never
+## confused with two circuits that merely pass close to one another.
+func _draw() -> void:
+	for cell in graph:
+		if graph[cell].size() < 3:
+			continue
+		var point := world_of(cell)
+		draw_circle(point, 7.5, Color(0.09, 0.07, 0.05, 0.8))
+		draw_circle(point, 4.5, Color(0.95, 0.78, 0.35, 0.95))
+		draw_circle(point + Vector2(-1.2, -1.2), 1.6, Color(1.0, 0.95, 0.75, 0.9))
 
 ## Draws one cell from its connection set rather than its position in a
 ## route, so authored rings, junctions, crossings and dead ends all share one
@@ -833,7 +873,7 @@ func _render_cell(cell: Vector2i) -> void:
 	# The authored railway is the main line and stays fully saturated; track the
 	# player added reads as lighter, newer siding so the two are never confused.
 	var player_built := is_built(cell)
-	var tint := PLAYER_BUILT_TINT if player_built else Color.WHITE
+	var tint := _base_tint(cell)
 	var sprites: Array[Sprite2D] = []
 	for piece in pieces:
 		var texture: Texture2D = rail_texture

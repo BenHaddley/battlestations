@@ -52,6 +52,6 @@ class_name GameBalance
 @export var reverse_acceleration: float = 28.0
 @export var carry_capacity: float = 1000.0
 @export var tender_capacity_bonus: float = 500.0
-@export var car_spacing: float = 94.0
+@export var car_spacing: float = 88.0
 @export var minimum_consist_clearance: float = 64.0
 @export var attachment_radius: float = 76.0

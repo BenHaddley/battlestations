@@ -33,7 +33,11 @@ editor has — see [Current build](../wiki/current-build.md#running-the-project)
 - [ ] During STATIONS, hovering a rail shows plus signs; laying a tile costs Δ50, a
       dead end shows the buffer stop, a join ring closes a detour, and right-click
       lifts a laid tile for a refund. Nothing of this is available during BATTLE.
-- [ ] Selecting an engine draws direction arrows around the loop it drives.
+- [ ] With nothing selected the board shows no route arrows, no engine card and no
+      faded track.
+- [ ] Selecting an engine draws corner brackets around it (not a disc over it), a
+      compact card above it, sparse direction arrows on its loop, and fades the
+      unrelated track; deselecting restores everything.
 - [ ] A spider steps into a clear neighbouring lane round a train and bites a unit
       when boxed in; the bitten unit shows its health bar and jaws marker.
 - [ ] A destroyed car leaves the train with a debris burst; a wrecked engine shows

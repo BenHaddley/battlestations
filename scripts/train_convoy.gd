@@ -39,7 +39,9 @@ class_name TrainConvoy
 ## Turret art occupies a 1500px square at 0.085 scale (127.5 world units).
 ## Engine liveries exist as both 750px and 1500px sources, so derive their
 ## scale from the texture instead of inheriting the old 750px-only value.
-const ENGINE_TOKEN_SIZE := 80.0
+## The locomotive leads its train visually as well as physically: it is drawn
+## meaningfully larger than the cars behind it.
+const ENGINE_TOKEN_SIZE := 94.0
 
 var path: PackedVector2Array
 var path_index: int = 0
@@ -538,11 +540,9 @@ func _draw() -> void:
 		_draw_caption("WRECKED — DROP A LOCOMOTIVE HERE", Vector2(0.0, -58.0), Color(1.0, 0.82, 0.7, 1.0))
 	if selected:
 		_draw_route_direction()
-		draw_circle(Vector2.ZERO, 43.0, Color(0.15, 0.78, 1.0, 0.12))
-		draw_arc(Vector2.ZERO, 44.0, 0.04, TAU - 0.08, 30, Color("35d9ff"), 4.0, true)
-		draw_arc(Vector2(1.5, -1.0), 48.0, 0.2, TAU - 0.16, 27, Color(0.04, 0.03, 0.02, 0.9), 2.5, true)
-		var caption_offset := Vector2(0.0, -84.0 if wrecked else -58.0)
-		_draw_caption("ENGINE %d  ·  %d / %d" % [selected_number, roundi(total_weight()), roundi(effective_capacity())], caption_offset, Color("9fe9ff"))
+		_draw_selection_brackets()
+		if not wrecked:
+			_draw_engine_card()
 	if occupancy_debug:
 		var debug_color := Color(1.0, 0.22, 0.18, 0.75) if movement_blocked else Color(0.12, 0.9, 0.95, 0.45)
 		draw_arc(Vector2.ZERO, occupancy_distance * 0.5, 0.0, TAU, 24, debug_color, 2.0, true)
@@ -554,53 +554,87 @@ func _draw() -> void:
 		var car_local := to_local(car.global_position)
 		if occupancy_debug:
 			draw_arc(car_local, occupancy_distance * 0.5, 0.0, TAU, 24, Color(0.12, 0.9, 0.95, 0.45), 2.0, true)
-		draw_line(previous, car_local, Color(0.12, 0.1, 0.07, 0.9), 9.0)
-		draw_circle(previous.lerp(car_local, 0.5), 7.0, Color(0.72, 0.48, 0.18, 1.0))
+		# Slim couplers: a drawbar and a small pin, not another board piece.
+		draw_line(previous, car_local, Color(0.12, 0.1, 0.07, 0.85), 4.5)
+		draw_circle(previous.lerp(car_local, 0.5), 3.4, Color(0.72, 0.48, 0.18, 1.0))
 		if drag_active and not capped:
 			_draw_attach_target(car_local)
 		previous = car_local
 
-## Grounding shadow and ink ring under the engine and every car, so the train
-## reads as a solid object on top of the railway rather than another rail
-## tile. During STATION it also gets a soft warm halo, because that is when
-## the player is looking for it.
+## A small contact shadow under each vehicle lifts it off the sleepers without
+## drawing a second object on the rails. The locomotive gets a slightly wider
+## one and a darker ink ring, so it outranks its cars at a glance.
 func _draw_consist_presence() -> void:
-	var station_glow := PhaseManager.is_station() and not wrecked
-	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 420.0)
 	var tokens: Array[Vector2] = [Vector2.ZERO]
 	for car in followers:
 		if is_instance_valid(car) and car.visible:
 			tokens.append(to_local(car.global_position))
+	# The consist as one object: a quiet spine threaded through every vehicle.
+	if tokens.size() > 1:
+		draw_polyline(PackedVector2Array(tokens), Color(0.08, 0.06, 0.04, 0.22), 7.0, true)
 	for index in range(tokens.size()):
 		var token := tokens[index]
-		draw_circle(token + Vector2(0.0, 6.0), 27.0, Color(0.05, 0.04, 0.03, 0.30))
-		if station_glow:
-			draw_circle(token, 33.0, Color(1.0, 0.86, 0.45, 0.05 + 0.05 * pulse))
-		draw_arc(token, 25.0, 0.0, TAU, 26, Color(0.08, 0.06, 0.04, 0.55), 3.0, true)
-	# The whole consist as one connected object: a spine through every token.
-	if tokens.size() > 1:
-		draw_polyline(PackedVector2Array(tokens), Color(0.08, 0.06, 0.04, 0.35), 13.0, true)
+		var is_engine := index == 0
+		var radius := 22.0 if is_engine else 18.0
+		draw_circle(token + Vector2(0.0, 3.0), radius, Color(0.05, 0.04, 0.03, 0.22))
+		draw_arc(token, radius, 0.0, TAU, 24, Color(0.07, 0.05, 0.03, 0.6 if is_engine else 0.34), 3.0 if is_engine else 1.8, true)
 
-## Arrows around the ring this train drives, so the player can see at a glance
-## which track belongs to it and which way it runs. Shown while selected.
+## Arrows around the ring this train drives — only while it is selected, and
+## spaced well apart so they read as a direction rather than as track texture.
 func _draw_route_direction() -> void:
 	if path.size() < 2 or route_length <= 0.0:
 		return
-	var spacing := 78.0
-	var travelled := 0.0
+	var spacing := 168.0
+	var travelled := spacing * 0.5
 	var facing := 1.0 if cruise_direction >= 0 else -1.0
 	while travelled < route_length:
 		var sample := _sample_route(route_distance + travelled)
 		var point: Vector2 = to_local(sample.position)
 		var heading: Vector2 = sample.direction * facing
 		var side := heading.orthogonal()
-		var tip := point + heading * 9.0
 		draw_colored_polygon(PackedVector2Array([
-			tip,
-			point - heading * 5.0 + side * 6.0,
-			point - heading * 5.0 - side * 6.0,
-		]), Color(0.24, 0.86, 1.0, 0.62))
+			point + heading * 7.0,
+			point - heading * 4.0 + side * 4.5,
+			point - heading * 4.0 - side * 4.5,
+		]), Color(0.24, 0.86, 1.0, 0.5))
 		travelled += spacing
+
+## Thin outline plus four corner brackets around the locomotive, instead of a
+## filled disc that buried the engine, its coupler and the rail beneath it.
+func _draw_selection_brackets() -> void:
+	var half := 31.0
+	var arm := 10.0
+	var cyan := Color(0.21, 0.85, 1.0)
+	draw_rect(Rect2(-half, -half, half * 2.0, half * 2.0), Color(cyan.r, cyan.g, cyan.b, 0.28), false, 1.5)
+	for corner in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
+		var point := Vector2(corner.x * half, corner.y * half)
+		draw_line(point, point - Vector2(corner.x * arm, 0.0), Color(0.04, 0.03, 0.02, 0.8), 5.0, true)
+		draw_line(point, point - Vector2(0.0, corner.y * arm), Color(0.04, 0.03, 0.02, 0.8), 5.0, true)
+		draw_line(point, point - Vector2(corner.x * arm, 0.0), cyan, 2.6, true)
+		draw_line(point, point - Vector2(0.0, corner.y * arm), cyan, 2.6, true)
+
+## Compact card floating clear above the selected engine: which train this is
+## and how loaded it is. Kept off the rails so it never competes with them.
+func _draw_engine_card() -> void:
+	var card_width := 128.0
+	var card_height := 32.0
+	var box := Rect2(-card_width * 0.5, -50.0 - card_height, card_width, card_height)
+	# Stem down toward the locomotive, so the card is clearly about this train.
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(0.0, box.end.y + 7.0), Vector2(-6.0, box.end.y - 1.0), Vector2(6.0, box.end.y - 1.0),
+	]), Color(0.07, 0.06, 0.05, 0.94))
+	draw_rect(box, Color(0.07, 0.06, 0.05, 0.94), true)
+	draw_rect(box, Color(0.21, 0.85, 1.0, 0.75), false, 2.0)
+	var font: Font = CAPTION_FONT
+	draw_string(font, box.position + Vector2(9.0, 15.0), "ENGINE %d" % selected_number, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("9fe9ff"))
+	var load_text := "%d / %d" % [roundi(total_weight()), roundi(effective_capacity())]
+	var load_width := font.get_string_size(load_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+	draw_string(font, Vector2(box.end.x - 9.0 - load_width, box.position.y + 15.0), load_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("ffe9b4"))
+	var bar := Rect2(box.position.x + 9.0, box.position.y + 20.0, card_width - 18.0, 6.0)
+	draw_rect(bar, Color(0.18, 0.15, 0.12, 1.0), true)
+	var load_fraction := clampf(total_weight() / maxf(effective_capacity(), 1.0), 0.0, 1.0)
+	var fill_color := Color(0.42, 0.86, 0.55).lerp(Color(0.95, 0.65, 0.25), load_fraction)
+	draw_rect(Rect2(bar.position, Vector2(bar.size.x * load_fraction, bar.size.y)), fill_color, true)
 
 const CAPTION_FONT := preload("res://assets/fonts/ArchitectsDaughter-Regular.ttf")
 
