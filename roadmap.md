@@ -517,8 +517,8 @@ every proposed feature against that definition.
       `godot --headless --path . --export-release "Web" export/web/index.html`.
 - [x] Host target decided: **GitHub Pages**, not itch.io. A build-and-deploy workflow
       is checked in at `.github/workflows/deploy-pages.yml` (push to `main` → export →
-      deploy). Not yet live — needs this repo pushed to GitHub with Pages enabled
-      (Settings → Pages → Source: GitHub Actions) before the workflow can run.
+      deploy). Live at <https://benhaddley.github.io/battlestations/> (Pages source:
+      GitHub Actions); the artist grid sheet is served beneath `/test`.
 - [x] Add a short [browser smoke-test checklist](docs/browser-smoke-test.md) to the repository.
 
 ### Verified in a live Web-exported browser build (headless Chromium, this session)
