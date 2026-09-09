@@ -17,6 +17,7 @@ editor has — see [Current build](../wiki/current-build.md#running-the-project)
 
 ## Gameplay
 
+- [ ] The starting train is visibly circling its loop before any input is given.
 - [ ] A car can be dragged from the Train Yard and attached to a valid train.
 - [ ] An unaffordable or invalid placement does not spend Delta.
 - [ ] A locomotive can be bought, placed on an empty route, selected, and driven.

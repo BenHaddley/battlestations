@@ -2,7 +2,7 @@ extends Control
 ## Functional shell over the authored 16:9 title-screen illustration.
 
 const StartGameDialogueScript := preload("res://scripts/start_game_dialogue.gd")
-const EnemyDataResource := preload("res://scripts/enemy_data.gd")
+const AlmanacPanelScript := preload("res://scripts/almanac_panel.gd")
 const TUTORIAL_SAVE_FILE := "tutorial.cfg"
 
 @onready var start_button: Button = $StartButton
@@ -24,6 +24,7 @@ const TUTORIAL_SAVE_FILE := "tutorial.cfg"
 
 var starting := false
 var start_dialogue: Control
+var almanac: AlmanacPanel
 
 func _ready() -> void:
 	if _is_artist_grid_build():
@@ -50,6 +51,9 @@ func _ready() -> void:
 	start_dialogue.continue_selected.connect(_on_continue_pressed)
 	start_dialogue.restart_selected.connect(_on_new_game_pressed)
 	start_dialogue.closed.connect(start_button.grab_focus)
+	almanac = AlmanacPanelScript.new()
+	add_child(almanac)
+	almanac.closed.connect(almanac_button.grab_focus)
 	start_button.grab_focus()
 	if _autostart_requested():
 		call_deferred("_on_new_game_pressed")
@@ -73,6 +77,14 @@ func _is_artist_grid_build() -> bool:
 	return String(location).contains("/test") or String(location).contains("artist-grid")
 
 func _unhandled_input(event: InputEvent) -> void:
+	if almanac != null and almanac.visible:
+		if event.is_action_pressed("ui_cancel"):
+			if almanac.detail.visible:
+				almanac._close_detail()
+			else:
+				almanac.close()
+			get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("ui_accept") and not modal.visible and not start_choice_modal.visible and not start_dialogue.visible:
 		_on_start_pressed()
 	elif event.is_action_pressed("ui_cancel"):
@@ -162,46 +174,9 @@ func _launch_level(index: int) -> void:
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
 
 func _show_almanac() -> void:
-	_prepare_interactive_modal("ALMANAC", "Units reveal their entries after appearing in a run.")
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(630, 470)
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 10)
-	scroll.add_child(grid)
-	for tower in BuildManager.towers:
-		_add_almanac_card(grid, "tower:%s" % tower.tower_name.to_snake_case(), tower.tower_name, tower.summary, CarArt.icon_for(tower))
-	for profile in EnemyRoster.PROFILES:
-		var data := EnemyDataResource.new()
-		data.enemy_id = String(profile.id)
-		data.enemy_name = String(profile.name)
-		data.summary = _enemy_summary(String(profile.get("ability", "")))
-		data.icon = profile.walk_a
-		_add_almanac_card(grid, "enemy:%s" % data.enemy_id, data.enemy_name, data.summary, data.icon)
-	_add_dynamic_before_back(scroll)
-	_expand_modal(365.0, 340.0)
-	modal.show()
-
-func _add_almanac_card(parent: GridContainer, content_id: String, title: String, summary: String, icon: Texture2D) -> void:
-	var discovered := DiscoveryTracker.is_discovered(content_id)
-	var card := Button.new()
-	card.disabled = true
-	card.custom_minimum_size = Vector2(300, 104)
-	card.text = "%s\n%s" % [title, summary] if discovered else "???\nNOT YET DISCOVERED"
-	card.icon = icon if discovered else null
-	card.expand_icon = true
-	card.add_theme_constant_override("icon_max_width", 72)
-	card.modulate = Color.WHITE if discovered else Color(0.38, 0.38, 0.38, 0.72)
-	parent.add_child(card)
-
-func _enemy_summary(ability: String) -> String:
-	return {
-		"dots": "Changes form as it takes damage.", "charge": "Bursts forward at speed.",
-		"rally": "Strengthens nearby spiders.", "armor": "Shrugs off repeated hits.",
-		"enrage": "Enrages below half health.", "jump": "Moves only while jumping.",
-		"hatch": "Hatches into smaller spiders.", "": "A quick railway pest."
-	}.get(ability, "A dangerous railway pest.")
+	modal.hide()
+	start_choice_modal.hide()
+	almanac.open()
 
 func _show_achievements() -> void:
 	_prepare_interactive_modal("ACHIEVEMENTS", "Complete tasks to unlock medals for this profile.")

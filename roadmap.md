@@ -166,9 +166,9 @@ its earlier deferred status. Tasks below remain unimplemented unless checked.
       and ensure continuing a save still introduces newly unlocked features/cars.
       Reset the appropriate lesson progress for a new campaign.
 - [x] Make sure switching to a different profile restarts the tutorial on that
-      profile (a profile with no completed lessons of its own should see the
-      opening tutorial again, not inherit progress from the previously active
-      profile).
+      profile without resetting its campaign or discoveries. At level one the opening
+      repeats; later saved levels reintroduce their unlocked cars. Selecting the
+      already active profile preserves lesson progress.
 - [ ] Verify the full campaign's teaching sequence with a fresh player, including
       levels that unlock multiple cars, save/continue, skipped lessons, and replays.
       Every available feature and car should have an introduction at a useful moment.
@@ -309,6 +309,9 @@ they improve the game.
       Spider Assault) are designed, launchable and regression-tested.
 - [x] **Achievements:** show persisted medal tasks and their locked/unlocked state.
 - [x] **Almanac:** open the persisted discovery/reference collection from the main menu.
+- [x] Build the illustrated reference-based Almanac with four category tabs, actual
+      game unit artwork, anonymous undiscovered entries, per-profile discovery counts,
+      scrolling, keyboard navigation, and discovered-unit detail views.
 - [x] **Settings (gear):** expose music/SFX volume and default battle speed preferences.
       preferences.
 - [x] **Profiles:** support three save profiles and make the active profile obvious;
@@ -350,6 +353,13 @@ interface competed with it; the railway, not the panels, should lead the eye.
       locomotive token, far sparser direction arrows, and route focus that lifts the
       selected train's ring while other track fades. Unselected shows none of it.
 - [x] Move the STATION nameplate off the rails onto its own posted sign.
+- [x] Fix trains freezing on every board. The consist clearance check compared
+      neighbouring vehicles' straight-line distance, which across a 90° corner is
+      shorter than their spacing along the rail, so a train declared itself blocked
+      and stopped for good. Neighbours are now exempt — only vehicles two or more
+      apart in the consist are checked, which is the wrap-around case the guard is
+      for. `_test_convoy_never_self_blocks` drives a full lap of every route on all
+      ten layouts, and the main-scene test asserts the level's own train moves.
 - [x] Mark junctions with a brass stud so connected track is distinguishable from
       track that merely passes nearby.
 - [ ] Resolve the bottom-of-board duplication: Boiler Room's second circuit runs along

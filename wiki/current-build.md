@@ -68,6 +68,14 @@ It serves `export/web` locally, opens `index.html?autostart` (which starts a new
 campaign without a click), and checks the console for Main's `LEVEL READY` line.
 Chromium is located through `$CHROME_BIN` or the Playwright browser cache.
 
+Main also prints a `TRAIN MOTION` line once per level. Under Chrome's virtual clock
+the page usually stops right after boot, so that line often never arrives in this
+harness and its absence is reported as a note, not a failure; the script only fails
+on a report that positively says the train stood still. A real windowed run
+(`xvfb-run … tests/VisualCapture.tscn -- --no-dialogue --combat`) does print it, and
+freezing is covered properly by `_test_convoy_never_self_blocks`, which drives a
+three-car consist a full lap of every route on all ten campaign layouts.
+
 ## Runtime architecture
 
 | Component | Responsibility |
@@ -224,3 +232,17 @@ reserved for interface rather than cropped away.
 
 See [Roadmap](../roadmap.md) for planned work rather than treating these gaps as
 settled solutions.
+
+## Illustrated almanac and profile guidance
+
+The title-screen Almanac uses the supplied parchment/railway reference, with Enemies,
+Train Cars, Defenses, and Tracks tabs, a scrollable two-column grid (one on narrow
+windows), per-tab discovery counts, and selectable discovered-entry details.
+Unseen units remain anonymous and show no actual unit artwork or stats. Entries use
+current game sprite resources, including both layers of placed turrets, and are
+revealed only after appearing in that profile's run. Browsing the almanac does not
+discover content. See [assets and behavior](../docs/almanac-assets.md).
+
+Selecting a different profile reloads its discoveries and restarts its tutorial
+lessons without resetting campaign progress. Selecting the same profile preserves
+lesson progress; later saved levels introduce their unlocked cars again.

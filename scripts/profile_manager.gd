@@ -20,11 +20,17 @@ func profile_path(file_name: String, slot: int = active_profile) -> String:
 	return root.path_join("profile_%d/%s" % [clampi(slot, 1, SLOT_COUNT), file_name])
 
 func select_profile(slot: int) -> void:
-	active_profile = clampi(slot, 1, SLOT_COUNT)
+	var selected := clampi(slot, 1, SLOT_COUNT)
+	var changed := selected != active_profile
+	active_profile = selected
 	_ensure_profile_dir(active_profile)
 	var config := ConfigFile.new()
 	config.set_value("profiles", "active", active_profile)
 	config.save(root.path_join(ACTIVE_FILE))
+	if changed:
+		# Returning to a different profile replays its guidance, not its campaign.
+		TutorialDirector.reset_progress()
+		DiscoveryTracker.load_discoveries()
 
 ## Redirects every profile-backed system to an isolated directory and reloads
 ## them from it. Intended for headless regression runs only.

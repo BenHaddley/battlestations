@@ -172,10 +172,20 @@ train in one ideal position undermines the movement strategy. Both the control
 scheme and exact minimum/maximum speeds still require a final specification.
 
 Cars don't have independent physics. The engine and every car sample the closed
-route at fixed distance offsets. Before advancing, the convoy validates all sampled
+route at fixed distance offsets. Before advancing, the convoy validates the sampled
 positions against `occupancy_distance`; it stops before self-overlap and refuses an
 attachment whose tail would wrap into the engine. `occupancy_debug` draws the tested
 clearance circles for route tuning.
+
+That check deliberately **skips neighbouring vehicles**. Two cars either side of a
+90° corner are closer in a straight line than their spacing along the rail — at
+`car_spacing` 88 the gap falls to `√(44² + 44²) ≈ 62`, under the 64 clearance — but
+that distance is a property of the corner, not a collision movement could avoid.
+Rejecting it made the consist declare itself blocked, zero its speed and freeze for
+the rest of the level. Only vehicles two or more apart in the consist are checked,
+which is the case the guard exists for: a tail wrapping round a short loop into the
+engine. The earlier 94 spacing cleared the same corner by 2.5 units, so this was
+always latent rather than introduced by tightening the spacing.
 
 ## Multiple trains
 

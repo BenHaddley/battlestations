@@ -28,6 +28,10 @@ var track_routes: Array[PackedVector2Array]:
 var pending_rebinds: Dictionary = {}
 var rail_builder: RailBuilder
 var range_preview: RangePreview
+var _motion_probe_elapsed := 0.0
+var _motion_probe_frames := 0
+var _motion_probe_origin := Vector2.ZERO
+var _motion_probe_done := false
 
 @export_range(2, 4) var starting_trains: int = 2
 @export_range(0, 6) var starting_cars: int = 1
@@ -131,6 +135,7 @@ func _ready() -> void:
 	rail_builder.name = "RailBuilder"
 	add_child(rail_builder)
 	rail_builder.configure(self, track, menu)
+	rail_builder.rail_built.connect(func(_cell: Vector2i, _route: int) -> void: _record_track_discoveries.call_deferred())
 	track.route_changed.connect(_on_route_changed)
 	range_preview = RangePreviewScript.new()
 	range_preview.name = "RangePreview"
@@ -140,6 +145,7 @@ func _ready() -> void:
 	var starter_cars := 0
 	for convoy in convoys:
 		starter_cars += int(convoy.car_count())
+	_record_track_discoveries()
 	print("LEVEL READY: %s | %d routes | %d trains | %d cars | %d rail cells" % [level.level_name if level else "?", track.routes.size(), convoys.size(), starter_cars, track.graph.size()])
 
 ## Regenerates the railway until it passes validation (every lane reachable,
@@ -200,8 +206,10 @@ func _generate_and_spawn_trains() -> void:
 		if CampaignManager.is_spider_assault():
 			_install_assault_blocker(convoy, 36.0)
 		convoys.append(convoy)
+		DiscoveryTracker.discover("engine:steam")
 
 func _process(delta: float) -> void:
+	_report_train_motion(delta)
 	if menu.dragging_tower >= 0:
 		_on_train_drag_updated(menu.dragging_tower, get_viewport().get_mouse_position(), menu.drag_facing)
 	var axis := 0
@@ -255,6 +263,7 @@ func car_near(world_position: Vector2, radius: float) -> Node2D:
 ## A revised ring reaches each convoy only once its whole consist sits on
 ## track both rings share; until then the train keeps its old geometry.
 func _on_route_changed(route_index: int, path: PackedVector2Array) -> void:
+	_record_track_discoveries.call_deferred()
 	for convoy_node in convoys:
 		var convoy := convoy_node as TrainConvoy
 		if not is_instance_valid(convoy) or convoy.route_index != route_index:
@@ -292,6 +301,29 @@ func _apply_keyboard_axis(convoy: TrainConvoy, axis: int, delta: float) -> void:
 	if convoy.get_meta("reverse_locked", false) and axis < 0:
 		axis = 0
 	convoy.set_manual_axis(axis, delta)
+
+## One console line, once per level, saying how far the starting train
+## actually travelled. A consist that decides it is blocked reports zero, so
+## the browser smoke test can catch a frozen train in the exported build —
+## the editor and headless suite both missed exactly that once already.
+func _report_train_motion(delta: float) -> void:
+	if _motion_probe_done or convoys.is_empty():
+		return
+	var convoy := convoys[0] as TrainConvoy
+	if not is_instance_valid(convoy):
+		_motion_probe_done = true
+		return
+	if _motion_probe_frames == 0:
+		_motion_probe_origin = convoy.global_position
+	_motion_probe_elapsed += delta
+	_motion_probe_frames += 1
+	# Frame count as well as elapsed time: a headless browser running on a
+	# virtual clock can deliver many frames with negligible delta, and the
+	# report must still arrive rather than waiting forever for two seconds.
+	if _motion_probe_elapsed < 2.0 and _motion_probe_frames < 150:
+		return
+	_motion_probe_done = true
+	print("TRAIN MOTION: %.1f units over %d frames / %.2fs, blocked=%s" % [convoy.global_position.distance_to(_motion_probe_origin), _motion_probe_frames, _motion_probe_elapsed, convoy.movement_blocked])
 
 ## Directional keys drive trains only while the board itself is the active
 ## surface. Every full-screen card (pause, upgrades, level complete, game
@@ -389,6 +421,7 @@ func _on_engine_drop_requested(screen_position: Vector2) -> void:
 		menu.show_placement_feedback("That rail cannot hold a locomotive here.", false)
 		return
 	convoys.append(convoy)
+	DiscoveryTracker.discover("engine:steam")
 	AudioFX.play_cue(&"purchase")
 	menu.trains = convoys
 	menu.train_drag_started.connect(convoy.set_drag_active.bind(true))
@@ -719,3 +752,8 @@ func _apply_car_palette(car: Node2D, palette_index: int) -> void:
 		sprite = car.get_node_or_null("Sprite2D")
 	if sprite:
 		sprite.modulate = Color.WHITE.lerp(palette[palette_index % palette.size()], 0.38)
+
+func _record_track_discoveries() -> void:
+	for tile in track.get_children():
+		if not tile.is_queued_for_deletion() and tile.has_meta("piece"):
+			DiscoveryTracker.discover("track:" + String(tile.get_meta("piece")))

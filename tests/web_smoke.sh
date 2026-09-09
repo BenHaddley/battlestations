@@ -45,6 +45,17 @@ elif ! grep "LEVEL READY" "$LOG.console" | grep -Eq "\| [1-9][0-9]* routes \| [1
 	echo "web_smoke: FAIL — level started without a railway or a train"
 	STATUS=1
 fi
+# A level that loads but whose train never moves still fails the player. Under
+# Chrome's virtual clock the page usually stops right after boot, so the report
+# often never arrives — that is a limit of this harness, not a failure. Freezing
+# is covered properly by _test_convoy_never_self_blocks in the Godot suite; here
+# we only fail on a report that positively says the train stood still.
+if ! grep -q "TRAIN MOTION" "$LOG.console"; then
+	echo "web_smoke: note — gameplay did not run long enough to report train motion"
+elif grep "TRAIN MOTION" "$LOG.console" | grep -Eq "TRAIN MOTION: 0\.0 |blocked=true"; then
+	echo "web_smoke: FAIL — the train did not move: $(grep 'TRAIN MOTION' "$LOG.console")"
+	STATUS=1
+fi
 if grep -Eq "SCRIPT ERROR|Failed to load script|Parse Error|Could not preload|Compile Error" "$LOG.console"; then
 	echo "web_smoke: FAIL — script errors in the exported build"
 	STATUS=1

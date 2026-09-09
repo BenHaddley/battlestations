@@ -28,8 +28,9 @@ func _run() -> void:
 	await get_tree().process_frame
 	# Persisted side effects (discoveries, tutorial flags, campaign saves) must
 	# never land in a real career while the suite runs.
-	ProfileManager.use_sandbox_root("user://regression_sandbox")
+	ProfileManager.use_sandbox_root("/tmp/battlestations-regression-%d" % OS.get_process_id())
 	_check(_test_convoy_spacing_and_reverse() == true, "_test_convoy_spacing_and_reverse aborted on a script error")
+	_check(_test_convoy_never_self_blocks() == true, "_test_convoy_never_self_blocks aborted on a script error")
 	_check(_test_campaign_track_library() == true, "_test_campaign_track_library aborted on a script error")
 	_check(_test_content_catalogs() == true, "_test_content_catalogs aborted on a script error")
 	_check(_test_mail_carrier() == true, "_test_mail_carrier aborted on a script error")
@@ -48,6 +49,7 @@ func _run() -> void:
 	_check((await _test_range_preview_and_readout()) == true, "_test_range_preview_and_readout aborted on a script error")
 	_check((await _test_lessons_and_profiles()) == true, "_test_lessons_and_profiles aborted on a script error")
 	_check(_test_audio_normalization() == true, "_test_audio_normalization aborted on a script error")
+	_check((await _test_almanac_discovery_and_profiles()) == true, "almanac/profile checks aborted")
 	_check(_test_export_preset_covers_preloads() == true, "_test_export_preset_covers_preloads aborted on a script error")
 	_check((await _test_train_yard_readability()) == true, "_test_train_yard_readability aborted on a script error")
 	# Let short procedural/audio one-shots finish and release their players before
@@ -259,6 +261,50 @@ func _test_convoy_spacing_and_reverse() -> bool:
 	convoy.queue_free()
 	return true
 
+## A train must keep moving on every authored campaign board. The consist
+## clearance check compares straight-line distance between sampled vehicles,
+## but two cars either side of a 90-degree corner are closer in a straight
+## line than their spacing along the rail — so a consist could declare itself
+## blocked, zero its speed and freeze for the rest of the level. The older
+## spacing test only asserted that positions were valid, which a frozen train
+## satisfies trivially, so it never caught this.
+func _test_convoy_never_self_blocks() -> bool:
+	var renderer := TrackRenderer.new()
+	add_child(renderer)
+	for layout_index in range(TrackRenderer.REFERENCE_LAYOUT_NAMES.size()):
+		var routes := renderer.generate_campaign_layout(layout_index)
+		for route_index in range(routes.size()):
+			var convoy: TrainConvoy = ConvoyScene.instantiate()
+			add_child(convoy)
+			convoy.configure_path(routes[route_index])
+			var attached := 0
+			for car_index in range(3):
+				var car := Node2D.new()
+				car.set_script(preload("res://tests/train_test_car.gd"))
+				add_child(car)
+				if convoy.attach_car(car):
+					attached += 1
+				else:
+					car.queue_free()
+					break
+			var blocked_steps := 0
+			# A full lap, so every corner on the ring is driven through. Distance
+			# is accumulated per step because route_distance wraps at the lap.
+			var steps := int(convoy.route_length / 4.0) + 8
+			var travelled := 0.0
+			var previous := convoy.route_distance
+			for step in range(steps):
+				convoy._advance_safely(4.0)
+				travelled += fposmod(convoy.route_distance - previous, convoy.route_length)
+				previous = convoy.route_distance
+				if convoy.movement_blocked:
+					blocked_steps += 1
+			_check(blocked_steps == 0, "layout %d route %d froze a %d-car train on %d of %d steps" % [layout_index, route_index, attached, blocked_steps, steps])
+			_check(travelled > convoy.route_length, "layout %d route %d train travelled only %.0f of %.0f units" % [layout_index, route_index, travelled, convoy.route_length])
+			convoy.queue_free()
+	renderer.queue_free()
+	return true
+
 func _test_challenge_job_cards() -> bool:
 	_check(CampaignManager.CHALLENGES.size() == 6, "challenge menu should expose six launchable job cards")
 	var seen_ids: Dictionary = {}
@@ -438,7 +484,8 @@ func _test_title_feature_modals() -> bool:
 	_check(title._modal_content().find_children("*", "HSlider", true, false).size() == 2, "settings modal is missing separate music and SFX sliders")
 	await get_tree().process_frame
 	title._show_almanac()
-	_check(title.modal_title.text == "ALMANAC", "Almanac grid did not open")
+	_check(title.almanac.visible and title.almanac.tab_buttons.size() == 4, "illustrated Almanac did not open with four categories")
+	title.almanac.close()
 	await get_tree().process_frame
 	title._show_achievements()
 	_check(title.modal_title.text == "ACHIEVEMENTS", "achievement medal list did not open")
@@ -534,6 +581,15 @@ func _test_main_scene_train_integration() -> bool:
 	var main = MainScene.instantiate()
 	add_child(main)
 	await get_tree().process_frame
+	# The reported symptom was simply "the train is not moving": assert the
+	# real level's convoy actually travels, not just that a synthetic one can.
+	var starter: TrainConvoy = main.convoys[0]
+	var origin := starter.global_position
+	var distance_before := starter.route_distance
+	for frame in range(30):
+		starter._process(1.0 / 60.0)
+	_check(not starter.movement_blocked, "the level's starting train reported itself blocked")
+	_check(starter.route_distance != distance_before and starter.global_position.distance_to(origin) > 4.0, "the level's starting train did not move over half a second")
 	_check(main.menu.get_node("NewIllustratedUi").visible, "normal play lost its illustrated UI background")
 	_check(main.get_node("Board").texture.resource_path == "res://assets/the_new_map.png", "normal play lost the shared new map background")
 	_check(main.menu.wave_banner != null, "HUD did not create the wave-start banner")
@@ -1127,7 +1183,7 @@ func _test_lessons_and_profiles() -> bool:
 	ProfileManager.select_profile(1)
 	main = await _start_campaign_scene(0, false)
 	director = main.get_node("TutorialDirector")
-	_check(not director.tutorial_active, "profile one inherited profile two's fresh lesson state")
+	_check(director.tutorial_active and director.current_lesson == "opening", "switching back to a different profile did not replay its tutorial")
 	main.queue_free()
 	await get_tree().process_frame
 
@@ -1358,4 +1414,76 @@ func _test_mail_carrier() -> bool:
 		spider.queue_free()
 	mail.queue_free()
 	_check(CampaignManager.tower_unlock_level(7) == 7, "Mail Carrier is unreachable in the campaign shop")
+	return true
+
+func _test_almanac_discovery_and_profiles() -> bool:
+	ProfileManager.select_profile(1)
+	DiscoveryTracker.discovered_ids.clear()
+	DiscoveryTracker.save_discoveries()
+	var title = TitleScene.instantiate()
+	add_child(title)
+	await get_tree().process_frame
+	title._show_almanac()
+	var book: AlmanacPanel = title.almanac
+	_check(book.counter.text == "0 / 9 DISCOVERED", "empty profile has revealed enemies")
+	_check(DiscoveryTracker.discovered_ids.is_empty(), "opening the almanac discovered unseen content")
+	for card in book.card_buttons:
+		_check(card.disabled and not card.get_meta("revealed"), "unseen card exposes interaction or identity")
+		var labels := card.find_children("*", "Label", true, false)
+		_check(labels[0].text == "???" and labels[1].text == "NOT YET DISCOVERED", "unseen card leaks its name or description")
+		var preview = card.get_child(0).get_child(0)
+		_check(preview.layers.is_empty(), "unseen card loaded the hidden unit artwork")
+	DiscoveryTracker.discover("enemy:generic")
+	DiscoveryTracker.discover("enemy:generic")
+	DiscoveryTracker.discover("tower:gunner_car")
+	book.open()
+	_check(book.counter.text == "1 / 9 DISCOVERED", "duplicate sightings inflated the discovery count")
+	_check(not book.card_buttons[0].disabled, "seen enemy stayed locked")
+	var enemy_preview = book.card_buttons[0].get_child(0).get_child(0)
+	_check(enemy_preview.layers[0].texture == EnemyMovement.DOT_STAGE_TEXTURES[0][0], "almanac spider differs from gameplay art")
+	book._show_detail(book.entries[0])
+	_check(book.detail.visible, "discovered unit details did not open")
+	book._close_detail()
+	book._show_detail(book.entries[1])
+	_check(not book.detail.visible, "unseen unit details were exposed")
+	book.select_category(2)
+	_check(book.counter.text == "1 / 5 DISCOVERED", "defense tab count does not match encountered weapons")
+	var gun_preview = book.card_buttons[0].get_child(0).get_child(0)
+	_check(gun_preview.layers.size() == 2 and gun_preview.layers[0].texture == CarArt.for_tower(BuildManager.towers[0]).base and gun_preview.layers[1].texture == CarArt.for_tower(BuildManager.towers[0]).top, "almanac turret omitted or replaced placed-car layers")
+	book.select_category(1)
+	_check(book.card_buttons.size() == 4, "train tab must contain engine and utility cars")
+	book.select_category(3)
+	_check(book.card_buttons.size() == 3, "track tab is missing a current rail piece")
+	book.close()
+	var completed := ConfigFile.new()
+	completed.set_value("tutorial", "completed", true)
+	completed.set_value("lessons", "opening", true)
+	completed.save(ProfileManager.profile_path("tutorial.cfg", 1))
+	completed.save(ProfileManager.profile_path("tutorial.cfg", 2))
+	var campaign := ConfigFile.new()
+	campaign.set_value("campaign", "current_level_index", 3)
+	campaign.save(ProfileManager.profile_path("campaign_progress.cfg", 2))
+	ProfileManager.delete_profile(3)
+	title._select_profile(2)
+	_check(not FileAccess.file_exists(ProfileManager.profile_path("tutorial.cfg", 2)), "profile switching did not reset selected profile lessons")
+	_check(FileAccess.file_exists(ProfileManager.profile_path("tutorial.cfg", 1)), "switching erased the outgoing profile's tutorial")
+	_check(CampaignManager.current_level_index == 3, "restarting profile guidance reset its campaign")
+	DiscoveryTracker.discovered_ids.clear()
+	DiscoveryTracker.save_discoveries()
+	title._show_almanac()
+	_check(book.counter.text == "0 / 9 DISCOVERED", "profile two inherited profile one's discoveries")
+	book.close()
+	completed.save(ProfileManager.profile_path("tutorial.cfg", 2))
+	title._select_profile(2)
+	_check(FileAccess.file_exists(ProfileManager.profile_path("tutorial.cfg", 2)), "reselecting the same profile reset its tutorial")
+	title._select_profile(1)
+	title._show_almanac()
+	_check(book.counter.text == "1 / 9 DISCOVERED", "profile one's saved discoveries were lost on switching back")
+	book.close()
+	title.queue_free()
+	await get_tree().process_frame
+	var main = await _start_campaign_scene(0, false)
+	_check(DiscoveryTracker.is_discovered("engine:steam") and DiscoveryTracker.is_discovered("track:straight") and DiscoveryTracker.is_discovered("track:curve"), "entering a run did not discover its engine and visible tracks")
+	main.queue_free()
+	await get_tree().process_frame
 	return true

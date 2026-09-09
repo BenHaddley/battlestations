@@ -378,7 +378,13 @@ func _positions_valid_on(ring: PackedVector2Array, starts: PackedFloat32Array, l
 	for index in range(follower_count):
 		positions.append(_sample_on(ring, starts, length, engine_distance - car_spacing * (index + 1)).position)
 	for first in range(positions.size()):
-		for second in range(first + 1, positions.size()):
+		# Neighbours in the consist are held exactly car_spacing apart along the
+		# rail, so their straight-line gap is a property of the corner they are
+		# rounding, not a collision movement could avoid — rejecting it would
+		# stop the train dead and it could never start again. Only vehicles
+		# further apart in the consist can genuinely close on each other, which
+		# is what this guard is for: a tail wrapping round a short loop.
+		for second in range(first + 2, positions.size()):
 			if positions[first].distance_to(positions[second]) < occupancy_distance:
 				return false
 	return true
