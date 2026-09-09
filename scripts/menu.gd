@@ -135,15 +135,17 @@ func _ready() -> void:
 		button.gui_input.connect(_on_tower_gui_input.bind(index))
 		button.mouse_entered.connect(_show_shop_detail.bind(index))
 		button.mouse_exited.connect(_clear_shop_detail)
-		button.visible = true
+		# A car the campaign has not granted yet is not shown at all. It used to
+		# sit in the list as a dimmed STOP n card, which filled the yard with
+		# rows the player could not use and pushed the usable ones out of view.
+		button.visible = unlocked
 		button.disabled = not unlocked or not CampaignManager.challenge_shop_enabled()
+		if not unlocked:
+			continue
 		if not CampaignManager.challenge_shop_enabled():
 			_set_price_text(button, "FIXED")
 			continue
-		if unlocked:
-			_set_price_text(button, "%d" % (BuildManager.towers[index].cost if index < BuildManager.towers.size() else 0))
-		else:
-			_set_price_text(button, "STOP %d" % CampaignManager.tower_unlock_level(index))
+		_set_price_text(button, "%d" % (BuildManager.towers[index].cost if index < BuildManager.towers.size() else 0))
 	_show_shop_detail(BuildManager.selected_tower)
 	_install_build_track_button()
 	remove_button.pressed.connect(_toggle_remove_mode)
@@ -335,8 +337,19 @@ func _show_shop_detail(index: int) -> void:
 func _card_range_grid(radius: float) -> int:
 	return maxi(1, roundi(radius / 45.0))
 
+## Falls back to whichever car is actually in the yard, never a hidden one.
 func _clear_shop_detail() -> void:
-	_show_shop_detail(-2 if building_track else BuildManager.selected_tower)
+	if building_track:
+		_show_shop_detail(-2)
+		return
+	if CampaignManager.is_tower_unlocked(BuildManager.selected_tower):
+		_show_shop_detail(BuildManager.selected_tower)
+		return
+	for index in range(BuildManager.towers.size()):
+		if CampaignManager.is_tower_unlocked(index):
+			_show_shop_detail(index)
+			return
+	_show_shop_detail(-1)
 
 func main_rail_cost() -> int:
 	var builder = get_tree().current_scene.get("rail_builder") if get_tree().current_scene else null
@@ -905,27 +918,16 @@ func _style_tower_button(button: Button, index: int) -> void:
 	if index >= BuildManager.towers.size():
 		return
 	var unlocked := CampaignManager.is_tower_unlocked(index)
+	if not unlocked:
+		# Locked cars are absent from the yard entirely; nothing to style.
+		button.visible = false
+		return
 	var is_selected: bool = BuildManager.selected_tower == index
 	var affordable := LevelManager.currency >= BuildManager.towers[index].cost
-	var style_state := "locked" if not unlocked else ("selected" if is_selected else ("ready" if affordable else "poor"))
+	var style_state := "selected" if is_selected else ("ready" if affordable else "poor")
 	if String(button.get_meta("train_yard_style_state", "")) == style_state:
 		return
 	button.set_meta("train_yard_style_state", style_state)
-	if not unlocked:
-		button.disabled = true
-		# A locked card should read as unavailable at a glance, not merely dark:
-		# the art greys back and the price pill becomes a slate STOP plate.
-		button.modulate = Color(0.66, 0.63, 0.6, 1.0)
-		button.add_theme_stylebox_override("disabled", _locked_train_yard_style(index))
-		var locked_icon := button.get_node_or_null("TrayIcon") as TextureRect
-		if locked_icon:
-			locked_icon.modulate = Color(0.55, 0.53, 0.5, 0.72)
-		var locked_pill := button.find_child("PricePill", true, false) as PanelContainer
-		if locked_pill:
-			var slate := _train_yard_price_style(index)
-			slate.bg_color = Color("5b5750")
-			locked_pill.add_theme_stylebox_override("panel", slate)
-		return
 	var style := _train_yard_row_style(index, is_selected)
 	if is_selected:
 		style.border_color = Color("19cfd0")
@@ -934,12 +936,6 @@ func _style_tower_button(button: Button, index: int) -> void:
 		style.bg_color = style.bg_color.darkened(0.22)
 	button.add_theme_stylebox_override("normal", style)
 	button.modulate = Color(1, 1, 1, 1) if (is_selected or affordable) else Color(1, 1, 1, 0.72)
-
-func _locked_train_yard_style(index: int) -> StyleBoxFlat:
-	var style := _train_yard_row_style(index, false)
-	style.bg_color = Color("9a765d")
-	style.border_color = Color("352018")
-	return style
 
 func _install_mail_carrier_row() -> void:
 	mail_carrier_button = tender_button.duplicate() as Button

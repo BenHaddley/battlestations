@@ -1352,18 +1352,12 @@ func _test_train_yard_readability() -> bool:
 	menu._show_shop_detail(5)
 	_check(menu.shop_detail_panel.get_global_rect().size.y <= Menu.DETAIL_PANEL_HEIGHT + 8.0, "a long description resized the info card")
 
-	# A locked car still explains itself; only its availability line changes.
-	menu._show_shop_detail(3)
-	_check(menu.shop_detail_name.text == "PASSENGER COACH", "detail card did not name the hovered unit, saw '%s'" % menu.shop_detail_name.text)
 	# The shop shows the one-line summary; the authored paragraphs are Almanac
 	# material and must not reappear in this small card.
-	_check(menu.shop_detail_body.text.contains("Delta generation"), "detail card lost the Passenger Coach summary, saw '%s'" % menu.shop_detail_body.text)
 	_check(not menu.shop_detail_body.text.contains("hearty defense"), "the long authored blurb is back in the shop card")
 	_check(UnitLore.for_tower(BuildManager.towers[3]).contains("hearty defense"), "the Passenger Coach lore did not move to the Almanac source")
 	for tower in BuildManager.towers:
 		_check(UnitLore.for_tower(tower).length() > tower.summary.length(), "%s has no Almanac entry beyond its one-line summary" % tower.tower_name)
-	_check(menu.shop_detail_body.text.contains("UNLOCKS AT STOP 2"), "a locked car does not say when it unlocks, saw '%s'" % menu.shop_detail_body.text)
-	_check(menu.shop_detail_stats.text.contains("Δ110") and menu.shop_detail_stats.text.contains("175 HP"), "a locked car should still show its cost and health, saw '%s'" % menu.shop_detail_stats.text)
 	menu._show_shop_detail(0)
 	_check(menu.shop_detail_stats.text.contains("Δ150") and menu.shop_detail_stats.text.contains("150 WEIGHT") and menu.shop_detail_stats.text.contains("200 HP"), "detail card stats are wrong: '%s'" % menu.shop_detail_stats.text)
 	# Ranges are quoted in the cards' grid notation, matching the lessons.
@@ -1388,10 +1382,22 @@ func _test_train_yard_readability() -> bool:
 	menu.set_build_track(false)
 	_check(shop_scroll.modulate.is_equal_approx(Color.WHITE), "the Train Yard stayed dimmed after building ended")
 
-	# Locked cars read as unavailable rather than merely dark.
+	# A car the campaign has not granted yet is absent from the yard, not shown
+	# as a dimmed STOP n row taking space from the cars that can be bought.
 	menu._process(0.0)
-	var locked: Button = menu.get(Menu.TOWER_BUTTONS[1])
-	_check(locked.disabled and locked.modulate.r < 0.7, "a locked car is not clearly disabled")
+	var shown := 0
+	for index in range(Menu.TOWER_BUTTONS.size()):
+		var row: Button = menu.get(Menu.TOWER_BUTTONS[index])
+		var unlocked := CampaignManager.is_tower_unlocked(index)
+		_check(row.visible == unlocked, "%s visible=%s but unlocked=%s" % [Menu.TOWER_BUTTONS[index], row.visible, unlocked])
+		if row.visible:
+			shown += 1
+	_check(shown == 1, "the first campaign stop should offer exactly its one unlocked car, saw %d" % shown)
+	# Every card on screen is one the player can actually act on.
+	for button_name in Menu.TOWER_BUTTONS:
+		var row: Button = menu.get(button_name)
+		if row.visible:
+			_check(not row.disabled, "%s is shown but not usable" % button_name)
 	_check(menu._phase_heading(false).begins_with("STATION —") and menu._phase_instruction(false) == "BUILD & PREPARE YOUR TRAIN", "the STATION panel does not say what to do, saw '%s'" % menu._phase_heading(false))
 	_check(menu.station_progress_panel.skip_button.custom_minimum_size.y >= 40.0, "START WAVE is too small to read as the primary action")
 	main.queue_free()

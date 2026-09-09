@@ -198,9 +198,12 @@ actions beneath the title treatment.
 
 - The Train Yard list can attach all eight documented cars (Gunner Car, Chaingunner
   Car, Ballast Blaster, Coal Cannon, Passenger Coach, Brake Van, Tender, Mail Carrier).
-  Future cars remain visible as dimmed illustrated previews labelled with the campaign
-  stop that unlocks them. Cars have a run-local upgrade/sell card; REMOVE detaches
-  whichever car is clicked, without a refund, and there is no manual reordering.
+  A car the campaign has not granted yet is **hidden from the yard entirely** — it used
+  to sit there as a dimmed "STOP n" preview, which filled the list with rows the player
+  could not use and pushed the usable ones out of view. Every card on screen is one that
+  can be bought right now; the Almanac is where the rest of the roster is browsed.
+  Cars have a run-local upgrade/sell card; REMOVE detaches whichever car is clicked,
+  without a refund, and there is no manual reordering.
 - STATIONS rail building is implemented with the proposed join/reroute/removal rules in
   [Systems and balance](systems-and-balance.md#rail-building-during-stations). Trains
   still drive closed rings only: there is no junction switching, no shuttle movement

@@ -29,6 +29,8 @@ editor has — see [Current build](../wiki/current-build.md#running-the-project)
 - [ ] Up/Down drive the train without moving the highlight through the Train Yard.
 - [ ] Hovering a shop row fills the description card in the Train Yard — no tooltip
       appears over the board.
+- [ ] The Train Yard lists only cars unlocked at the current stop; locked cars are
+      absent rather than greyed out, and every visible card can be dragged.
 - [ ] BUILD TRACK arms construction: only then do plus signs appear on the hovered
       rail, the circuit outlines, and the panels step back. Starting a wave disarms it.
 - [ ] During STATIONS, hovering a rail shows plus signs; laying a tile costs Δ50, a
