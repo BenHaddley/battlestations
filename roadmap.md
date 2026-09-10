@@ -8,6 +8,22 @@ The original Unity snapshot remains in [`legacy_unity/`](legacy_unity/). Do not 
 features merely because an asset filename suggests them: confirm the design or mark
 the interpretation as a proposal in the wiki.
 
+## September 10 playtest revision
+
+Source: [Gubgub's playtest notes](wiki/sources/2026-09-10-playtest-revision.md). These decisions supersede older upgrade-tree, train-navigation and spider-role proposals below.
+
+- [x] Remove the upgrade tree; retain a compact car information/sell panel.
+- [x] Park trains during STATIONS unless selected and piloted. Hide trains and hold departure while BUILD TRACK is active.
+- [x] Drive open spurs and purchase engines on them. Pause at buffers and reverse the whole consist; smooth rail-corner facing.
+- [x] Import revised Steam Engine (50 liveries), Gunner, Chaingunner and Coal Cannon art. Preserve offensive-car colors and normalize one-tile footprints.
+- [x] Correct Mail Carrier orientation and reduce firing by 12.5%, preserving random targets.
+- [x] Use cardinal spider movement and grid-aligned detours; biting pins the whole train.
+- [x] Give Jump Spiders two-tile hops over trains; give Chargers one 250-damage stopping impact.
+- [x] Make Rally a slightly stronger, faster wave leader without an aura.
+- [x] Give Rollers a separate priority-target egg that releases four babies on destruction.
+- [ ] Playtest branch selection, buffer timing, jump cadence, egg/baby economy, and the Mail Carrier's new fire rate.
+- [ ] Replace placeholder UI when the artist supplies final elements.
+
 ## Working rules
 
 - Keep every phase playable before advancing to the next.

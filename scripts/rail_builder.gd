@@ -64,9 +64,8 @@ func _process(_delta: float) -> void:
 		# A wave started while building was armed; drop back to normal play.
 		menu.set_build_track(false)
 	if not active():
-		if has_anchor or has_hovered_removable:
-			_clear_hover()
-			queue_redraw()
+		_clear_hover()
+		queue_redraw()
 		return
 	var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * get_viewport().get_mouse_position()
 	var cell := track.cell_of(world_position)

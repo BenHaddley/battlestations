@@ -17,7 +17,9 @@ testing-in-browser caught that code review and the editor alone did not). The
 2026-09-09 direction — STATIONS rail building, spider avoidance and biting, unit
 health and wrecks, range previews, the controlled-train readout and per-profile
 Duck and Daisy lessons — is implemented and covered by the headless regression
-suite (`tests/GameplayRegression.tscn`); it has not yet been playtested by a person.
+suite (`tests/GameplayRegression.tscn`). The subsequent human playtest led to the
+[September 10 revision](sources/2026-09-10-playtest-revision.md): open-rail reversing,
+station parking/build focus, simplified car information, revised artwork and spider roles.
 
 ## Running the project
 
@@ -93,7 +95,7 @@ three-car consist a full lap of every route on all ten campaign layouts.
 | `TrainConvoy` | Reusable scene (`TrainConvoy.tscn`); each instance samples its engine and attached cars at fixed distances along a closed route, including safe acceleration and reversing, safe rebinding to a revised route, ramming impacts with recoil, and the wreck/recover states |
 | `UnitHealth` | Hit points on every engine and coupled car, bite/ram damage, screen-oriented health bar and jaws marker, debris burst and caption on destruction |
 | `RangePreview` + `CarPlacementGhost` | The real acquisition radius around a hovered or selected car and around the track-snapped placement preview |
-| `CarArt` | One chassis/turret art source for shop rows, drag previews, ghosts, almanac cards and upgrade portraits |
+| `CarArt` | One chassis/turret art source for shop rows, drag previews, ghosts, almanac cards and information portraits |
 | `TutorialDirector` + `DialogueOverlay` | Per-profile Duck and Daisy lessons with highlighted objectives, STATION scheduling, and replay |
 | `BattlefieldOverlay` | Draws subdued spider-lane entrances, lane guides, and the station danger line |
 | `Turret` + `Bullet` | Convoy following, target acquisition, rotation, firing, homing, and damage — base class for Chaingunner, Ballast, and Coal Cannon |
@@ -157,8 +159,7 @@ kept alongside them.
   to-do checklist tracking the run's live objectives.
 - An illustrated HP rail sits between the board and the right panel.
 - The board carries two independent trains on separate closed-loop tracks generated
-  every run. Engines use one of 25 authored liveries (matching the infowiki Steam
-  Engine card's "25 unique paint jobs") drawn without replacement, so no two engines
+  every run. Engines use one of 50 revised artist-supplied liveries drawn without replacement, so no two engines
   on the board share a color. Dropping a purchased car attaches it to whichever
   train's engine or connected cars the drop lands near — there is no separate "select
   a train" step.
@@ -202,12 +203,12 @@ actions beneath the title treatment.
   to sit there as a dimmed "STOP n" preview, which filled the list with rows the player
   could not use and pushed the usable ones out of view. Every card on screen is one that
   can be bought right now; the Almanac is where the rest of the roster is browsed.
-  Cars have a run-local upgrade/sell card; REMOVE detaches whichever car is clicked,
+  Cars have a compact information/sell card; REMOVE detaches whichever car is clicked,
   without a refund, and there is no manual reordering.
 - STATIONS rail building is implemented with the proposed join/reroute/removal rules in
   [Systems and balance](systems-and-balance.md#rail-building-during-stations). Trains
-  still drive closed rings only: there is no junction switching, no shuttle movement
-  on dead ends, and no collision between two trains sharing a cell. The Δ50 price is
+  navigate the live graph, choose branches and reverse at dead-end buffers. There
+  is still no collision between two trains sharing a cell. The Δ50 price is
   provisional and rail inventory is unlimited.
 - Spiders steer round trains and bite when boxed in; engines and cars carry workbook
   health, destroyed cars drop out of the consist and wrecked engines can be recovered.
@@ -218,9 +219,9 @@ actions beneath the title treatment.
   acquired through the car's scaled physics area (about half the radius), so range
   balance has effectively changed and needs a playtest.
 - Gunner and Chaingunner render the same chassis/turret pair everywhere (shop row,
-  drag preview, ghost, almanac, upgrade card, placed car). The updated artwork Gubgub
-  added to the shared Drive is not in the repository yet; once imported as chassis
-  and turret pieces it replaces `Gunner Car Base/Top` and `Minigun Base/Top`.
+  drag preview, ghost, almanac, information card, placed car). The revised A/B layers
+  from the shared Drive are imported, including Coal Cannon; engines use the 50
+  revised liveries. Car colors are untinted and footprints are consistent.
 - Spiders stop at the station and attack it repeatedly rather than disappearing.
   They remain targetable and keep the wave active until killed. Station HP is a
   separately tunable 60-point pool; no station gun has been added.
@@ -254,3 +255,7 @@ discover content. See [assets and behavior](../docs/almanac-assets.md).
 Selecting a different profile reloads its discoveries and restarts its tutorial
 lessons without resetting campaign progress. Selecting the same profile preserves
 lesson progress; later saved levels introduce their unlocked cars again.
+
+### September 10 verification
+
+The full headless gameplay regression suite passes, including open-line reversals at both buffers with attached cars, entering a newly built spur, station/manual/build-mode rules, Charger damage, two-tile jumps, Rally wave ordering, and egg priority/four-baby accounting. The Web export was exercised in Chromium through STATIONS, BUILD TRACK, and BATTLE; Main reported positive train movement with no script errors. Native rendered checks covered revised vehicle art and the compact information/sell panel. Further human balance playtesting remains on the roadmap.

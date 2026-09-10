@@ -1,8 +1,8 @@
 [gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/turret_coal_cannon.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/sprites/units/COAL CANNON BASE.png" id="2"]
-[ext_resource type="Texture2D" path="res://assets/sprites/units/COAL CANNON TOP.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/revised/COAL CANNON B.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/revised/COAL CANNON A.png" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/CoalCannonball.tscn" id="4"]
 
 [sub_resource type="CircleShape2D" id="RangeShape"]
@@ -18,13 +18,14 @@ z_index = 20
 
 [node name="Base" type="Sprite2D" parent="."]
 texture = ExtResource("2")
-scale = Vector2(0.17, 0.17)
+scale = Vector2(0.1208667875334542, 0.1208667875334542)
 
 [node name="RotationPoint" type="Node2D" parent="."]
 
 [node name="Top" type="Sprite2D" parent="RotationPoint"]
+rotation = -1.5707963
 texture = ExtResource("3")
-scale = Vector2(0.17, 0.17)
+scale = Vector2(0.1208667875334542, 0.1208667875334542)
 
 [node name="FiringPoint" type="Marker2D" parent="RotationPoint"]
 position = Vector2(0, -48)

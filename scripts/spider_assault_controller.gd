@@ -39,8 +39,8 @@ const SWARM_COOLDOWN := 45.0
 const SPIDER_CARDS: Array[Dictionary] = [
 	{"id":"generic", "name":"BASIC SPIDER", "role":"CHEAP ATTACKER", "description":"A reliable body for building a swarm.", "cost":1},
 	{"id":"baby", "name":"FAST SPIDER", "role":"QUICK PRESSURE", "description":"Quick and agile. Great for rushing gaps.", "cost":2},
-	{"id":"roller", "name":"TANK SPIDER", "role":"ABSORBS FIRE", "description":"Armoured and steady under defensive fire.", "cost":3},
-	{"id":"rally", "name":"WEB SPITTER", "role":"SUPPORT", "description":"Rallies nearby spiders through dangerous lanes.", "cost":4},
+	{"id":"roller", "name":"ROLLER", "role":"EGG PUSHER", "description":"Pushes an egg that releases four babies when destroyed.", "cost":3},
+	{"id":"rally", "name":"RALLY SPIDER", "role":"WAVE LEADER", "description":"A slightly tougher, faster spider. No aura or support ability.", "cost":4},
 	{"id":"sturdy", "name":"HEAVY SPIDER", "role":"BREAKTHROUGH", "description":"Slow, tough, and built for the final push.", "cost":5},
 ]
 

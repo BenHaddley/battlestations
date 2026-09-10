@@ -32,3 +32,7 @@ recorded in writing. Do not infer ownership from a filename or Discord upload.
 
 Until those steps are completed, local testing is appropriate but a public release
 must not be represented as rights-cleared.
+
+## Updated vehicle sprites — September 10
+
+Imported from the artist's [car folder](https://drive.google.com/drive/folders/1xiREf-He6shyYezBpXaWOWV0PKRlmqnN) and [Steam Engine folder](https://drive.google.com/drive/folders/1r9-ROzDkYN1Sb_7IRMGMceBUS3tedKPI) following the playtest request. Original PNG pixels are preserved. Six A/B car layers live in `assets/sprites/units/revised/`; 50 engine liveries live in `assets/sprites/engines/revised/`. Rotation and footprint normalization happen in scene transforms/runtime rendering.

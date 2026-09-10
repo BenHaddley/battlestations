@@ -6,7 +6,7 @@ extends Node2D
 const TrainConvoyScene := preload("res://scenes/TrainConvoy.tscn")
 const GameOverOverlayScene := preload("res://scenes/ui/GameOverOverlay.tscn")
 const SpiderAssaultControllerScript := preload("res://scripts/spider_assault_controller.gd")
-const NEW_BOARD_CAR_SCALE := Vector2(0.60, 0.60)
+const NEW_BOARD_CAR_SCALE := Vector2(0.54, 0.54)
 const PlacementGhostScript := preload("res://scripts/car_placement_ghost.gd")
 const RailBuilderScript := preload("res://scripts/rail_builder.gd")
 const RangePreviewScript := preload("res://scripts/range_preview.gd")
@@ -37,36 +37,58 @@ var _motion_probe_done := false
 @export_range(0, 6) var starting_cars: int = 1
 @export_range(1, 8) var max_generation_attempts: int = 6
 
-## The infowiki's Steam Engine card (#001): "can be spawned in one of 25
-## unique paint jobs at random" — these are exactly those 25 liveries,
-## drawn without replacement each run so two engines on the board can never
-## share a color.
+## Updated artist-supplied engine liveries. Car colors remain unchanged.
 const ENGINE_LIVERIES: Array[Texture2D] = [
-	preload("res://assets/sprites/engines/Steam Engine 1.png"),
-	preload("res://assets/sprites/engines/Steam Engine 2.png"),
-	preload("res://assets/sprites/engines/Steam Engine 3.png"),
-	preload("res://assets/sprites/engines/Steam Engine 4.png"),
-	preload("res://assets/sprites/engines/Steam Engine 5.png"),
-	preload("res://assets/sprites/engines/Steam Engine 6.png"),
-	preload("res://assets/sprites/engines/Steam Engine 7.png"),
-	preload("res://assets/sprites/engines/Steam Engine 8.png"),
-	preload("res://assets/sprites/engines/Steam Engine 9.png"),
-	preload("res://assets/sprites/engines/Steam Engine 10.png"),
-	preload("res://assets/sprites/engines/Steam Engine 11.png"),
-	preload("res://assets/sprites/engines/Steam Engine 12.png"),
-	preload("res://assets/sprites/engines/Steam Engine 13.png"),
-	preload("res://assets/sprites/engines/Steam Engine 14.png"),
-	preload("res://assets/sprites/engines/Steam Engine 15.png"),
-	preload("res://assets/sprites/engines/Steam Engine 16.png"),
-	preload("res://assets/sprites/engines/Steam Engine 17.png"),
-	preload("res://assets/sprites/engines/Steam Engine 18.png"),
-	preload("res://assets/sprites/engines/Steam Engine 19.png"),
-	preload("res://assets/sprites/engines/Steam Engine 20.png"),
-	preload("res://assets/sprites/engines/Steam Engine 21.png"),
-	preload("res://assets/sprites/engines/Steam Engine 22.png"),
-	preload("res://assets/sprites/engines/Steam Engine 23.png"),
-	preload("res://assets/sprites/engines/Steam Engine 24.png"),
-	preload("res://assets/sprites/engines/Steam Engine 25.png"),
+	preload("res://assets/sprites/engines/revised/001_Blue.png"),
+	preload("res://assets/sprites/engines/revised/002_Red.png"),
+	preload("res://assets/sprites/engines/revised/003_Green.png"),
+	preload("res://assets/sprites/engines/revised/004_Yellow.png"),
+	preload("res://assets/sprites/engines/revised/005_Orange.png"),
+	preload("res://assets/sprites/engines/revised/006_Purple.png"),
+	preload("res://assets/sprites/engines/revised/007_Pink.png"),
+	preload("res://assets/sprites/engines/revised/008_Navy.png"),
+	preload("res://assets/sprites/engines/revised/009_Rose.png"),
+	preload("res://assets/sprites/engines/revised/010_Forest.png"),
+	preload("res://assets/sprites/engines/revised/011_Monochrome.png"),
+	preload("res://assets/sprites/engines/revised/012_Teal.png"),
+	preload("res://assets/sprites/engines/revised/013_Viridian.png"),
+	preload("res://assets/sprites/engines/revised/014_Maroon.png"),
+	preload("res://assets/sprites/engines/revised/015_Blorange.png"),
+	preload("res://assets/sprites/engines/revised/016_Bumblebee.png"),
+	preload("res://assets/sprites/engines/revised/017_Diet.png"),
+	preload("res://assets/sprites/engines/revised/018_Lavender.png"),
+	preload("res://assets/sprites/engines/revised/019_Surge.png"),
+	preload("res://assets/sprites/engines/revised/020_Cherry Blossom.png"),
+	preload("res://assets/sprites/engines/revised/021_Baby Blue.png"),
+	preload("res://assets/sprites/engines/revised/022_Brick.png"),
+	preload("res://assets/sprites/engines/revised/023_High Contrast.png"),
+	preload("res://assets/sprites/engines/revised/024_Blue Coat.png"),
+	preload("res://assets/sprites/engines/revised/025_Red Coat.png"),
+	preload("res://assets/sprites/engines/revised/026_Green Coat.png"),
+	preload("res://assets/sprites/engines/revised/027_Yellow Coat.png"),
+	preload("res://assets/sprites/engines/revised/028_Purple Coat.png"),
+	preload("res://assets/sprites/engines/revised/029_Orange Coat.png"),
+	preload("res://assets/sprites/engines/revised/030_Ivory.png"),
+	preload("res://assets/sprites/engines/revised/031_Khaki.png"),
+	preload("res://assets/sprites/engines/revised/032_Midnight.png"),
+	preload("res://assets/sprites/engines/revised/033_Burgundy.png"),
+	preload("res://assets/sprites/engines/revised/034_Moss.png"),
+	preload("res://assets/sprites/engines/revised/035_Coffee.png"),
+	preload("res://assets/sprites/engines/revised/036_Neopolitan.png"),
+	preload("res://assets/sprites/engines/revised/037_Mint Chip.png"),
+	preload("res://assets/sprites/engines/revised/038_Candy Corn.png"),
+	preload("res://assets/sprites/engines/revised/039_Blueberry.png"),
+	preload("res://assets/sprites/engines/revised/040_Strawberry.png"),
+	preload("res://assets/sprites/engines/revised/041_Sour Apple.png"),
+	preload("res://assets/sprites/engines/revised/042_Lemon.png"),
+	preload("res://assets/sprites/engines/revised/043_Tangerine.png"),
+	preload("res://assets/sprites/engines/revised/044_Grape.png"),
+	preload("res://assets/sprites/engines/revised/045_True Blue.png"),
+	preload("res://assets/sprites/engines/revised/046_True Red.png"),
+	preload("res://assets/sprites/engines/revised/047_True Green.png"),
+	preload("res://assets/sprites/engines/revised/048_True Yellow.png"),
+	preload("res://assets/sprites/engines/revised/049_True Purple.png"),
+	preload("res://assets/sprites/engines/revised/050_True Orange.png"),
 ]
 
 var _car_palette_cursor := 0
@@ -100,6 +122,8 @@ func _ready() -> void:
 	menu.engine_drop_requested.connect(_on_engine_drop_requested)
 	menu.remove_requested.connect(_on_remove_requested)
 	_seed_tabletop()
+	for convoy in convoys:
+		convoy.configure_network(track)
 	upgrade_panel = UnitUpgradePanel.new()
 	$CanvasLayer.add_child(upgrade_panel)
 	upgrade_panel.sell_requested.connect(_on_upgrade_sell_requested)
@@ -217,21 +241,16 @@ func _process(delta: float) -> void:
 		var forward_held := Input.is_key_pressed(KEY_UP) or Input.is_key_pressed(KEY_W)
 		var reverse_held := Input.is_key_pressed(KEY_DOWN) or Input.is_key_pressed(KEY_S)
 		axis = int(forward_held) - int(reverse_held)
-	if is_instance_valid(selected_convoy):
-		_apply_keyboard_axis(selected_convoy, axis, delta)
-	else:
-		# Keyboard driving should work immediately without making the player
-		# find and click a small moving locomotive first. With no explicit
-		# selection, the command is shared by every player train.
-		for convoy_node in convoys:
-			var convoy := convoy_node as TrainConvoy
-			if is_instance_valid(convoy):
-				_apply_keyboard_axis(convoy, axis, delta)
+	for convoy_node in convoys:
+		var convoy := convoy_node as TrainConvoy
+		if is_instance_valid(convoy):
+			convoy.set_building_hidden(menu.building_track)
+			_apply_keyboard_axis(convoy, axis if convoy == selected_convoy and not menu.building_track else 0, delta)
 	_retry_pending_rebinds()
 	_refresh_range_preview()
 
 ## The attack radius is shown for the car under the pointer and for the car
-## whose upgrade card is open; utility cars draw nothing.
+## whose information card is open; utility cars draw nothing.
 func _refresh_range_preview() -> void:
 	if range_preview == null:
 		return
@@ -293,8 +312,13 @@ func rail_cell_occupied(cell: Vector2i) -> bool:
 	var point := track.world_of(cell)
 	for convoy_node in convoys:
 		var convoy := convoy_node as TrainConvoy
-		if is_instance_valid(convoy) and convoy.occupies_point(point, track.path_step * 0.7):
-			return true
+		if not is_instance_valid(convoy): continue
+		if convoy.occupies_point(point, track.path_step * 0.7): return true
+		if convoy.navigator:
+			var at := convoy.navigator.distance - convoy.followers.size() * convoy.car_spacing
+			while at <= convoy.navigator.distance:
+				if Vector2(convoy.navigator.sample(at).position).distance_to(point) < track.path_step * 0.5: return true
+				at += track.path_step * 0.25
 	return false
 
 func _apply_keyboard_axis(convoy: TrainConvoy, axis: int, delta: float) -> void:
@@ -307,7 +331,7 @@ func _apply_keyboard_axis(convoy: TrainConvoy, axis: int, delta: float) -> void:
 ## the browser smoke test can catch a frozen train in the exported build —
 ## the editor and headless suite both missed exactly that once already.
 func _report_train_motion(delta: float) -> void:
-	if _motion_probe_done or convoys.is_empty():
+	if _motion_probe_done or convoys.is_empty() or PhaseManager.is_station():
 		return
 	var convoy := convoys[0] as TrainConvoy
 	if not is_instance_valid(convoy):
@@ -326,7 +350,7 @@ func _report_train_motion(delta: float) -> void:
 	print("TRAIN MOTION: %.1f units over %d frames / %.2fs, blocked=%s" % [convoy.global_position.distance_to(_motion_probe_origin), _motion_probe_frames, _motion_probe_elapsed, convoy.movement_blocked])
 
 ## Directional keys drive trains only while the board itself is the active
-## surface. Every full-screen card (pause, upgrades, level complete, game
+## surface. Every full-screen card (pause, car information, level complete, game
 ## over, Duck and Daisy) keeps ordinary keyboard navigation instead.
 func train_driving_enabled() -> bool:
 	if get_tree().paused or CampaignManager.is_spider_assault():
@@ -396,15 +420,6 @@ func _on_engine_drop_requested(screen_position: Vector2) -> void:
 		return
 	var placement := _nearest_free_rail_placement(world_position)
 	if placement.is_empty():
-		# Player-built rail off the authored rings: a closed detour becomes a
-		# circuit of its own; a dead end cannot host a locomotive yet.
-		var cell := track.cell_of(world_position)
-		if track.in_bounds(cell) and track.is_rail(cell) and track.route_index_of(cell) < 0:
-			if track.route_for_engine(cell) < 0:
-				menu.show_placement_feedback("That rail dead-ends. Close it into a loop before parking a locomotive on it.", false)
-				return
-			placement = _nearest_free_rail_placement(world_position)
-	if placement.is_empty():
 		menu.show_placement_feedback("Place the locomotive on an empty stretch of rail.", false)
 		return
 	if not LevelManager.spend_currency(Menu.ENGINE_COST):
@@ -412,14 +427,13 @@ func _on_engine_drop_requested(screen_position: Vector2) -> void:
 		return
 	var convoy: TrainConvoy = TrainConvoyScene.instantiate()
 	trains.add_child(convoy)
-	convoy.configure_path(track_routes[int(placement.route)])
-	convoy.route_index = int(placement.route)
+	convoy.configure_path(PackedVector2Array([placement.start, placement.finish]))
+	convoy.route_index = track.route_index_of(track.cell_of(placement.start))
+	convoy.navigator = RailNavigator.new()
+	convoy.navigator.setup_edge(track, placement.start, placement.finish, placement.position)
+	convoy.route_distance = convoy.navigator.distance
+	convoy._apply_consist_positions()
 	convoy.set_engine_livery(ENGINE_LIVERIES[convoys.size() % ENGINE_LIVERIES.size()])
-	if not convoy.place_at_route_distance(float(placement.distance)):
-		LevelManager.increase_currency(Menu.ENGINE_COST)
-		convoy.queue_free()
-		menu.show_placement_feedback("That rail cannot hold a locomotive here.", false)
-		return
 	convoys.append(convoy)
 	DiscoveryTracker.discover("engine:steam")
 	AudioFX.play_cue(&"purchase")
@@ -432,20 +446,15 @@ func _on_engine_drop_requested(screen_position: Vector2) -> void:
 func _nearest_free_rail_placement(world_position: Vector2) -> Dictionary:
 	var best := {}
 	var best_distance := 44.0
-	for route_index in range(track_routes.size()):
-		var route := track_routes[route_index]
-		var along := 0.0
-		for point_index in range(route.size()):
-			var start := route[point_index]
-			var finish := route[(point_index + 1) % route.size()]
-			var segment := finish - start
-			var weight := clampf((world_position - start).dot(segment) / maxf(segment.length_squared(), 0.001), 0.0, 1.0)
-			var candidate := start + segment * weight
-			var pointer_distance := candidate.distance_to(world_position)
-			if pointer_distance < best_distance and _engine_space_is_free(candidate):
-				best_distance = pointer_distance
-				best = {"route": route_index, "distance": along + segment.length() * weight}
-			along += segment.length()
+	for cell in track.graph:
+		for neighbor in track.graph[cell]:
+			var start: Vector2 = track.world_of(cell)
+			var finish: Vector2 = track.world_of(neighbor)
+			var candidate := Geometry2D.get_closest_point_to_segment(world_position, start, finish)
+			var gap := candidate.distance_to(world_position)
+			if gap < best_distance and _engine_space_is_free(candidate):
+				best_distance = gap
+				best = {"start": start, "finish": finish, "position": candidate, "route": track.route_index_of(cell), "distance": start.distance_to(candidate)}
 	return best
 
 func _find_wreck_near(world_position: Vector2) -> TrainConvoy:
@@ -733,25 +742,11 @@ func _find_attachable_convoy(world_position: Vector2) -> Node2D:
 
 const UNTINTED_CARS := ["Minigun", "Ballast", "CoalCannon", "BrakeVan", "PassengerCoach", "Tender"]
 
-func _apply_car_palette(car: Node2D, palette_index: int) -> void:
-	# These cars have strong authored identities of their own, so keep
-	# their supplied colors intact — only the plain Gunner Car chassis
-	# gets tinted per purchase.
-	for excluded in UNTINTED_CARS:
-		if car.name.contains(excluded):
-			return
-	var palette := [
-		Color(1.0, 0.48, 0.42),
-		Color(0.45, 0.68, 1.0),
-		Color(1.0, 0.82, 0.28),
-		Color(0.72, 0.48, 1.0),
-		Color(0.48, 0.9, 0.58),
-	]
-	var sprite: Sprite2D = car.get_node_or_null("Base")
-	if sprite == null:
-		sprite = car.get_node_or_null("Sprite2D")
-	if sprite:
-		sprite.modulate = Color.WHITE.lerp(palette[palette_index % palette.size()], 0.38)
+func _apply_car_palette(car: Node2D, _palette_index: int) -> void:
+	for name in ["Base", "Sprite2D", "RotationPoint/Top"]:
+		var sprite := car.get_node_or_null(name) as Sprite2D
+		if sprite:
+			sprite.modulate = Color.WHITE
 
 func _record_track_discoveries() -> void:
 	for tile in track.get_children():

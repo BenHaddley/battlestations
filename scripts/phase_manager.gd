@@ -21,6 +21,7 @@ var paused: bool = false
 ## objective is still open. Unlike `paused`, the player may still start the
 ## wave by hand; only the automatic departure countdown waits.
 var dialogue_hold: bool = false
+var build_hold: bool = false
 
 var _spawner: EnemySpawner
 
@@ -44,6 +45,7 @@ func reset() -> void:
 	rail_building_enabled = true
 	paused = false
 	dialogue_hold = false
+	build_hold = false
 	_spawner = null
 
 func _process(delta: float) -> void:
@@ -54,12 +56,12 @@ func _process(delta: float) -> void:
 		_spawner.start_next_wave()
 
 func clock_running() -> bool:
-	return not paused and not dialogue_hold and phase == Phase.STATION and is_instance_valid(_spawner)
+	return not paused and not build_hold and not dialogue_hold and phase == Phase.STATION and is_instance_valid(_spawner)
 
 ## True whenever the player is allowed to start the next wave by hand: the
 ## station window is open, no overlay owns the clock, and the spawner is idle.
 func can_start_wave() -> bool:
-	return not paused and phase == Phase.STATION and is_instance_valid(_spawner) and _spawner.can_start_next_wave()
+	return not paused and not build_hold and phase == Phase.STATION and is_instance_valid(_spawner) and _spawner.can_start_next_wave()
 
 ## Starts the next wave from a player action. Returns false when nothing
 ## happened, so a double-click or a stale button can never queue two waves.
@@ -88,7 +90,7 @@ func status_text() -> String:
 		return ""
 	if phase == Phase.BATTLE:
 		return "%d SPIDERS LEFT" % _spawner.enemies_remaining()
-	if dialogue_hold:
+	if dialogue_hold or build_hold:
 		return "DEPARTURE HELD"
 	var seconds: int = int(ceil(phase_timer))
 	return "DEPARTURE %02d:%02d" % [seconds / 60, seconds % 60]

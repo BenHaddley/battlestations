@@ -42,8 +42,10 @@ var is_spawning: bool = false
 ## the scene, so nothing here should ever start another wave underneath it.
 var level_finished: bool = false
 var telemetry: Dictionary = {}
+var spawned_this_wave := 0
 
 func _ready() -> void:
+	add_to_group("enemy_spawners")
 	_apply_balance()
 	GameEvents.enemy_destroyed.connect(_on_enemy_destroyed)
 	LevelManager.currency_changed.connect(_on_currency_changed)
@@ -83,6 +85,7 @@ func start_next_wave() -> void:
 	if not can_start_next_wave():
 		return
 	current_wave += 1
+	spawned_this_wave = 0
 	is_spawning = true
 	time_since_last_spawn = 0.0
 	enemies_left_to_spawn = _enemies_per_wave()
@@ -144,6 +147,9 @@ func _spawn_enemy() -> void:
 	var campaign_level := int(CampaignManager.get("current_level_index"))
 	var forced_enemy := String(CampaignManager.challenge_value("enemy", ""))
 	var profile := EnemyRoster.by_id(forced_enemy) if not forced_enemy.is_empty() else EnemyRoster.pick(campaign_level)
+	if forced_enemy.is_empty() and spawned_this_wave == 0 and campaign_level >= int(EnemyRoster.by_id("rally").unlock_level):
+		profile = EnemyRoster.by_id("rally")
+	spawned_this_wave += 1
 	DiscoveryTracker.discover("enemy:%s" % String(profile.get("id", "generic")))
 	if enemy.has_method("configure_archetype"):
 		enemy.configure_archetype(profile, current_wave, campaign_level)
@@ -163,6 +169,7 @@ func _spawn_enemy() -> void:
 		enemy.configure_bounty(maxi(1, roundi(normal_bounty * bounty_scale)))
 	if enemy.has_method("configure_lane"):
 		enemy.configure_lane(leak_y, _journey_duration_for_wave())
+	if profile.id == "roller": _add_roller_egg(enemy)
 
 ## Player-requested deployment for Spider Assault. This deliberately uses the
 ## same scene, roster data, lane movement, health and station-attack behavior
@@ -190,6 +197,7 @@ func spawn_controlled_spider(profile_id: String, entrance: Vector2, destination:
 	enemy.set_meta("assault_lane_x", entrance.x)
 	enemy.set("assault_speed_multiplier", 1.6 if swarm_active else 1.0)
 	enemies_alive += 1
+	if profile_id == "roller": _add_roller_egg(enemy)
 	return enemy
 
 func _hit_points_for_wave() -> int:
@@ -212,3 +220,24 @@ func _enemies_per_second() -> float:
 func _journey_duration_for_wave() -> float:
 	var early_bonus_seconds := maxf(0.0, 9.0 - 2.0 * (current_wave - 1))
 	return journey_duration_seconds + early_bonus_seconds
+
+func spawn_extra(profile_id: String, entrance: Vector2, destination_y: float, player_deployed: bool = false) -> EnemyMovement:
+	if enemy_prefabs.is_empty(): return null
+	var enemy := enemy_prefabs[0].instantiate() as EnemyMovement
+	get_tree().current_scene.add_child(enemy)
+	enemy.global_position = entrance
+	enemy.scale = Vector2.ONE * 0.54
+	enemy.lane_x_positions = lane_x_positions
+	enemy.configure_archetype(EnemyRoster.by_id(profile_id), maxi(current_wave, 1), CampaignManager.current_level_index)
+	enemy.configure_lane(destination_y, _journey_duration_for_wave())
+	enemy.set_meta("player_deployed", player_deployed)
+	if player_deployed: enemy.configure_bounty(0)
+	enemies_alive += 1
+	DiscoveryTracker.discover("enemy:" + profile_id)
+	return enemy
+
+func _add_roller_egg(roller: EnemyMovement) -> void:
+	var egg := spawn_extra("egg", roller.global_position + Vector2.DOWN * EnemyMovement.GRID_STEP, roller.route_target.y, bool(roller.get_meta("player_deployed", false)))
+	if egg:
+		roller.pushed_egg = egg
+		egg.egg_pusher = roller

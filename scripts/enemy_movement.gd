@@ -55,10 +55,15 @@ var death_texture: Texture2D
 var rage_texture_a: Texture2D
 var rage_texture_b: Texture2D
 var _special_clock := 0.0
-var _rally_expires_at := 0
 var _armored_hit_counter := 0
 var _jumping := false
-var _hatched := false
+var charge_spent := false
+var pushed_egg: EnemyMovement
+var egg_pusher: EnemyMovement
+var _babies_released := false
+var _hop_remaining := 0.0
+var _hop_direction := Vector2.DOWN
+const GRID_STEP := 65.5
 var attacking_station := false
 var _station_attack_timer := 0.0
 var _hit_feedback_tween: Tween
@@ -74,6 +79,8 @@ var bites_landed := 0
 var _bite_timer := 0.0
 var _sidestepping := false
 var _sidestep_target_x := 0.0
+var _sidestep_row := 0.0
+var grid_origin_y := -377.0
 var _sidestep_time := 0.0
 ## unit instance id -> ms timestamp before which that unit cannot strike again
 var _impact_cooldowns: Dictionary = {}
@@ -112,6 +119,7 @@ func configure_archetype(profile: Dictionary, wave: int, campaign_level: int) ->
 	speed_multiplier = float(profile.get("speed", 1.0))
 	var difficulty_bonus := campaign_level + maxi(wave - 1, 0) / 2
 	health.configure_hit_points(int(profile.get("hp", 5)) + difficulty_bonus)
+	if archetype_id == "rally": health.configure_hit_points(mini(3 + maxi(wave - 1, 0) * 2, 15) + 2)
 	health.set_bounty(int(profile.get("bounty", 45)) + campaign_level * 8)
 	# The complete one-to-six-dot artwork is now available, so the procedural
 	# dot overlay remains only as the stage signal source and is not rendered.
@@ -180,6 +188,15 @@ func _set_dot_stage(dot_count: int) -> void:
 	spider_sprite.texture = primary_texture
 
 func _physics_process(delta: float) -> void:
+	if health.is_destroyed: return
+	if is_instance_valid(egg_pusher) and not egg_pusher.health.is_destroyed:
+		global_position = egg_pusher.global_position + Vector2.DOWN * GRID_STEP
+		_animate_walk(delta)
+		return
+	if archetype_id == "egg":
+		velocity = Vector2.ZERO
+		_animate_walk(delta)
+		return
 	if not lane_configured:
 		return
 	if attacking_station:
@@ -201,23 +218,44 @@ func _physics_process(delta: float) -> void:
 	var speed: float = base_speed * assault_speed_multiplier
 	if Time.get_ticks_msec() < _slow_expires_at:
 		speed *= 0.5
-	if Time.get_ticks_msec() < _rally_expires_at:
-		speed *= 1.25
-	if ability == "charge" and fmod(_special_clock, 5.0) > 3.8:
+	if ability == "charge" and not charge_spent:
 		speed *= 2.1
 	if ability == "enrage" and health.hit_points <= health.max_hit_points / 2:
 		speed *= 1.55
+	var travel_direction := _cardinal_direction()
 	if ability == "jump":
-		# Jump Spiders advance only during the visible hop window. Grounded time
-		# is a deliberate pause, not ordinary walking at base speed.
-		speed = speed * 1.8 if _jumping else 0.0
-	var travel_direction := global_position.direction_to(route_target) if has_route_target else Vector2.DOWN
-	if travel_direction.is_zero_approx():
-		travel_direction = Vector2.DOWN
+		if not _jumping and _special_clock >= 3.55:
+			_jumping = true
+			_special_clock = 0.0
+			_hop_direction = travel_direction
+			_hop_remaining = minf(GRID_STEP * 2.0, absf((route_target - global_position).dot(travel_direction)))
+			_stop_biting()
+			_sidestepping = false
+		if _jumping:
+			var travel := minf(_hop_remaining, GRID_STEP * 2.0 / 0.75 * delta)
+			global_position += _hop_direction * travel
+			_hop_remaining -= travel
+			spider_sprite.position.y = -sin(PI * (1.0 - _hop_remaining / (GRID_STEP * 2.0))) * 35.0
+			if _hop_remaining <= 0.001:
+				_jumping = false
+				spider_sprite.position.y = 0.0
+		velocity = Vector2.ZERO
+		_animate_walk(delta)
+		queue_redraw()
+		return
+	if ability == "charge" and not charge_spent:
+		var obstacle := _blocking_unit(travel_direction)
+		if not obstacle.is_empty() and float(obstacle.forward) <= contact_distance + speed * delta:
+			_charge_hit(obstacle.unit)
+		else:
+			velocity = travel_direction * minf(speed, global_position.distance_to(route_target) / maxf(delta, 0.001))
+			move_and_collide(velocity * delta)
+		_animate_walk(delta)
+		return
 	if _update_train_interaction(delta, travel_direction, speed):
 		return
-	velocity = travel_direction * speed
-	move_and_slide()
+	velocity = travel_direction * minf(speed, absf((route_target - global_position).dot(travel_direction)) / maxf(delta, 0.001))
+	move_and_collide(velocity * delta)
 	queue_redraw()
 	_animate_walk(delta)
 
@@ -228,16 +266,21 @@ func _physics_process(delta: float) -> void:
 func _update_train_interaction(delta: float, travel_direction: Vector2, speed: float) -> bool:
 	if _sidestepping:
 		_sidestep_time += delta
+		var dy := _sidestep_row - global_position.y
+		if absf(dy) > 0.01:
+			velocity = Vector2(0, signf(dy)) * minf(maxf(speed, 1.0), absf(dy) / maxf(delta, 0.001))
+			move_and_collide(velocity * delta)
+			_animate_walk(delta)
+			return true
 		var dx := _sidestep_target_x - global_position.x
 		if absf(dx) <= 2.5:
 			global_position.x = _sidestep_target_x
 			_finish_sidestep()
-		elif _sidestep_time > 3.0:
+		elif _sidestep_time > 12.0:
 			_finish_sidestep()
 		else:
-			var vertical := signf(travel_direction.y) if absf(travel_direction.y) > 0.01 else 1.0
-			velocity = Vector2(signf(dx) * 1.1, vertical).normalized() * maxf(speed, 1.0)
-			move_and_slide()
+			velocity = Vector2(signf(dx), 0.0) * minf(maxf(speed, 1.0), absf(dx) / maxf(delta, 0.001))
+			move_and_collide(velocity * delta)
 			queue_redraw()
 			_animate_walk(delta)
 			return true
@@ -254,8 +297,11 @@ func _update_train_interaction(delta: float, travel_direction: Vector2, speed: f
 	if not is_nan(detour_x):
 		_sidestepping = true
 		_sidestep_target_x = detour_x
+		_sidestep_row = grid_origin_y + roundf((global_position.y - grid_origin_y) / GRID_STEP) * GRID_STEP
+		if absf(obstacle.unit.global_position.y - _sidestep_row) < contact_distance:
+			_sidestep_row = grid_origin_y + floorf((global_position.y - grid_origin_y) / GRID_STEP) * GRID_STEP
 		_sidestep_time = 0.0
-		return false
+		return _update_train_interaction(delta, travel_direction, speed)
 	if float(obstacle.forward) <= contact_distance:
 		biting_target = obstacle.unit
 		_bite_timer = minf(_bite_timer, bite_tick_seconds)
@@ -286,7 +332,7 @@ func _blocking_unit(travel_direction: Vector2) -> Dictionary:
 		var offset := unit.global_position - global_position
 		var forward := offset.dot(travel_direction)
 		var lateral := absf(offset.dot(travel_direction.orthogonal()))
-		if forward > 0.0 and forward <= lookahead_distance and lateral <= unit_half_width and forward < best_forward:
+		if forward >= -4.0 and forward <= lookahead_distance and lateral <= unit_half_width and forward < best_forward:
 			best_forward = forward
 			best = {"unit": unit, "forward": forward, "lateral": lateral}
 	return best
@@ -323,6 +369,8 @@ func _lane_clear(lane_x: float, travel_direction: Vector2) -> bool:
 		var health := UnitHealth.of(unit)
 		if health != null and health.is_destroyed:
 			continue
+		var across := Geometry2D.get_closest_point_to_segment(unit.global_position, global_position, probe)
+		if across.distance_to(unit.global_position) < unit_half_width: return false
 		var offset := unit.global_position - probe
 		var forward := offset.dot(travel_direction)
 		var lateral := absf(offset.dot(travel_direction.orthogonal()))
@@ -332,6 +380,9 @@ func _lane_clear(lane_x: float, travel_direction: Vector2) -> bool:
 
 func _bite(delta: float) -> void:
 	velocity = Vector2.ZERO
+	var convoy: TrainConvoy = biting_target as TrainConvoy
+	if convoy == null and is_instance_valid(biting_target) and biting_target.has_meta("convoy"): convoy = biting_target.get_meta("convoy") as TrainConvoy
+	if is_instance_valid(convoy): convoy.current_speed = 0.0
 	_bite_timer -= delta
 	if _bite_timer > 0.0:
 		_animate_walk(delta)
@@ -355,7 +406,7 @@ func is_biting() -> bool:
 ## the strike landed so the train can recoil; the same unit cannot strike
 ## again until its cooldown has passed.
 func take_impact(unit: Node2D, damage: int, cooldown_seconds: float) -> bool:
-	if attacking_station or health.is_destroyed:
+	if attacking_station or health.is_destroyed or _jumping or (ability == "charge" and not charge_spent):
 		return false
 	var key := unit.get_instance_id()
 	var now := Time.get_ticks_msec()
@@ -381,7 +432,7 @@ func apply_slow(duration: float) -> void:
 func apply_knockback(distance: float) -> void:
 	if distance <= 0.0 or not lane_configured or attacking_station:
 		return
-	var toward_destination := global_position.direction_to(route_target) if has_route_target else Vector2.DOWN
+	var toward_destination := _cardinal_direction()
 	global_position -= toward_destination * distance
 	velocity = Vector2.ZERO
 	queue_redraw()
@@ -443,37 +494,14 @@ func _draw() -> void:
 		var base := toward * 34.0
 		draw_line(base - toward.orthogonal() * 10.0, base + toward * 16.0, Color(1.0, 0.32, 0.26, 0.9), 3.0, true)
 		draw_line(base + toward.orthogonal() * 10.0, base + toward * 16.0, Color(1.0, 0.32, 0.26, 0.9), 3.0, true)
-	if ability == "rally":
-		draw_arc(Vector2.ZERO, 58.0, 0.0, TAU, 28, Color(0.45, 0.9, 0.35, 0.65), 3.0)
-		draw_arc(Vector2.ZERO, 64.0, -0.7, 0.7, 9, Color(1.0, 0.9, 0.25, 0.85), 4.0)
-	elif ability == "charge" and fmod(_special_clock, 5.0) > 3.8:
+	if ability == "charge" and not charge_spent:
 		for offset in [-24.0, 0.0, 24.0]:
 			draw_line(Vector2(offset - 14.0, -58.0), Vector2(offset, -92.0), Color(1.0, 0.55, 0.18, 0.75), 4.0)
 
 func _update_special_state() -> void:
-	if ability == "rally" and fmod(_special_clock, 1.0) < 0.035:
-		for spider in get_tree().get_nodes_in_group("spiders"):
-			if spider != self and spider is Node2D and global_position.distance_to(spider.global_position) <= 190.0:
-				spider.set("_rally_expires_at", Time.get_ticks_msec() + 1300)
 	if ability == "enrage" and health.hit_points <= health.max_hit_points / 2 and rage_texture_a:
 		primary_texture = rage_texture_a
 		alternate_texture = rage_texture_b
-	if ability == "jump":
-		var should_jump := fmod(_special_clock, 4.5) > 3.55
-		if should_jump != _jumping:
-			_jumping = should_jump
-			var target_scale := base_sprite_scale * (1.18 if _jumping else 1.0)
-			create_tween().tween_property(spider_sprite, "scale", target_scale, 0.12)
-	if ability == "hatch" and not _hatched and health.hit_points <= health.max_hit_points / 2:
-		_hatched = true
-		spider_sprite.texture = archetype_break_texture()
-		primary_texture = EnemyRoster.PROFILES[1].walk_a
-		alternate_texture = EnemyRoster.PROFILES[1].walk_b
-		base_sprite_scale = Vector2.ONE * 0.160
-		base_speed *= 2.2
-		var timer := get_tree().create_timer(0.18)
-		timer.timeout.connect(func() -> void: spider_sprite.texture = primary_texture)
-
 func archetype_break_texture() -> Texture2D:
 	for profile in EnemyRoster.PROFILES:
 		if String(profile.id) == archetype_id:
@@ -494,6 +522,14 @@ func _play_block_effect() -> void:
 	tween.chain().tween_callback(label.queue_free)
 
 func play_destroyed_effect(bounty: int) -> void:
+	if archetype_id == "egg" and not _babies_released:
+		_babies_released = true
+		var spawner := get_tree().get_first_node_in_group("enemy_spawners") as EnemySpawner
+		if spawner:
+			for offset in [Vector2.ZERO, Vector2(-GRID_STEP, 0), Vector2(GRID_STEP, 0), Vector2(0, -GRID_STEP)]:
+				var entrance: Vector2 = global_position + offset
+				entrance.x = clampf(entrance.x, lane_x_positions[0], lane_x_positions[-1])
+				spawner.spawn_extra("baby", entrance, route_target.y, bool(get_meta("player_deployed", false)))
 	if death_texture:
 		var death := Sprite2D.new()
 		death.texture = death_texture
@@ -525,3 +561,22 @@ func play_destroyed_effect(bounty: int) -> void:
 	tween.tween_property(reward, "modulate:a", 0.0, 0.65)
 	tween.chain().tween_callback(puff.queue_free)
 	tween.chain().tween_callback(reward.queue_free)
+
+func _cardinal_direction() -> Vector2:
+	if not has_route_target: return Vector2.DOWN
+	var difference := route_target - global_position
+	if absf(difference.x) > 0.1: return Vector2(signf(difference.x), 0)
+	return Vector2(0, signf(difference.y))
+
+func _charge_hit(unit: Node2D) -> void:
+	if charge_spent: return
+	charge_spent = true
+	velocity = Vector2.ZERO
+	var convoy: TrainConvoy = unit as TrainConvoy
+	if convoy == null and unit.has_meta("convoy"): convoy = unit.get_meta("convoy") as TrainConvoy
+	if is_instance_valid(convoy): convoy.force_stop()
+	var unit_health := UnitHealth.of(unit)
+	if unit_health: unit_health.take_damage(250.0, true)
+
+func protected_by_egg(origin: Vector2, radius: float) -> bool:
+	return is_instance_valid(pushed_egg) and not pushed_egg.health.is_destroyed and origin.distance_to(pushed_egg.global_position) <= radius

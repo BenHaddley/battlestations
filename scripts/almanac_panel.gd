@@ -306,14 +306,14 @@ func _style(fill: Color, edge: Color) -> StyleBoxFlat:
 func _catalog() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for profile in EnemyRoster.PROFILES:
-		var summary: String = {"dots": "Changes form as it takes damage.", "charge": "Bursts forward at speed.", "rally": "Strengthens nearby spiders.", "armor": "Shrugs off repeated hits.", "enrage": "Enrages below half health.", "jump": "Moves only while jumping.", "hatch": "Hatches into smaller spiders."}.get(String(profile.ability), "A quick railway pest." if profile.id == "baby" else "A tough, slow-moving spider.")
+		var summary: String = {"dots": "Changes form as it takes damage.", "charge": "First impact: 250 damage. Stops the train.", "leader": "Leads the wave. Slightly tougher and faster.", "push_egg": "Pushes a priority-target egg one tile ahead.", "enrage": "Enrages below half health.", "jump": "Jumps two tiles, clearing trains.", "egg": "Releases four babies when destroyed."}.get(String(profile.ability), "A quick railway pest." if profile.id == "baby" else "A tough, slow-moving spider.")
 		result.append({"id": "enemy:" + String(profile.id), "category": 0, "title": profile.name, "summary": summary, "profile": profile, "stats": "Base health: %d • Movement: ×%.2f\nHealth increases with campaign difficulty." % [profile.hp, profile.speed]})
 	for tower in BuildManager.towers:
 		var attacking := float(CarArt.for_tower(tower).get("range", 0)) > 0
 		# The long authored description lives here rather than in the shop, which
 		# only has room for the numbers and a one-line summary.
 		result.append({"id": "tower:" + tower.tower_name.to_snake_case(), "category": 2 if attacking else 1, "title": tower.tower_name, "summary": UnitLore.for_tower(tower), "tower": tower, "stats": "Cost: Δ%d • Weight: %d • Health: %d" % [tower.cost, tower.weight, tower.health]})
-	result.append({"id": "engine:steam", "category": 1, "title": "Steam Engine", "summary": "Carries your cars around the railway.", "texture": preload("res://assets/sprites/engines/Steam Engine 1.png"), "stats": "Purchase: Δ%d • Base capacity: %d" % [Menu.ENGINE_COST, (preload("res://resources/game_balance.tres") as GameBalance).carry_capacity]})
+	result.append({"id": "engine:steam", "category": 1, "title": "Steam Engine", "summary": "Carries your cars around the railway.", "texture": preload("res://assets/sprites/engines/revised/001_Blue.png"), "stats": "Purchase: Δ%d • Base capacity: %d" % [Menu.ENGINE_COST, (preload("res://resources/game_balance.tres") as GameBalance).carry_capacity]})
 	for kind in ["straight", "curve", "end"]:
 		var textures := {"straight": preload("res://assets/sprites/board/Rail Straight.png"), "curve": preload("res://assets/sprites/board/Rail Curve.png"), "end": preload("res://assets/sprites/board/Rail End.png")}
 		result.append({"id": "track:" + kind, "category": 3, "title": {"straight": "Straight Rail", "curve": "Curved Rail", "end": "Buffer Stop"}[kind], "summary": {"straight": "Connects the line across a tile.", "curve": "Turns the railway around a corner.", "end": "Caps a dead-end rail extension."}[kind], "texture": textures[kind], "stats": "Expand your railway during STATIONS."})

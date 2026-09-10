@@ -50,7 +50,7 @@ var mail_carrier_button: Button
 
 const TOWER_BUTTONS := ["gunner_button", "chaingunner_button", "ballast_button", "passenger_button", "coal_cannon_button", "brake_van_button", "tender_button", "mail_carrier_button"]
 static var ENGINE_COST: int = (preload("res://resources/game_balance.tres") as GameBalance).locomotive_cost
-const ENGINE_ICON := preload("res://assets/sprites/engines/Steam Engine Black.png")
+const ENGINE_ICON := preload("res://assets/sprites/engines/revised/001_Blue.png")
 
 const SCHEDULE_STATION_COLOR := Color(0.32, 0.58, 0.86, 1)
 const SCHEDULE_BATTLE_COLOR := Color(0.72, 0.16, 0.1, 1)
@@ -223,6 +223,7 @@ func set_build_track(active: bool) -> void:
 	if active and removing_mode:
 		_exit_remove_mode()
 	building_track = active and PhaseManager.rail_building_enabled and PhaseManager.is_station()
+	PhaseManager.build_hold = building_track
 	build_track_button.text = "DONE BUILDING" if building_track else "BUILD TRACK"
 	build_track_button.add_theme_stylebox_override("normal", _build_button_style(building_track))
 	AudioFX.play_cue(&"ui")
@@ -711,7 +712,7 @@ func _phase_heading(is_battle: bool) -> String:
 	if is_battle:
 		return "BATTLE"
 	var seconds := int(ceil(PhaseManager.phase_timer))
-	return "STATION — HELD" if PhaseManager.dialogue_hold else "STATION — %02d:%02d" % [seconds / 60, seconds % 60]
+	return "STATION — HELD" if PhaseManager.dialogue_hold or PhaseManager.build_hold else "STATION — %02d:%02d" % [seconds / 60, seconds % 60]
 
 func _phase_instruction(is_battle: bool) -> String:
 	return "DEFEND THE STATION" if is_battle else "BUILD & PREPARE YOUR TRAIN"

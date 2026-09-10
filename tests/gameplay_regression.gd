@@ -33,6 +33,7 @@ func _run() -> void:
 	_check(_test_convoy_never_self_blocks() == true, "_test_convoy_never_self_blocks aborted on a script error")
 	_check(_test_campaign_track_library() == true, "_test_campaign_track_library aborted on a script error")
 	_check(_test_content_catalogs() == true, "_test_content_catalogs aborted on a script error")
+	_check((await _test_playtest_revision()) == true, "playtest revision checks aborted")
 	_check(_test_mail_carrier() == true, "_test_mail_carrier aborted on a script error")
 	_check(_test_wallet_wave_and_selection_rules() == true, "_test_wallet_wave_and_selection_rules aborted on a script error")
 	_check(_test_challenge_job_cards() == true, "_test_challenge_job_cards aborted on a script error")
@@ -117,7 +118,6 @@ func _test_reported_combat_regressions() -> bool:
 	var grounded_position := jump_spider.global_position
 	jump_spider._physics_process(0.25)
 	_check(jump_spider.global_position.is_equal_approx(grounded_position), "grounded Jump Spider moved between hops")
-	jump_spider._jumping = true
 	jump_spider._special_clock = 4.0
 	jump_spider._physics_process(0.25)
 	_check(jump_spider.global_position.y > grounded_position.y, "Jump Spider did not advance during its hop")
@@ -224,6 +224,7 @@ func _latest_minigun_bullet() -> Bullet:
 	return null
 
 func _test_convoy_spacing_and_reverse() -> bool:
+	PhaseManager.phase = PhaseManager.Phase.BATTLE
 	var convoy: TrainConvoy = ConvoyScene.instantiate()
 	add_child(convoy)
 	convoy.configure_path(PackedVector2Array([
@@ -589,7 +590,7 @@ func _test_main_scene_train_integration() -> bool:
 	for frame in range(30):
 		starter._process(1.0 / 60.0)
 	_check(not starter.movement_blocked, "the level's starting train reported itself blocked")
-	_check(starter.route_distance != distance_before and starter.global_position.distance_to(origin) > 4.0, "the level's starting train did not move over half a second")
+	_check(starter.route_distance == distance_before and starter.global_position.is_equal_approx(origin), "station train moved without being selected and piloted")
 	_check(main.menu.get_node("NewIllustratedUi").visible, "normal play lost its illustrated UI background")
 	_check(main.get_node("Board").texture.resource_path == "res://assets/the_new_map.png", "normal play lost the shared new map background")
 	# The live health gauge must sit inside the channel drawn in the UI artwork.
@@ -636,20 +637,19 @@ func _test_main_scene_train_integration() -> bool:
 		var starter_car: Node2D = main.convoys[0].followers[0]
 		var starter_data := BuildManager.towers[0]
 		var fire_rate_before := float(starter_car.get("bps"))
-		LevelManager.currency = UnitUpgradePanel.COSTS[0]
+		LevelManager.currency = 120
 		main.upgrade_panel.open_for(starter_car, main.convoys[0], starter_data)
-		main.upgrade_panel._select_node(0, 0)
-		main.upgrade_panel._buy_selected()
-		_check(LevelManager.currency == 0, "upgrade purchase did not spend its listed cost")
-		_check(is_equal_approx(float(starter_car.get("bps")), fire_rate_before * 1.25), "Rapid Fire upgrade did not apply its documented multiplier")
-		_check(main.upgrade_panel._levels()[0] == 1, "purchased upgrade level was not persisted on the car")
+		_check(LevelManager.currency == 120, "opening car information spent currency")
+		_check(is_equal_approx(float(starter_car.get("bps")), fire_rate_before), "car information changed weapon stats")
+		_check(not main.upgrade_panel.title_label.text.contains("UPGRADE"), "removed upgrade tree still advertised")
 		main.upgrade_panel.close_panel()
 		main._select_convoy(main.convoys[0])
 		await get_tree().create_timer(0.2).timeout
 		_check(main.train_control_panel._expansion > 0.9, "engine selection did not expand train controls")
 		_check(main.train_control_panel.size.y <= 44.0, "selected-engine indicator obscures too much battlefield")
 		var selected: TrainConvoy = main.convoys[0]
-		var cruise_before := selected.cruise_speed
+		PhaseManager.phase = PhaseManager.Phase.BATTLE
+		var cruise_before := selected.current_speed
 		selected.set_manual_axis(1, 0.2)
 		selected._update_speed(0.5)
 		_check(selected.current_speed > cruise_before, "Up override did not accelerate the selected engine")
@@ -783,6 +783,8 @@ func _test_rail_building() -> bool:
 	_check(not builder.attempt_build(Vector2i(2, 0), Vector2i(1, 0)), "unaffordable rail was laid")
 	_check(LevelManager.currency == cost - 1 and track.graph.size() == before_cells, "refused placement changed the wallet or railway")
 	LevelManager.currency = before_currency
+	_check(not PhaseManager.request_wave_start(), "wave started while building rails")
+	main.menu.set_build_track(false)
 	_check(PhaseManager.request_wave_start(), "could not start a wave for the BATTLE gating check")
 	main.menu._on_phase_changed("battle")
 	_check(not builder.active(), "rail builder stayed active during BATTLE")
@@ -832,55 +834,24 @@ func _test_rail_building() -> bool:
 		_check(builder.attempt_remove(cell), "leftover tile %s could not be lifted" % cell)
 	_check(track.built_cells.is_empty() and track.routes[0].size() == loop_a_before, "loop A did not return to its authored ring")
 
-	# The starting train drives loop B. A detour built on its bottom edge is
-	# adopted immediately, but the convoy only rebinds once its whole consist
-	# is on track both rings share.
-	var convoy: TrainConvoy = main.convoys[0]
-	_check(convoy.route_index == 1 and convoy.path == track.routes[1], "starting train is not bound to loop B")
-	var bottom_edge := track.cell_of(track.routes[1][14])
-	_check(bottom_edge == Vector2i(6, 11), "loop B ring order changed; expected cell (6,11) at index 14, got %s" % bottom_edge)
-	# Park the engine 30 units into the stretch the detour will bypass.
-	convoy.place_at_route_distance(convoy.segment_starts[14] + 30.0)
-	var loop_b_before: int = track.routes[1].size()
-	var engine_position := convoy.global_position
-	_check(builder.attempt_build(Vector2i(4, 11), Vector2i(4, 10)) and builder.attempt_build(Vector2i(4, 10), Vector2i(5, 10)) and builder.attempt_build(Vector2i(5, 10), Vector2i(6, 10)), "loop B detour could not be built")
-	_check(builder.attempt_link(Vector2i(6, 10), Vector2i(6, 11)), "loop B detour could not be joined")
-	_check(track.routes[1].size() == loop_b_before + 2, "loop B did not adopt its detour")
-	_check(main.pending_rebinds.has(convoy) and convoy.path.size() == loop_b_before, "convoy on the bypassed stretch was rebound while still standing on it")
-	_check(convoy.global_position.is_equal_approx(engine_position), "pending rebind moved the train")
-	for step in range(80):
-		convoy._advance_safely(5.0)
-		main._retry_pending_rebinds()
-		_check(convoy._positions_valid_at(convoy.route_distance, convoy.followers.size()), "consist overlapped while a rebind was pending")
-	_check(not main.pending_rebinds.has(convoy) and convoy.path.size() == loop_b_before + 2, "convoy never adopted the revised loop after leaving the bypassed stretch")
-	# Rail under a standing train cannot be lifted.
-	var detour_index := -1
-	for index in range(convoy.path.size()):
-		if track.cell_of(convoy.path[index]) == Vector2i(5, 10):
-			detour_index = index
-	_check(detour_index >= 0, "rebound convoy path does not include the detour")
-	convoy.place_at_route_distance(convoy.segment_starts[detour_index])
-	_check(main.rail_cell_occupied(Vector2i(5, 10)), "occupancy check missed the engine standing on the detour")
-	var occupied_currency := LevelManager.currency
-	_check(not builder.attempt_remove(Vector2i(5, 10)) and track.is_rail(Vector2i(5, 10)) and LevelManager.currency == occupied_currency, "rail under a train could be lifted")
-
-	# Locomotives need a closed circuit: a dead end refuses, a closed lobe
-	# off loop A becomes a circuit of its own.
-	_check(builder.attempt_build(Vector2i(2, 2), Vector2i(2, 1)), "lobe spur could not be started")
+	# A locomotive can be purchased directly on an open spur.
+	_check(builder.attempt_build(Vector2i(2, 2), Vector2i(2, 1)), "engine spur could not be built")
+	main.menu.set_build_track(false)
 	var convoys_before: int = main.convoys.size()
 	LevelManager.currency = Menu.ENGINE_COST
 	main._on_engine_drop_requested(main.get_viewport().get_canvas_transform() * track.world_of(Vector2i(2, 1)))
-	_check(main.convoys.size() == convoys_before and LevelManager.currency == Menu.ENGINE_COST, "a locomotive was parked on a dead end")
-	_check(main.menu.placement_banner_label.text.contains("dead-ends"), "dead-end refusal did not explain itself, saw '%s'" % main.menu.placement_banner_label.text)
-	LevelManager.currency = 1000
-	_check(builder.attempt_build(Vector2i(2, 1), Vector2i(1, 1)) and builder.attempt_build(Vector2i(1, 1), Vector2i(1, 2)), "lobe could not be built")
-	_check(builder.attempt_link(Vector2i(1, 2), Vector2i(2, 2)), "lobe could not be closed")
-	_check(track.route_index_of(Vector2i(1, 1)) == -1 and track.routes[0].size() == loop_a_before, "a single-cell lobe was spliced into loop A")
-	var routes_before: int = track.routes.size()
-	LevelManager.currency = Menu.ENGINE_COST
-	main._on_engine_drop_requested(main.get_viewport().get_canvas_transform() * track.world_of(Vector2i(1, 1)))
-	_check(main.convoys.size() == convoys_before + 1 and track.routes.size() == routes_before + 1 and LevelManager.currency == 0, "closed lobe did not become a circuit for a new locomotive")
-	_check(main.convoys[-1].path.size() == 4 and main.convoys[-1].route_index == routes_before, "lobe locomotive is not driving the four-cell lobe")
+	_check(main.convoys.size() == convoys_before + 1 and LevelManager.currency == 0, "dead-end rail rejected a locomotive")
+	_check(main.convoys[-1].navigator != null, "new locomotive is not driving the live railway")
+	main.menu.set_build_track(true)
+	main._process(0.01)
+	for train in main.convoys:
+		_check(not train.visible and train.current_speed == 0.0, "building mode did not hide and park an engine")
+		for car in train.followers:
+			_check(not car.visible, "building mode left a car visible")
+			_check(main.rail_cell_occupied(track.cell_of(car.global_position)), "hidden car lost its rail occupancy")
+	main.menu.set_build_track(false)
+	main._process(0.01)
+	_check(main.convoys[0].visible and main.convoys[0].followers[0].visible, "trains did not return after building")
 	main.queue_free()
 	await get_tree().process_frame
 	PhaseManager.reset()
@@ -916,7 +887,7 @@ func _test_train_obstacles() -> bool:
 	spider.configure_route(Vector2(0.0, 600.0), 10.0)
 	for step in range(120):
 		spider._physics_process(1.0 / 60.0)
-	_check(not spider.is_biting() and is_equal_approx(absf(spider.route_target.x), 65.5), "spider did not sidestep round a lone train unit, lane x is %f" % spider.route_target.x)
+	_check(not spider.is_biting() and is_equal_approx(absf(spider.route_target.x), 65.5), "spider did not sidestep round a lone train unit, lane x is %f at %s, row %f" % [spider.route_target.x, spider.global_position, spider._sidestep_row])
 	_check(spider.global_position.y > 0.0, "sidestepping spider stopped advancing")
 	_check(spider._blocking_unit(Vector2.DOWN).is_empty(), "spider still saw the unit as blocking after moving lanes")
 	spider.queue_free()
@@ -1531,4 +1502,126 @@ func _test_almanac_discovery_and_profiles() -> bool:
 	_check(DiscoveryTracker.is_discovered("engine:steam") and DiscoveryTracker.is_discovered("track:straight") and DiscoveryTracker.is_discovered("track:curve"), "entering a run did not discover its engine and visible tracks")
 	main.queue_free()
 	await get_tree().process_frame
+	return true
+
+func _test_playtest_revision() -> bool:
+	var previous_level := CampaignManager.current_level_index
+	var renderer := TrackRenderer.new()
+	add_child(renderer)
+	renderer.columns.assign([0.0, 65.5, 131.0, 196.5, 262.0, 327.5, 393.0, 458.5, 524.0])
+	renderer.rows.assign([0.0, 65.5, 131.0])
+	renderer.track_bounds = Rect2(0, 0, 524, 131)
+	renderer.graph.clear()
+	for x in range(9):
+		var neighbors: Array = []
+		if x > 0: neighbors.append(Vector2i(x - 1, 0))
+		if x < 8: neighbors.append(Vector2i(x + 1, 0))
+		renderer.graph[Vector2i(x, 0)] = neighbors
+	var train: TrainConvoy = ConvoyScene.instantiate()
+	add_child(train)
+	train.set_process(false)
+	train.configure_path(PackedVector2Array([Vector2(131, 0), Vector2(196.5, 0)]))
+	train.navigator = RailNavigator.new()
+	train.navigator.setup_edge(renderer, Vector2(131, 0), Vector2(196.5, 0), Vector2(196.5, 0))
+	train.route_distance = train.navigator.distance
+	for i in range(2):
+		var car := Node2D.new()
+		car.set_script(preload("res://tests/train_test_car.gd"))
+		add_child(car)
+		_check(train.attach_car(car), "open railway rejected a car with enough rail behind it")
+	PhaseManager.phase = PhaseManager.Phase.BATTLE
+	var reversals := 0
+	var last_direction := train.cruise_direction
+	for step in range(1800):
+		train._process(1.0 / 60.0)
+		if train.cruise_direction != last_direction:
+			reversals += 1
+			_check(train.current_speed == 0.0 and train.buffer_pause > 0.6, "buffer reversal skipped its stop and pause")
+			last_direction = train.cruise_direction
+		_check(train._positions_valid_at(train.route_distance, 2), "backing train overlapped its cars")
+		_check(train.followers[-1].global_position.x >= -0.01 and train.global_position.x <= 524.01, "a train member left the dead-end rails")
+	_check(reversals >= 2, "train did not reverse at both ends of an open railway")
+	# Add an open side branch to an already moving network. The engine must
+	# enter it, pause at its buffer, and back out with all cars still on rail.
+	renderer.graph[Vector2i(4, 0)].append(Vector2i(4, 1))
+	renderer.graph[Vector2i(4, 1)] = [Vector2i(4, 0)]
+	renderer.built_cells[Vector2i(4, 1)] = true
+	renderer.revision += 1
+	var entered_spur := false
+	var spur_buffer := false
+	for frame in range(3000):
+		train._process(1.0 / 60.0)
+		entered_spur = entered_spur or train.global_position.y > 1.0
+		spur_buffer = spur_buffer or (train.global_position.y > 65.4 and train.buffer_pause > 0)
+		_check(not train.movement_blocked, "train self-blocked at the new spur junction")
+	_check(entered_spur and spur_buffer, "live train did not enter a newly built dead-end branch")
+	PhaseManager.phase = PhaseManager.Phase.STATION
+	train._process(0.2)
+	_check(train.current_speed == 0.0, "station train did not park")
+	train.set_selected(true)
+	train.set_manual_axis(1)
+	train.buffer_pause = 0.0
+	train._process(0.2)
+	_check(train.current_speed > 0, "selected station train cannot be piloted")
+	train.release_driver_controls()
+	train._process(0.2)
+	_check(train.current_speed == 0, "station train coasted after releasing controls")
+	var spider: EnemyMovement = EnemyScene.instantiate()
+	add_child(spider)
+	spider.set_physics_process(false)
+	spider.biting_target = train
+	train._process(0.2)
+	_check(train.current_speed == 0, "biting spider did not pin the entire train")
+	spider._stop_biting()
+	spider.configure_archetype(EnemyRoster.by_id("charger"), 1, 1)
+	var hp := train.unit_health.hit_points
+	spider._charge_hit(train)
+	spider._charge_hit(train)
+	_check(train.unit_health.hit_points == hp - 250.0 and train.current_speed == 0, "charger did not deal exactly one 250-damage stopping impact")
+	spider.configure_archetype(EnemyRoster.by_id("jump"), 1, 5)
+	spider.global_position = Vector2(0, -131)
+	spider.configure_lane(500)
+	spider._special_clock = 4.0
+	for frame in range(45): spider._physics_process(1.0 / 60.0)
+	_check(absf(spider.global_position.y) < 0.01 and not spider.is_biting(), "jump did not clear exactly two tiles over the train")
+	spider.configure_archetype(EnemyRoster.by_id("generic"), 1, 0)
+	spider.global_position = Vector2(0, -200)
+	spider.configure_route(Vector2(131, 300))
+	spider._physics_process(0.1)
+	_check(spider.velocity.x == 0 or spider.velocity.y == 0, "spider moved diagonally")
+	spider.queue_free()
+	for car in train.followers: car.queue_free()
+	train.queue_free()
+	renderer.queue_free()
+	await get_tree().process_frame
+	var spawner := EnemySpawner.new()
+	spawner.enemy_prefabs = [EnemyScene]
+	add_child(spawner)
+	CampaignManager.current_level_index = 2
+	spawner.current_wave = 3
+	spawner._spawn_enemy()
+	var first: EnemyMovement = get_tree().get_nodes_in_group("spiders")[-1]
+	_check(first.archetype_id == "rally" and first.health.hit_points == spawner._hit_points_for_wave() + 2 and first.speed_multiplier > 1.0, "wave did not open with its tougher, faster Rally leader")
+	_check(first.ability == "leader", "Rally retained a support ability")
+	first.queue_free()
+	await get_tree().process_frame
+	var roller := spawner.spawn_extra("roller", Vector2.ZERO, 380)
+	spawner._add_roller_egg(roller)
+	var egg := roller.pushed_egg
+	_check(is_instance_valid(egg) and egg.global_position == Vector2(0, 65.5), "roller is not pushing an egg one tile ahead")
+	var gun: Turret = BasicTurretScene.instantiate()
+	add_child(gun)
+	gun.set_process(false)
+	gun.global_position = Vector2(0, -100)
+	_check(gun._find_target() == egg, "gun preferred the closer roller over its egg")
+	var count_before := spawner.enemies_alive
+	egg.take_damage(1000)
+	_check(spawner.enemies_alive == count_before + 3, "destroyed egg did not replace itself with four counted babies")
+	_check(roller.health.hit_points > 0 and not roller.protected_by_egg(gun.global_position, gun.targeting_range), "broken egg kept protecting its roller")
+	for enemy in get_tree().get_nodes_in_group("spiders"): enemy.queue_free()
+	gun.queue_free()
+	spawner.queue_free()
+	await get_tree().process_frame
+	CampaignManager.current_level_index = previous_level
+	PhaseManager.reset()
 	return true

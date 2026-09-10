@@ -204,7 +204,7 @@ func _car_lesson_feasible(tower: TowerData) -> bool:
 	return false
 
 ## STATION lessons in a fixed order: the first-payout chat belongs to the
-## opening mission; driving, rail building and upgrades are general and play
+## opening mission; driving, rail building and car information are general and play
 ## at the first STATION after a wave on whichever level the profile reaches
 ## them, so a continued save is never left untaught.
 func _station_lessons_for_level() -> void:
@@ -221,24 +221,24 @@ func _station_lessons_for_level() -> void:
 		])
 	if not is_done("driving"):
 		_begin_lesson("driving", [
-			_entry("Daisy", "The engine cruises on its own. Hold Up to run faster along the circuit."),
-			_entry("Duck", "Tap Down to crawl. Hold Down and she backs up. Try it now.", "train_driven", "HOLD UP OR DOWN TO DRIVE THE TRAIN", _highlight_first_engine),
-			_entry("Daisy", "Click an engine to control just that one. Its readout shows weight against capacity."),
+			_entry("Daisy", "During STATIONS, trains stay parked. Click an engine to select it."),
+			_entry("Duck", "Hold Up to drive forward or Down to back up. Release the key to park. Try it now.", "train_driven", "SELECT AN ENGINE, THEN HOLD UP OR DOWN", _highlight_first_engine),
+			_entry("Daisy", "During BATTLE it cruises automatically. Tap Down to slow, or hold it to reverse."),
 		])
 	if not is_done("rails") and CampaignManager.challenge_shop_enabled():
 		var rail_cost := _rail_cost()
 		var rail_lines: Array[Dictionary] = [
-			_entry("Duck", "Between waves the yard is ours. Hover any rail tile and click a plus to lay new track."),
-			_entry("Daisy", "Δ%d a tile, for now. A dead end gets a buffer stop; click the link ring to join it back onto the circuit." % rail_cost),
+			_entry("Duck", "Choose BUILD TRACK to clear the trains from view. Hover a rail and click a plus; choose DONE BUILDING when finished."),
+			_entry("Daisy", "Δ%d a tile, for now. Trains pause at a buffer stop, then reverse. You can also join the end back onto the circuit." % rail_cost),
 		]
 		if LevelManager.currency >= rail_cost:
 			rail_lines.append(_entry("Duck", "Lay one tile.", "rail_built", "HOVER A RAIL TILE, CLICK A PLUS  (Δ%d)" % rail_cost, _highlight_first_engine))
 		rail_lines.append(_entry("Daisy", "Rails only go down during STATIONS. Right-click a tile you laid to lift it for a refund."))
 		_begin_lesson("rails", rail_lines)
-	if not is_done("upgrades") and _upgrade_lesson_feasible():
-		_begin_lesson("upgrades", [
-			_entry("Duck", "Click any coupled car to open its upgrade card."),
-			_entry("Daisy", "Upgrades cost Delta and last for this run. Selling refunds half.", "panel_opened", "CLICK A CAR ON THE TRAIN", _highlight_first_car),
+	if not is_done("car_info") and _upgrade_lesson_feasible():
+		_begin_lesson("car_info", [
+			_entry("Duck", "Click any coupled car to open its car information card."),
+			_entry("Daisy", "Check its weapon and health here. Selling refunds half its purchase price.", "panel_opened", "CLICK A CAR ON THE TRAIN", _highlight_first_car),
 			_entry("Duck", "Close the card whenever you are done and we carry on."),
 		])
 	for lesson_id in deferred_lessons:
@@ -248,14 +248,14 @@ func _station_lessons_for_level() -> void:
 func _upgrade_lesson_feasible() -> bool:
 	if main == null or main.get("upgrade_panel") == null:
 		return false
-	return LevelManager.currency >= int(UnitUpgradePanel.COSTS[0]) and _car_count() > 0
+	return _car_count() > 0
 
 func _event_lesson_lines(lesson_id: String) -> Array[Dictionary]:
 	match lesson_id:
 		"biting":
 			return [
 				_entry("Daisy", "Did you see that? A spider walks round a train if a lane beside it is clear."),
-				_entry("Duck", "And chews on it when there is not. About twenty-five damage a second, each. Keep the trains moving."),
+				_entry("Duck", "And chews on it when there is not. About twenty-five damage a second, each. A bite pins the whole train until the spider is cleared."),
 			]
 		"destroyed":
 			return [

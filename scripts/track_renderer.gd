@@ -3,16 +3,13 @@ class_name TrackRenderer
 ## Owns the railway: authored/generated closed loops, the player-built rail
 ## graph that grows off them during STATIONS, and the tile artwork for both.
 ##
-## Two ideas are kept separate on purpose. `routes` are closed rings a train
-## can drive (every consecutive pair exactly one grid step apart, wrapping at
-## the end). `graph` is the built rail network: every route cell plus any
-## player-built spur, which may dead-end or branch. Trains only ever drive
-## routes; spurs exist as construction until they close a detour that a
-## route adopts (see place_rail()).
+## `routes` describe authored/generated closed rings and construction detours.
+## `graph` also includes open player-built spurs. Live RailNavigator instances
+## drive the graph and retain the rail edges occupied by their whole consist.
 
 signal network_changed
 ## A route's geometry changed (a detour was adopted or a rail removed). Main
-## rebinds the convoys driving it once their consist sits on shared track.
+## keeps legacy route fixtures in sync; live convoys follow the graph.
 signal route_changed(route_index: int, path: PackedVector2Array)
 
 @export var rail_texture: Texture2D

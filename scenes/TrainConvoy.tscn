@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/train_convoy.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/sprites/engines/Steam Engine Black.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/engines/revised/001_Blue.png" id="2"]
 [ext_resource type="Texture2D" path="res://assets/sprites/effects/puff 1.png" id="3"]
 
 [node name="TrainConvoy" type="Node2D"]

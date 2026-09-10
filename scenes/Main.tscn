@@ -13,7 +13,7 @@
 [ext_resource type="Script" path="res://scripts/battlefield_overlay.gd" id="13"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Gunner Top 1.png" id="15"]
 [ext_resource type="Script" path="res://scripts/music_playlist.gd" id="66"]
-[ext_resource type="Texture2D" path="res://assets/sprites/units/COAL CANNON BASE.png" id="25"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/revised/COAL CANNON B.png" id="25"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Ballast Blaster.png" id="26"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Passenger Coach.png" id="27"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/Minigun Base.png" id="28"]

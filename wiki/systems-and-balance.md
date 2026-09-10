@@ -2,6 +2,8 @@
 
 [Wiki home](README.md)
 
+The [September 10 playtest revision](sources/2026-09-10-playtest-revision.md) supersedes earlier inferred rules. STATIONS trains stop unless selected and manually piloted. BUILD TRACK hides trains and holds both automatic and manual departure until finished. The upgrade tree is removed. Mail Carrier fires at 2.625/s (12.5% slower), and all car colors remain artist-authored. Engine and chassis artwork is normalized to a 56-unit visible footprint inside a 65.5-unit tile.
+
 Values on this page are **implemented defaults** from the active GDScript and scenes,
 not claims of final balance.
 
@@ -28,7 +30,7 @@ Dropping a shop car on a valid rail spends its `TowerData.cost`, but only after
 `TrainConvoy.attach_car()` also confirms the target train has capacity — see
 [Train weight and momentum](#train-weight-and-momentum). Invalid, off-track, or
 over-capacity drops spend nothing. Coupled cars can also be selected for the active
-upgrade/sell panel. Currency sinks are purchases, upgrades, locomotives, and rail
+information/sell panel. Currency sinks are purchases, locomotives, and rail
 tiles; its only sources are spider bounties, wave-completion bonuses, Passenger Coach
 income, and rail refunds.
 
@@ -49,9 +51,9 @@ there: Slomo (no card in the recovered folder) and an earlier standalone Chaingu
 (redundant with the Chaingunner Car card below) were both removed rather than kept
 alongside it.
 
-Six cars can be dragged from the shop onto a train. Each has a `TowerData` resource
+Eight cars can be dragged from the shop onto a train. Each has a `TowerData` resource
 (`resources/*.tres`) carrying its cost, a one-line shop summary, and a `weight` — see
-[Train weight and momentum](#train-weight-and-momentum) for what weight does. Four are
+[Train weight and momentum](#train-weight-and-momentum) for what weight does. Five are
 combat cars (they extend `scripts/turret.gd` or reimplement its targeting loop);
 Passenger Coach, Brake Van, and Tender are non-combat utility cars.
 
@@ -61,7 +63,7 @@ Passenger Coach, Brake Van, and Tender are non-combat utility cars.
 | Chaingunner Car | 275 | 200 | 200 | 0.25/s (4s), 7-shot burst | 315 | 4 per pellet (7/burst) |
 | Ballast Blaster | 200 | 200 | 200 | 0.45/s (≈2.2s) | 135 | 8 to every target in range |
 | Coal Cannon | 300 | 225 | 225 | 0.22/s (≈4.5s) | 225 | 12 direct + 4 splash, knockback |
-| Mail Carrier | 200 | 150 | 150 | 3/s | 225 | 4 per envelope, random recipient each shot |
+| Mail Carrier | 200 | 150 | 150 | 2.625/s | 225 | 4 per envelope, random recipient each shot |
 | Passenger Coach | 110 | 125 | 175 | — | — | none — generates Delta |
 | Brake Van | 250 | 0 | 200 | — | — | none — caps train, buffs it |
 | Tender | 50 | 50 | 125 | — | — | none — +500 capacity behind the engine |
@@ -80,7 +82,7 @@ fact. Acquisition now measures that radius directly from the car (workbook prior
 **Close**: the nearest live spider inside it). It previously used the car's physics
 `TargetingArea`, which the placed car's 0.54 root scale shrank to roughly half the
 documented radius, so guns acquired much later than their cards claimed. Placement
-ghosts, the hovered-car ring and the upgrade card all draw this same radius, and none
+ghosts, the hovered-car ring and the information card all draw this same radius, and none
 is drawn for a utility car. All four projectile cars fire a homing projectile toward
 their locked target's current position each frame (Gunner Car 6000 u/s swept,
 Chaingunner Car 1050 u/s, Coal Cannon's cannonball 480 u/s); Ballast Blaster instead
@@ -145,7 +147,7 @@ used to describe. A train's total weight is the sum of every attached car's `wei
 | Reverse acceleration | 28 world units/second² |
 | Deceleration | 34 world units/second² |
 | Brake Van braking multiplier | ×0.85 time factor |
-| Car spacing | 94 world units |
+| Car spacing | 88 world units |
 | Minimum consist clearance | 64 world units |
 | Attachment radius | 76 world units |
 
@@ -153,26 +155,18 @@ used to describe. A train's total weight is the sum of every attached car's `wei
 `effective_capacity()` (1000, or 1500 with a Tender coupled as `followers[0]`)
 *before* appending the car, and simply returns `false` — refusing the attachment
 entirely, refunding its cost — if it would exceed capacity. There is no partial
-weight penalty. Each train cruises automatically and can be selected to open a
-custom-drawn locomotive control stand. Its REV/N/FWD reverser is separate from the
-six-position BRAKE/COAST/POWER 1/POWER 2/POWER 3/FULL throttle. BRAKE targets zero,
-COAST restores automatic cruise, and the four power steps interpolate from cruise
-to configured maximum speed in the requested direction. Signed speed still uses
-separate acceleration, deceleration and reverse-acceleration values; an opposite
-direction always brakes through zero instead of flipping instantly. The stand reads
-actual velocity for its speed bars and movement-direction lamp, independently of
-the requested controls.
+weight penalty. During STATIONS a train is parked unless the player selects it
+and holds Up/W (forward) or Down/S (reverse). Releasing the key parks it again.
+During BATTLE it cruises automatically; Up boosts speed, a short Down slows it,
+and holding Down reverses after braking. Only the selected train receives keyboard
+commands. Its compact readout reports speed, capacity and health.
 
-Gubgub's latest **documented** direction differs from that implementation. The full
-control stand obscures combat at the bottom of the board and should be condensed;
-the suggested input is Up to increase forward speed and Down for reverse. Manual
-engine control is meant primarily to exceed normal cruise speed. An engine should
-be able to slow dramatically but probably never stop completely, because parking a
-train in one ideal position undermines the movement strategy. Both the control
-scheme and exact minimum/maximum speeds still require a final specification.
+BUILD TRACK hides engines and cars, stops them, and holds departure until DONE
+BUILDING. Hidden trains still occupy their rails, so construction cannot remove
+track from underneath them.
 
 Cars don't have independent physics. The engine and every car sample the closed
-route at fixed distance offsets. Before advancing, the convoy validates the sampled
+travelled rail tape at fixed distance offsets. Before advancing, the convoy validates the sampled
 positions against `occupancy_distance`; it stops before self-overlap and refuses an
 attachment whose tail would wrap into the engine. `occupancy_debug` draws the tested
 clearance circles for route tuning.
@@ -231,11 +225,11 @@ until the designer confirms them.
 | When | STATION only. The plus signs, join markers and right-click removal vanish the moment a wave starts and return when it clears. |
 | Laying | Hover any rail tile; plus signs appear on its empty orthogonal neighbours. A click lays one tile connected only to the tile you hovered, for **Δ50**, charged only after the tile exists. The hover stays anchored on the new tile so a run can be laid click by click. |
 | Refusals | Insufficient Delta, a tile that already holds rail, a tile not touching the hovered rail, or joining two separate circuits each produce a specific banner and change nothing. |
-| Dead ends | A tile with one connection is drawn with the supplied `Rail End` buffer stop. Trains never enter a dead end, and a locomotive cannot be parked on one. |
+| Dead ends | A tile with one connection is drawn with the supplied `Rail End` buffer stop. Trains enter open spurs and engines may be placed on them. The leading end of the consist stops at the buffer, waits 0.65 seconds, then the whole consist reverses. |
 | Joining | A dead end beside rail of the same circuit shows a join ring between the two; clicking it connects them for free. Only dead ends can be joined, so the network never becomes a lattice. Joining rail from a different circuit is refused. |
 | Rerouting | A join closes a cycle. If that cycle leaves a train's ring at one cell, returns at another, and its player-built part is longer than the stretch it bypasses, the ring adopts the detour and the bypassed stretch stays as a siding. Shortcuts, lobes that touch the ring at a single cell, and detours through sidings never change a route. |
-| Rebinding | A convoy adopts its revised ring only when its engine and every car already sit on track both rings share, facing the same way; until then it keeps driving the old geometry and retries every frame. Nothing ever teleports. |
-| New circuits | A closed lobe or spur cycle that no train drives becomes a circuit of its own the moment a locomotive is dropped on it. |
+| Navigation | Live trains retain a tape of the actual rail edges under their consist. New branches can be taken at junctions without rebinding a closed route. Facing eases across corners while positions remain on rails. |
+| New engines | Drop an engine on any free connected rail edge, including an open spur. A closed circuit is not required. |
 | Removing | Right-click a tile you laid to lift it for a full **Δ50** refund. Authored rail, rail a train is standing on, and any removal that would strand track or leave a ring with no way round are refused. Lifting any tile of an adopted detour drops the whole detour from the ring, restoring the original stretch; the other detour tiles remain as spurs. |
 | Persistence | Built rail is run-local. It survives every wave of the level and is reset with the level whenever the scene reloads: restart, replay from Level Select, continuing a save, or the next campaign stop. |
 | Art | Every cell is drawn from its connection set — straight, curve, buffer stop, and for junctions one piece per rail pair — so junctions and crossings refresh as soon as a neighbour changes. |
@@ -258,11 +252,10 @@ are proposed design.
 
 - Every engine and coupled car is an obstacle. A spider that sees one ahead in its
   corridor first looks for a clear lane to its left or right and steps into it
-  diagonally, then continues down the new lane. Empty rail never blocks a spider.
+  cardinally at a grid row, then continues down the new lane. Empty rail never blocks a spider.
 - When no lane within reach is clear and the unit is in contact, the spider stops and
   bites, showing fangs toward its target; the bitten unit flashes, shows a jaws marker
-  and a health bar. A moving train leaves contact almost immediately, so biting mostly
-  punishes crawling or long trains parked across a lane.
+  and a health bar. A bite pins the entire consist until its attackers are cleared or their target is destroyed.
 - A spider whose target drives away, is destroyed or becomes a wreck resumes walking
   the next physics frame; a sidestep that cannot complete within 3 s is abandoned. A
   frozen spider therefore cannot hold a wave open.
@@ -304,13 +297,13 @@ distinct authored stats and abilities:
 |---|---:|---:|---:|---|
 | Dotted Spider | 1 | 5–15 | ×1.00 | Baseline enemy; transforms through the supplied one-to-six-dot art every two HP |
 | Baby Spider | 2 | 3 | ×1.45 | Small, fragile rush enemy |
-| Charger | 2 | 7 | ×1.00 | Periodically charges at ×2.10 speed |
-| Rally Spider | 3 | 8 | ×0.85 | Gives nearby spiders a short ×1.25 movement boost |
-| Roller | 4 | 10 | ×1.15 | Armoured; completely blocks every third incoming hit |
+| Charger | 2 | 7 | ×1.00 | Stampedes at ×2.10 until its first car impact: 250 damage and a full train stop, then normal movement |
+| Rally Spider | 3 | wave baseline + 2 | ×1.15 | First spider of each wave after introduction; no aura or buff |
+| Roller | 4 | 10 | ×1.15 | Pushes a separate egg one tile ahead; egg has targeting priority over the roller |
 | Sturdy Spider | 4 | 16 | ×0.62 | Large, slow health tank |
 | Wolf Spider | 5 | 12 | ×1.05 | Enrages below half HP, swaps to angry art, and moves ×1.55 faster |
-| Jump Spider | 6 | 10 | ×1.10 | Periodically jumps, moving ×1.80 faster and evading damage while airborne |
-| Spider Egg | 7 | 18 | ×0.48 | Slow shell that breaks at half HP and hatches into a fast Baby form |
+| Jump Spider | 6 | 10 | ×1.10 | Hops two tiles in 0.75 seconds, clearing trains and evading airborne hits |
+| Spider Egg | 4, with Roller | 18 | pusher speed | Destroying the shell releases four counted Baby Spiders; a surviving egg remains where its pusher dropped it |
 
 The selection pool is weighted toward the baseline spider and unlocks by campaign
 level. This keeps the first level readable and adds counters gradually rather than
@@ -321,12 +314,12 @@ placing every special enemy into the opening wave.
 | Threat | Readable tell | Available counterplay |
 |---|---|---|
 | Baby / Charger | Small fast body; Charger shows speed streaks before its burst | Broad route coverage, Chaingunner bursts, and short-range Ballast groups |
-| Rally | Green circular aura | Prioritize the Rally spider with direct fire or splash clustered followers |
-| Roller | `BLOCK` appears every third hit | Coal Cannon's heavy hit and Ballast group damage reduce wasted pellet cadence |
+| Rally | First in the wave | A slightly tougher, faster ordinary target |
+| Roller | Visible egg ahead of the pusher | Break the egg, then clear its babies and the exposed roller |
 | Sturdy | Large slow body | Concentrated Gunner/Coal fire; low speed gives more circuit passes |
 | Wolf | Angry artwork below half HP | Burst damage around enrage; manage engine speed to retain coverage |
 | Jump | Enlarged jump state and `BLOCK` on airborne hits | Sustained or burst fire resumes when its short jump ends |
-| Egg | Break frame at half HP, followed by fast Baby animation | Focus it before hatching or maintain downstream rapid-fire coverage |
+| Egg | A separate shell one tile ahead of a Roller | Destroy it, then clear the four babies it releases |
 
 Every specialist enters after the baseline Gunner is taught, while campaign car
 unlocks progressively add burst, area, splash, economy, and capacity options.
@@ -417,7 +410,7 @@ the profile's progress; New Game does the same.
 | Lesson | When | Objective |
 |---|---|---|
 | Opening | Boiler Room, new profile or New Game | couple a Gunner, then START WAVE |
-| Payout, driving, rails, upgrades | first STATION after a wave, once each | drive with Up/Down, lay a rail tile, open a car's upgrade card |
+| Payout, driving, rails, car information | first STATION after a wave, once each | drive with Up/Down, lay a rail tile, open a car's information card |
 | One per car (Gunner … Mail Carrier) | the first STATION on a level where it is unlocked | couple one, when affordable |
 | Biting, destroyed car, wreck | first STATION after the event | none |
 | Final wave, level ending | as before | none |

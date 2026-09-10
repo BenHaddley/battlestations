@@ -19,6 +19,7 @@ func _find_target() -> Node2D:
 		var health := spider.get_node_or_null("Health") as Health
 		if health != null and health.is_destroyed:
 			continue
+		if spider.has_method("protected_by_egg") and spider.protected_by_egg(global_position, targeting_range): continue
 		if global_position.distance_squared_to(spider.global_position) <= targeting_range * targeting_range:
 			candidates.append(spider)
 	return null if candidates.is_empty() else candidates.pick_random()
@@ -30,9 +31,3 @@ func _shoot() -> void:
 	# Aim at this shot's recipient before placing its projectile at the muzzle.
 	turret_rotation_point.rotation = (target.global_position - global_position).angle() + PI * 0.5
 	super._shoot()
-
-func _face_direction(direction: Vector2) -> void:
-	super._face_direction(direction)
-	if not direction.is_zero_approx():
-		# Mail Carrier chassis artwork lies horizontally in its source image.
-		train_chassis.rotation = direction.angle()

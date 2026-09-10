@@ -1,8 +1,7 @@
 extends Node2D
 class_name TrainConvoy
-## The always-present locomotive leads one train. Every consist member is
-## sampled at a fixed distance along one closed route, so reversing cannot
-## make the engine retrace into its own cars.
+## A locomotive and its attached cars sample their actual travelled rail path.
+## Open networks use RailNavigator; closed paths remain available for fixtures.
 ##
 ## Weight follows the infowiki Steam Engine card (#001): a hard
 ## carry_capacity budget (1000 units by default), not a soft speed penalty.
@@ -36,12 +35,13 @@ class_name TrainConvoy
 
 @onready var engine: Sprite2D = $Engine
 
-## Turret art occupies a 1500px square at 0.085 scale (127.5 world units).
-## Engine liveries exist as both 750px and 1500px sources, so derive their
-## scale from the texture instead of inheriting the old 750px-only value.
-## The locomotive leads its train visually as well as physically: it is drawn
-## meaningfully larger than the cars behind it.
-const ENGINE_TOKEN_SIZE := 94.0
+## Normalize visible engine artwork to the same one-tile car footprint.
+const ENGINE_TOKEN_SIZE := 56.0
+
+var navigator: RailNavigator
+var building_hidden := false
+var buffer_pause := 0.0
+var impact_stop := 0.0
 
 var path: PackedVector2Array
 var path_index: int = 0
@@ -108,7 +108,7 @@ func set_engine_livery(texture: Texture2D) -> void:
 	if texture:
 		engine.texture = texture
 		engine.modulate = Color.WHITE
-		var source_size := texture.get_size()
+		var source_size := Vector2(texture.get_image().get_used_rect().size)
 		var source_extent := maxf(source_size.x, source_size.y)
 		if source_extent > 0.0:
 			var normalized_scale := ENGINE_TOKEN_SIZE / source_extent
@@ -124,10 +124,35 @@ func configure_path(track_path: PackedVector2Array) -> void:
 	current_speed = cruise_speed
 	_apply_consist_positions()
 
+func configure_network(renderer: TrackRenderer) -> void:
+	navigator = RailNavigator.new()
+	navigator.setup(renderer, path, route_distance, followers.size() * car_spacing)
+	route_distance = navigator.distance
+
+func force_stop() -> void:
+	current_speed = 0.0
+	impact_stop = 0.15
+
+func set_building_hidden(hidden: bool) -> void:
+	building_hidden = hidden
+	visible = not hidden
+	for car in followers:
+		if is_instance_valid(car): car.visible = not hidden
+	if hidden:
+		current_speed = 0.0
+		release_driver_controls()
+
+func _grabbed() -> bool:
+	for spider in get_tree().get_nodes_in_group("spiders"):
+		if spider.is_queued_for_deletion(): continue
+		var victim = spider.get("biting_target")
+		if is_instance_valid(victim) and (victim == self or victim in followers): return true
+	return false
+
 func _process(delta: float) -> void:
 	if path.size() < 2:
 		return
-	if wrecked:
+	if wrecked or building_hidden or _grabbed():
 		current_speed = 0.0
 		queue_redraw()
 		return
@@ -193,6 +218,18 @@ func recover_engine() -> void:
 	queue_redraw()
 
 func _update_speed(delta: float) -> void:
+	if buffer_pause > 0.0 or impact_stop > 0.0:
+		buffer_pause = maxf(0.0, buffer_pause - delta)
+		impact_stop = maxf(0.0, impact_stop - delta)
+		current_speed = 0.0
+		return
+	if PhaseManager.is_station():
+		if not selected or manual_axis == 0 or building_hidden:
+			current_speed = 0.0
+			return
+		current_speed = move_toward(current_speed, max_speed * manual_axis, acceleration * delta)
+		cruise_direction = manual_axis
+		return
 	var target_speed := cruise_speed * cruise_direction
 	if manual_axis > 0:
 		target_speed = max_speed
@@ -273,6 +310,7 @@ static func _metrics_for(ring: PackedVector2Array) -> Dictionary:
 	return {"starts": starts, "length": length}
 
 func _sample_route(distance_on_route: float) -> Dictionary:
+	if navigator: return navigator.sample(distance_on_route)
 	if route_length <= 0.0:
 		return {"position": global_position, "direction": Vector2.DOWN, "index": 0}
 	return _sample_on(path, segment_starts, route_length, distance_on_route)
@@ -313,6 +351,7 @@ static func _project_onto(ring: PackedVector2Array, starts: PackedFloat32Array, 
 ## straddling a stretch the new route no longer includes. Callers retry
 ## later when this returns false.
 func rebind_route(new_path: PackedVector2Array) -> bool:
+	if navigator: return true
 	if new_path.size() < 4:
 		return false
 	var metrics := _metrics_for(new_path)
@@ -346,11 +385,22 @@ func occupies_point(point: Vector2, radius: float) -> bool:
 	if global_position.distance_to(point) <= radius:
 		return true
 	for car in followers:
-		if is_instance_valid(car) and car.visible and car.global_position.distance_to(point) <= radius:
+		if is_instance_valid(car) and car.global_position.distance_to(point) <= radius:
 			return true
 	return false
 
 func _advance_safely(signed_distance: float) -> void:
+	if navigator:
+		movement_blocked = not navigator.advance(signed_distance, followers.size(), car_spacing, occupancy_distance)
+		route_distance = navigator.distance
+		if navigator.buffer_hit:
+			cruise_direction *= -1
+			buffer_pause = 0.65
+			current_speed = 0.0
+		elif movement_blocked:
+			current_speed = 0.0
+		_apply_consist_positions()
+		return
 	movement_blocked = false
 	var remaining := absf(signed_distance)
 	var direction_sign := signf(signed_distance)
@@ -366,6 +416,7 @@ func _advance_safely(signed_distance: float) -> void:
 	_apply_consist_positions()
 
 func _positions_valid_at(engine_distance: float, follower_count: int) -> bool:
+	if navigator: return navigator.valid(engine_distance, follower_count, car_spacing, occupancy_distance)
 	if route_length <= 0.0:
 		return false
 	return _positions_valid_on(path, segment_starts, route_length, engine_distance, follower_count)
@@ -393,24 +444,29 @@ func _apply_consist_positions() -> void:
 	var engine_sample := _sample_route(route_distance)
 	global_position = engine_sample.position
 	path_index = int(engine_sample.index)
-	var engine_direction: Vector2 = engine_sample.direction * cruise_direction
+	var engine_direction: Vector2 = _smooth_direction(route_distance)
 	_face_engine(engine_direction)
 	for index in range(followers.size()):
 		var car := followers[index]
 		if not is_instance_valid(car):
 			continue
 		var sample := _sample_route(route_distance - car_spacing * (index + 1))
-		if not car.visible:
+		if not car.visible and not building_hidden:
 			car.visible = true
 			car.process_mode = Node.PROCESS_MODE_INHERIT
 		# Cars follow the rail's authored orientation, not the current travel
 		# sign. Reversing means backing the consist up; it must not turn every
 		# directional turret around and swap its firing side.
-		var car_direction: Vector2 = sample.direction
+		var car_direction: Vector2 = _smooth_direction(route_distance - car_spacing * (index + 1))
 		if car.has_method("set_convoy_transform"):
 			car.set_convoy_transform(sample.position, car_direction)
 		else:
 			car.global_position = sample.position
+
+func _smooth_direction(at: float) -> Vector2:
+	var before: Vector2 = _sample_route(at - 15.0).position
+	var after: Vector2 = _sample_route(at + 15.0).position
+	return (after - before).normalized() if not before.is_equal_approx(after) else Vector2(_sample_route(at).direction)
 
 func total_weight() -> float:
 	var sum := 0.0
@@ -438,11 +494,15 @@ func attach_car(car: Node2D) -> bool:
 	var requested_count := followers.size() + 1
 	# A closed loop has finite physical capacity. Reject a consist whose tail
 	# would wrap around onto its own engine or another car.
-	if requested_count * car_spacing + occupancy_distance >= route_length:
+	if navigator:
+		if not navigator.ensure_tail(requested_count * car_spacing): return false
+		route_distance = navigator.distance
+	elif requested_count * car_spacing + occupancy_distance >= route_length:
 		return false
 	if not _positions_valid_at(route_distance, requested_count):
 		return false
 	followers.append(car)
+	car.set_meta("convoy", self)
 	_apply_consist_positions()
 	if car.get("is_train_cap") == true:
 		capped = true
@@ -683,4 +743,4 @@ func _face_engine(direction: Vector2) -> void:
 	if not direction.is_zero_approx():
 		# Steam-engine artwork's headlamp/boiler end faces up in the source
 		# image, not down — the train was driving tender-first before this.
-		engine.rotation = direction.angle() + PI * 0.5
+		engine.rotation = direction.angle() - PI * 0.5

@@ -191,6 +191,7 @@ func _find_target() -> Node2D:
 			var spider_health := spider.get_node_or_null("Health") as Health
 			if spider_health != null and spider_health.is_destroyed:
 				continue
+			if spider.has_method("protected_by_egg") and spider.protected_by_egg(global_position, targeting_range): continue
 			var distance := global_position.distance_squared_to(spider.global_position)
 			if distance <= nearest_distance:
 				nearest_distance = distance
@@ -210,6 +211,7 @@ func _find_target() -> Node2D:
 	return nearest
 
 func _target_in_range() -> bool:
+	if target.has_method("protected_by_egg") and target.protected_by_egg(global_position, targeting_range): return false
 	if fixed_direction_enabled:
 		return _is_in_fixed_firing_line(target)
 	return global_position.distance_to(target.global_position) <= targeting_range

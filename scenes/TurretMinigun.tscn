@@ -1,8 +1,8 @@
 [gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/turret_minigun.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/sprites/units/Minigun Base.png" id="2"]
-[ext_resource type="Texture2D" path="res://assets/sprites/units/Minigun Top.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/revised/CHAINGUN B.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/units/revised/CHAINGUN A.png" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/MinigunBullet.tscn" id="4"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/unit static/CHAINGUN_CAR.png" id="5"]
 
@@ -27,13 +27,14 @@ scale = Vector2(0.17, 0.17)
 
 [node name="Base" type="Sprite2D" parent="."]
 texture = ExtResource("2")
-scale = Vector2(0.17, 0.17)
+scale = Vector2(0.12086678753345419, 0.12086678753345419)
 
 [node name="RotationPoint" type="Node2D" parent="."]
 
 [node name="Top" type="Sprite2D" parent="RotationPoint"]
+rotation = -1.5707963
 texture = ExtResource("3")
-scale = Vector2(0.17, 0.17)
+scale = Vector2(0.12086678753345419, 0.12086678753345419)
 
 [node name="FiringPoint" type="Marker2D" parent="RotationPoint"]
 position = Vector2(0, -48)

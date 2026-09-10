@@ -122,8 +122,14 @@ Uses Gubgub’s Mail Carrier A (turret), B (chassis), and envelope artwork from 
 Each shot independently selects a live spider within 5×5 range (225-unit radius);
 repeat recipients are allowed. Rotating turret, no direction lock.
 
-Provisional balance: 3 shots/second, 4 damage, Δ200 cost, 150 weight. These numbers
+Provisional balance: 2.625 shots/second, 4 damage, Δ200 cost, 150 weight. These numbers
 were not specified in the design message. The newly documented [workbook](asset-workbook.md)
 specifies cost 125 and weight 125; reconciling these is pending. It labels power
 Weak and speed Fast without numeric values. Unlocks at All Aboard (stop 7), and is
 available in Open Rails, shopping-enabled challenges, and debug sandbox key `8`.
+
+## September 10 revised vehicle artwork
+
+The active Steam Engine uses 50 updated liveries in `assets/sprites/engines/revised/`. Gunner, Chaingunner and Coal Cannon use their new A (turret) and B (chassis) layers in `assets/sprites/units/revised/`. A-layer barrels point right in source art and are rotated to match the firing marker. B-layer buffers run vertically. The Mail Carrier uses that same chassis convention. CarArt shares these scene resources with the shop, placement ghosts and almanac. No per-purchase color tint is applied to cars.
+
+Mail firing is now **2.625 envelopes/s**, retaining an independent random target per shot. A roller is excluded while its live pushed egg is also in range, preserving egg priority without changing random selection among eligible enemies.

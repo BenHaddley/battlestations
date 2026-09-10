@@ -36,7 +36,7 @@ func configure(art: Dictionary, world_position: Vector2, travel_direction: Vecto
 	_top.scale = Vector2(art.get("top_scale", ART_SCALE))
 	# Turret art faces up while chassis art faces down: idle guns point along
 	# the direction of travel, exactly as a freshly coupled car does.
-	_top.rotation = travel_direction.angle() + PI * 0.5
+	_top.rotation = travel_direction.angle() + PI * 0.5 + float(art.get("top_rotation", 0.0))
 	_range_radius = float(art.get("range", 0.0))
 	_directional = directional
 	_fire_direction = travel_direction.rotated(float(-1 if facing >= 0 else 1) * PI * 0.5).normalized()

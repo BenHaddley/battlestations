@@ -18,7 +18,7 @@ static func for_tower(tower: TowerData) -> Dictionary:
 	var _cache: Dictionary = BuildManager.car_art_cache
 	if _cache.has(tower):
 		return _cache[tower]
-	var art := {"base": tower.icon, "base_scale": Vector2(0.0918, 0.0918), "base_rotation": 0.0, "top": null, "top_scale": Vector2(0.0918, 0.0918), "range": 0.0}
+	var art := {"base": tower.icon, "base_scale": Vector2(0.0918, 0.0918), "base_rotation": 0.0, "top_rotation": 0.0, "top": null, "top_scale": Vector2(0.0918, 0.0918), "range": 0.0}
 	if tower.scene:
 		var instance: Node = tower.scene.instantiate()
 		var base := instance.get_node_or_null("Base") as Sprite2D
@@ -31,6 +31,7 @@ static func for_tower(tower: TowerData) -> Dictionary:
 		var top := instance.get_node_or_null("RotationPoint/Top") as Sprite2D
 		if top and top.texture:
 			art.top = top.texture
+			art.top_rotation = top.rotation
 			art.top_scale = top.scale * PLACED_SCALE
 		# Only attacking cars expose targeting_range; utility cars report 0 so
 		# no radius is ever drawn for a coach, van or tender.
@@ -66,7 +67,10 @@ static func icon_for(tower: TowerData) -> Texture2D:
 			overlay.convert(composite.get_format())
 			# Turret art points up in its source; a coupled car's idle gun
 			# points down the line, so flip it before laying it over the chassis.
-			overlay.rotate_180()
+			if is_equal_approx(float(art.top_rotation), -PI * 0.5):
+				overlay.rotate_90(CLOCKWISE)
+			else:
+				overlay.rotate_180()
 			var top_ratio := (Vector2(art.top_scale) / Vector2(art.base_scale))
 			var target := Vector2i(roundi(overlay.get_width() * top_ratio.x), roundi(overlay.get_height() * top_ratio.y))
 			if target.x > 0 and target.y > 0 and target != overlay.get_size():
