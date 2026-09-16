@@ -230,26 +230,10 @@ func _select_profile(slot: int) -> void:
 	CampaignManager.continue_saved_game()
 	_show_profiles()
 
-func _show_info_modal(title: String, copy: String) -> void:
-	_clear_dynamic_modal_content()
-	modal_copy.visible = true
-	_clear_challenge_buttons()
-	modal_title.text = title
-	modal_copy.text = copy
-	_reset_modal_size()
-	modal.show()
-	$Modal/Margin/VBox/BackButton.grab_focus()
-
 func _clear_challenge_buttons() -> void:
 	for old_button in $Modal/Margin/VBox.get_children():
 		if old_button is Button and old_button.name.begins_with("Challenge"):
 			old_button.queue_free()
-
-func _reset_modal_size() -> void:
-	modal.offset_left = -250.0
-	modal.offset_right = 250.0
-	modal.offset_top = -145.0
-	modal.offset_bottom = 145.0
 
 func _show_challenges() -> void:
 	modal_title.text = "CHALLENGE JOB CARDS"

@@ -143,18 +143,20 @@ follow their matching roles and supplied art, rather than introducing duplicate 
 
 | Item | Workbook | Current implementation / follow-up |
 |---|---|---|
-| Steam Engine | Cost 250; carry 1200; health 300 | Purchased engine costs 325; base carry is 1000 in [game balance](../scripts/game_balance.gd). Reconcile economy and capacity. |
-| Tender | Cost 75; health 125; weight and carry `N/A`; attach behind engine to increase capacity | [Catalog](../resources/tender_car.tres) costs 50, weighs 50; current direct-behind bonus is +500. Sheet does not supply a replacement bonus. |
-| Delta Coach | Cost 100; weight 125; health 175 | [Passenger Coach](../resources/passenger_coach.tres) costs 110, weighs 125. Income amount/interval remain unspecified by the sheet. |
-| Mail Car | Cost 125; weight 125; health 150; 5×5; Weak/Fast/Random | [Mail Carrier](../resources/mail_carrier.tres) currently uses provisional cost 200 and weight 150, with 3 shots/sec and 4 damage. Random targeting and range are implemented; numeric power/cadence are not established by the sheet. |
-| Brake Van | Cost 175; weight 0; health 200; 1.25× train attack power | [Catalog](../resources/brake_van.tres) costs 250. [Behavior](../scripts/brake_van.gd) grants 1.2× attack speed, caps attachments, and reduces braking time by 15%. Damage versus cadence, train-cap rules, and stacking need reconciliation. |
+| Steam Engine | Cost 250; carry 1200; health 300 | Adopted September 16: purchase/recovery Δ250, carry 1200, health 300. |
+| Tender | Cost 75; health 125; weight and carry `N/A` | Cost 75 adopted; existing weight 50 and direct-behind +500 carry retained because the sheet is silent. |
+| Delta Coach | Cost 100; weight 125; health 175 | Passenger Coach now matches; income stays Δ32 / 8 seconds. |
+| Mail Car | Cost 125; weight 125; health 150; 5×5; Weak/Fast/Random | Cost/weight adopted; September 10 cadence 2.625/s retained, with 4 damage and independent random recipients. |
+| Brake Van | Cost 175; weight 0; health 200; 1.25× train attack power | Adopted as 1.25× damage, not cadence. Non-stacking; existing tail cap and 15% braking-time reduction retained. |
+| Chaingun Car | Cost 225; weight 200 | Price corrected from 275 to 225; seven-round burst retained. |
+| Ballast Blaster | Cost 200; weight 175 | Weight corrected from 200 to 175 in both shop data and placed scene. |
 | Coal Cannon | Knockback has a chance to occur | [Projectile](../scripts/coal_cannonball.gd) currently applies knockback on each eligible direct hit. Probability is unspecified. |
-| Target selection | Most offensive cars use Close; Steel Driver uses Strong; Mail uses Random | Standard [turrets](../scripts/turret.gd) acquire the first physics overlap, which is not guaranteed nearest. Mail already reselects randomly per projectile. |
+| Target selection | Most offensive cars use Close; Steel Driver uses Strong; Mail uses Random | Standard turrets select the nearest eligible spider, prioritizing a Roller’s in-range egg over its pusher. Mail reselects randomly per projectile. |
 | Health and size | All 25 rows specify health; Barrier has a double footprint | These are design requirements, not proof of implemented per-car health/destruction or two-tile placement. Train damage and reconnection rules remain open. |
 
-Gunner, Coal Cannon, Ballast Blaster, and Chaingunner retain the familiar listed
-cost/range/weight values. This does not settle their new health, qualitative power,
-cadence, or priority specifications. Latest playtest feedback restores swivelling
+See the [September 16 reconciliation](sources/2026-09-16-roadmap-verification.md)
+for the implemented baseline. Qualitative power/cadence for future units and Coal
+Cannon knockback probability remain unresolved. Latest playtest feedback restores swivelling
 weapons; the workbook's directional wording for individual new attacks does not
 reinstate the rejected global direction-lock experiment.
 

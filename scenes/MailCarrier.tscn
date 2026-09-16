@@ -14,7 +14,7 @@ bullet_scene = ExtResource("4")
 targeting_range = 225.0
 bps = 2.625
 base_projectile_damage = 4
-weight = 150.0
+weight = 125.0
 z_index = 20
 
 [node name="Base" type="Sprite2D" parent="."]

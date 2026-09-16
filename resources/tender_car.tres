@@ -7,7 +7,7 @@
 [resource]
 script = ExtResource("1")
 tower_name = "Tender"
-cost = 50
+cost = 75
 scene = ExtResource("2")
 summary = "No weapon — coupled directly behind the engine, increases max pull capacity by 500."
 icon = ExtResource("3")

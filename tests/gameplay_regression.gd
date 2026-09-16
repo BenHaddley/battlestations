@@ -53,6 +53,10 @@ func _run() -> void:
 	_check((await _test_almanac_discovery_and_profiles()) == true, "almanac/profile checks aborted")
 	_check(_test_export_preset_covers_preloads() == true, "_test_export_preset_covers_preloads aborted on a script error")
 	_check((await _test_train_yard_readability()) == true, "_test_train_yard_readability aborted on a script error")
+	_check(_test_roster_baseline() == true, "roster baseline checks aborted")
+	_check(_test_junction_and_jump_timing() == true, "junction/jump checks aborted")
+	_check((await _test_cadence_and_offspring_economy()) == true, "cadence/economy checks aborted")
+	_check((await _test_full_campaign_flow()) == true, "full campaign flow checks aborted")
 	# Let short procedural/audio one-shots finish and release their players before
 	# ObjectDB performs its exit leak check.
 	await get_tree().create_timer(0.25).timeout
@@ -385,8 +389,9 @@ func _test_content_catalogs() -> bool:
 		_check(not profile_id.is_empty(), "enemy profile has no id")
 		_check(not enemy_ids.has(profile_id), "enemy id is duplicated: %s" % profile_id)
 		enemy_ids[profile_id] = true
-		for numeric_key in ["weight", "hp", "speed", "bounty", "scale"]:
+		for numeric_key in ["weight", "hp", "speed", "scale"]:
 			_check(float(profile.get(numeric_key, 0)) > 0.0, "%s has invalid %s" % [profile_id, numeric_key])
+		_check(int(profile.get("bounty", -1)) >= 0, "%s has negative bounty" % profile_id)
 		for texture_key in ["walk_a", "walk_b", "death"]:
 			_check(profile.get(texture_key) is Texture2D, "%s has no %s texture" % [profile_id, texture_key])
 	return true
@@ -658,7 +663,8 @@ func _test_main_scene_train_integration() -> bool:
 		selected._update_speed(0.5)
 		_check(selected.current_speed > 0.0 and selected.current_speed < selected.cruise_speed, "short Down override did not slow without parking")
 		selected.set_manual_axis(-1, selected.REVERSE_HOLD_SECONDS)
-		for step in range(5): selected._update_speed(0.5)
+		for step in range(5):
+			selected._update_speed(0.5)
 		_check(selected.current_speed < 0.0, "held Down override did not reverse the selected engine")
 		var placement: Dictionary = main._nearest_free_rail_placement(main.track_routes[1][2])
 		_check(not placement.is_empty(), "empty railway rejected purchased-engine placement")
@@ -1083,7 +1089,7 @@ func _test_range_preview_and_readout() -> bool:
 	_check(main.track.tiles_at(other_cell)[0].modulate.is_equal_approx(Color.WHITE), "track stayed faded after deselecting")
 	main._select_convoy(convoy)
 	var status: String = main.train_control_panel.status_line()
-	_check(status.contains("WEIGHT 150 / 1000") and status.contains("ENGINE HP 300 / 300"), "controlled-train readout is wrong: '%s'" % status)
+	_check(status.contains("WEIGHT 150 / 1200") and status.contains("ENGINE HP 300 / 300"), "controlled-train readout is wrong: '%s'" % status)
 	_check(convoy.selected and convoy.selected_number == 1, "selected engine is not marked as engine 1")
 	_check(main.train_control_panel.size.y <= 44.0, "train readout grew tall enough to hide the station edge")
 	main.upgrade_panel.open_for(starter, convoy, BuildManager.towers[0])
@@ -1188,6 +1194,16 @@ func _test_lessons_and_profiles() -> bool:
 			mail_objective_seen = mail_objective_seen or String(entry.get("wait_for", "")) == "car_placed:7"
 	_check(lessons_queued.size() == 8 and lessons_queued.has("car:1") and lessons_queued.has("car:7"), "level seven did not queue a lesson for every unlocked car, got %s" % [lessons_queued.keys()])
 	_check(mail_line_seen and mail_objective_seen, "Mail Carrier lesson lacks its 5×5 explanation or a guided placement")
+	# Multiple introductions are queued from one wallet snapshot. Spending
+	# before a later objective must turn it into advice, not a stuck task.
+	LevelManager.currency = 0
+	for step in range(64):
+		if director.current.is_empty():
+			break
+		director._advance()
+	_check(director.current.is_empty() and not director.overlay.waiting_for_action, "queued car introduction required an unaffordable purchase")
+	LevelManager.currency = 600
+
 	var level_seven: LevelData = CampaignManager.levels[6]
 	_check(level_seven.new_tower_indices == [1, 7], "level seven does not record both newly unlocked cars")
 	main.level_complete_overlay.show_for(level_seven, false)
@@ -1274,7 +1290,7 @@ func _test_export_preset_covers_preloads() -> bool:
 				uncovered.append(entry)
 	_check(preloads_seen > 100, "preload scan found only %d preloads; the pattern is no longer matching the scripts" % preloads_seen)
 	_check(covered.has("res://assets/sprites/board/Rail End.png") and covered.has("res://assets/the_new_map.png"), "scene dependency scan did not follow Main.tscn's textures")
-	_check(_matches_include_filter("duckTalking.png", include_patterns) and _matches_include_filter("assets/sprites/effects/BREAK 1.png", include_patterns), "include filter matching is broken")
+	_check(_matches_include_filter("assets/sprites/ui/portrait/duck_talking.png", include_patterns) and _matches_include_filter("assets/sprites/effects/BREAK 1.png", include_patterns), "include filter matching is broken")
 	_check(uncovered.is_empty(), "script preload targets are not exported to the Web build: %s" % [uncovered])
 	return true
 
@@ -1514,8 +1530,10 @@ func _test_playtest_revision() -> bool:
 	renderer.graph.clear()
 	for x in range(9):
 		var neighbors: Array = []
-		if x > 0: neighbors.append(Vector2i(x - 1, 0))
-		if x < 8: neighbors.append(Vector2i(x + 1, 0))
+		if x > 0:
+			neighbors.append(Vector2i(x - 1, 0))
+		if x < 8:
+			neighbors.append(Vector2i(x + 1, 0))
 		renderer.graph[Vector2i(x, 0)] = neighbors
 	var train: TrainConvoy = ConvoyScene.instantiate()
 	add_child(train)
@@ -1537,6 +1555,11 @@ func _test_playtest_revision() -> bool:
 		if train.cruise_direction != last_direction:
 			reversals += 1
 			_check(train.current_speed == 0.0 and train.buffer_pause > 0.6, "buffer reversal skipped its stop and pause")
+			var stopped_position := train.global_position
+			train._process(0.3)
+			_check(train.global_position == stopped_position and is_equal_approx(train.buffer_pause, 0.35), "train moved during buffer dwell")
+			train._process(0.35)
+			_check(train.global_position == stopped_position and is_zero_approx(train.buffer_pause), "buffer dwell did not last 0.65 seconds")
 			last_direction = train.cruise_direction
 		_check(train._positions_valid_at(train.route_distance, 2), "backing train overlapped its cars")
 		_check(train.followers[-1].global_position.x >= -0.01 and train.global_position.x <= 524.01, "a train member left the dead-end rails")
@@ -1559,10 +1582,10 @@ func _test_playtest_revision() -> bool:
 	train._process(0.2)
 	_check(train.current_speed == 0.0, "station train did not park")
 	train.set_selected(true)
-	train.set_manual_axis(1)
+	train.set_manual_axis(train.cruise_direction)
 	train.buffer_pause = 0.0
 	train._process(0.2)
-	_check(train.current_speed > 0, "selected station train cannot be piloted")
+	_check(absf(train.current_speed) > 0, "selected station train cannot be piloted")
 	train.release_driver_controls()
 	train._process(0.2)
 	_check(train.current_speed == 0, "station train coasted after releasing controls")
@@ -1582,7 +1605,8 @@ func _test_playtest_revision() -> bool:
 	spider.global_position = Vector2(0, -131)
 	spider.configure_lane(500)
 	spider._special_clock = 4.0
-	for frame in range(45): spider._physics_process(1.0 / 60.0)
+	for frame in range(45):
+		spider._physics_process(1.0 / 60.0)
 	_check(absf(spider.global_position.y) < 0.01 and not spider.is_biting(), "jump did not clear exactly two tiles over the train")
 	spider.configure_archetype(EnemyRoster.by_id("generic"), 1, 0)
 	spider.global_position = Vector2(0, -200)
@@ -1590,7 +1614,8 @@ func _test_playtest_revision() -> bool:
 	spider._physics_process(0.1)
 	_check(spider.velocity.x == 0 or spider.velocity.y == 0, "spider moved diagonally")
 	spider.queue_free()
-	for car in train.followers: car.queue_free()
+	for car in train.followers:
+		car.queue_free()
 	train.queue_free()
 	renderer.queue_free()
 	await get_tree().process_frame
@@ -1618,10 +1643,287 @@ func _test_playtest_revision() -> bool:
 	egg.take_damage(1000)
 	_check(spawner.enemies_alive == count_before + 3, "destroyed egg did not replace itself with four counted babies")
 	_check(roller.health.hit_points > 0 and not roller.protected_by_egg(gun.global_position, gun.targeting_range), "broken egg kept protecting its roller")
-	for enemy in get_tree().get_nodes_in_group("spiders"): enemy.queue_free()
+	for enemy in get_tree().get_nodes_in_group("spiders"):
+		enemy.queue_free()
 	gun.queue_free()
 	spawner.queue_free()
 	await get_tree().process_frame
 	CampaignManager.current_level_index = previous_level
 	PhaseManager.reset()
+	return true
+
+## Real scene reloads and persisted profiles, with scripted kills to make this a
+## deterministic flow test. This is not a human usability or combat-balance test.
+func _test_full_campaign_flow() -> bool:
+	# Earlier embedded-scene tests spawn under this harness; isolate the real
+	# campaign from any remaining synthetic enemies before switching scenes.
+	for enemy in get_tree().get_nodes_in_group("spiders"):
+		enemy.free()
+	ProfileManager.use_sandbox_root("/tmp/battlestations-campaign-%d" % OS.get_process_id())
+	CampaignManager.restart_campaign()
+	var harness := get_tree().current_scene
+	var main = MainScene.instantiate()
+	get_tree().root.add_child(main)
+	get_tree().current_scene = main
+	await get_tree().process_frame
+	await get_tree().process_frame
+	seed(16092026)
+	var introduced: Dictionary = {}
+	for stop in range(CampaignManager.levels.size()):
+		_check(CampaignManager.current_level_index == stop, "campaign transition skipped stop %d" % stop)
+		var director: TutorialDirector = main.get_node("TutorialDirector")
+		var expected: Array = [0] if stop == 0 else CampaignManager.levels[stop].new_tower_indices
+		var scheduled: Dictionary = {}
+		for entry in [director.current] + director.queue:
+			scheduled[String(entry.get("lesson", ""))] = true
+		for index in expected:
+			var id := "opening" if stop == 0 else "car:%d" % index
+			_check(scheduled.has(id), "stop %d omitted introduction %s" % [stop + 1, id])
+			introduced[index] = true
+		_check(PhaseManager.dialogue_hold, "new car introduction did not hold departure at stop %d" % stop)
+		director._skip_all()
+		# Save/continue reloads the stop, not a half-finished wave. Skipped
+		# introductions must remain skipped on the same profile.
+		CampaignManager.save_progress()
+		CampaignManager.continue_saved_game()
+		get_tree().reload_current_scene()
+		await get_tree().process_frame
+		await get_tree().process_frame
+		main = get_tree().current_scene
+		director = main.get_node("TutorialDirector")
+		_check(CampaignManager.current_level_index == stop and main.spawner.current_wave == 0, "continue failed to restore stop %d" % stop)
+		_check(director.current.is_empty(), "continued stop repeated a skipped introduction")
+		_check(LevelManager.currency == CampaignManager.levels[stop].starting_currency, "continue inherited another stop's wallet")
+		for wave in range(1, CampaignManager.levels[stop].wave_count + 1):
+			_check(PhaseManager.request_wave_start(), "wave button failed at stop %d wave %d" % [stop + 1, wave])
+			_check(not PhaseManager.request_wave_start(), "double wave-start advanced twice")
+			director._skip_all()
+			var spawner: EnemySpawner = main.spawner
+			# Spawn every scheduled enemy and kill its complete egg family.
+			for tick in range(100):
+				if not spawner.is_spawning:
+					break
+				spawner._process(1.0 / spawner.eps + 0.01)
+				for generation in range(2):
+					for enemy in get_tree().get_nodes_in_group("spiders"):
+						if not enemy.health.is_destroyed:
+							enemy.take_damage(100000)
+			_check(not spawner.is_spawning and spawner.enemies_remaining() == 0, "wave failed to clear after all enemies/offspring died: alive=%d left=%d" % [spawner.enemies_alive, spawner.enemies_left_to_spawn])
+			director._skip_all()
+			_check(spawner.current_wave == wave, "wave counter changed during post-wave lessons")
+		_check(main.level_complete_overlay.visible and PhaseManager.paused, "stop completion did not show and pause")
+		var wallet := LevelManager.currency
+		main.spawner.start_next_wave()
+		PhaseManager._process(1000)
+		_check(LevelManager.currency == wallet and not main.spawner.is_spawning, "completed stop restarted or paid twice")
+		print("CAMPAIGN FLOW PASS: %s (%d waves)" % [CampaignManager.levels[stop].level_name, main.spawner.current_wave])
+		main.level_complete_overlay.continue_pressed.emit()
+		await get_tree().process_frame
+		await get_tree().process_frame
+		main = get_tree().current_scene
+	_check(introduced.size() == BuildManager.towers.size(), "campaign did not introduce the entire purchasable roster")
+	_check(CampaignManager.campaign_complete and main.spawner.wave_target == 0, "finale failed to enter endless play")
+	main.queue_free()
+	get_tree().current_scene = harness
+	await get_tree().process_frame
+	# Switching profiles preserves both campaigns, while deliberately replaying
+	# lessons on the selected profile. Same-profile selection preserves lessons.
+	ProfileManager.select_profile(2)
+	CampaignManager.continue_saved_game()
+	_check(CampaignManager.current_level_index == 0 and not CampaignManager.campaign_complete, "fresh profile inherited campaign completion")
+	CampaignManager.restart_campaign()
+	ProfileManager.select_profile(1)
+	CampaignManager.continue_saved_game()
+	_check(CampaignManager.campaign_complete, "profile switch lost completed campaign")
+	main = await _start_campaign_scene(6, false)
+	var replay: TutorialDirector = main.get_node("TutorialDirector")
+	_check(replay.current_lesson == "car:0", "profile switch did not reintroduce saved unlocked roster")
+	replay._skip_all()
+	ProfileManager.select_profile(1)
+	replay.load_progress()
+	_check(replay.is_done("car:7"), "same-profile selection forgot skipped lessons")
+	main.queue_free()
+	await get_tree().process_frame
+	CampaignManager.restart_campaign()
+	main = await _start_campaign_scene(0, true)
+	replay = main.get_node("TutorialDirector")
+	_check(replay.current_lesson == "opening" and not replay.is_done("car:7"), "new campaign retained old lesson progress")
+	main.queue_free()
+	await get_tree().process_frame
+	PhaseManager.reset()
+	return true
+
+func _test_cadence_and_offspring_economy() -> bool:
+	var old_level := CampaignManager.current_level_index
+	CampaignManager.clear_challenge()
+	# Sixty seconds should produce exactly 157 envelopes at 2.625/sec,
+	# regardless of frame rate. Idle time must never accumulate a free volley.
+	for fps in [30, 60, 144]:
+		var mail: Turret = preload("res://scenes/MailCarrier.tscn").instantiate()
+		add_child(mail)
+		mail.set_process(false)
+		mail._process(60.0)
+		var target_spider: EnemyMovement = EnemyScene.instantiate()
+		add_child(target_spider)
+		target_spider.set_physics_process(false)
+		target_spider.position = Vector2(100, 0)
+		var shots := 0
+		for frame in range(fps * 60):
+			mail._process(1.0 / fps)
+			for child in get_children():
+				if child.get_script() == preload("res://scripts/mail_envelope.gd"):
+					shots += 1
+					child.free()
+		_check(shots == 157, "Mail Carrier emitted %d shots at %d FPS, expected 157" % [shots, fps])
+		mail.free()
+		target_spider.free()
+		# Let cosmetic one-shots finish before the next batch.
+		await get_tree().create_timer(0.4).timeout
+	var spawner := EnemySpawner.new()
+	spawner.enemy_prefabs = [EnemyScene]
+	add_child(spawner)
+	spawner.set_process(false)
+	for challenge in ["", "budget", "spider_assault"]:
+		CampaignManager.active_challenge_id = challenge
+		CampaignManager.current_level_index = 6
+		spawner.current_wave = 8
+		var player_deployed: bool = challenge == "spider_assault"
+		var starting_cash := LevelManager.currency
+		var roller := spawner.spawn_extra("roller", Vector2.ZERO, 380, player_deployed)
+		spawner._add_roller_egg(roller)
+		var egg := roller.pushed_egg
+		_check(egg.health.currency_worth == 0, "egg shell pays a duplicate bounty")
+		egg.take_damage(10000)
+		egg.take_damage(10000)
+		var babies := 0
+		for enemy in get_tree().get_nodes_in_group("spiders"):
+			if enemy.archetype_id == "baby" and not enemy.health.is_destroyed:
+				babies += 1
+				enemy.take_damage(10000)
+		roller.take_damage(10000)
+		_check(babies == 4 and spawner.enemies_alive == 0, "egg family spawned twice or left incorrect live count")
+		var expected := 0 if player_deployed else (15 if challenge == "budget" else 33)
+		_check(LevelManager.currency - starting_cash == expected, "egg family reward mismatch in %s: %d" % [challenge, LevelManager.currency - starting_cash])
+		await get_tree().process_frame
+	spawner.free()
+	CampaignManager.clear_challenge()
+	CampaignManager.current_level_index = old_level
+	return true
+
+func _test_roster_baseline() -> bool:
+	var prices := [150, 225, 200, 100, 300, 175, 75, 125]
+	var weights := [150, 200, 175, 125, 225, 0, 50, 125]
+	for index in range(BuildManager.towers.size()):
+		var data: TowerData = BuildManager.towers[index]
+		_check(data.cost == prices[index] and data.weight == weights[index], "roster baseline differs for %s" % data.tower_name)
+		var car: Node2D = data.scene.instantiate()
+		_check(car.get("weight") == data.weight, "placed %s weight differs from shop" % data.tower_name)
+		car.free()
+	_check(Menu.ENGINE_COST == 250, "engine purchase/recovery price differs from workbook")
+	var train: TrainConvoy = ConvoyScene.instantiate()
+	add_child(train)
+	train.set_process(false)
+	train.configure_path(PackedVector2Array([Vector2.ZERO, Vector2(3000, 0), Vector2(3000, 3000), Vector2(0, 3000)]))
+	_check(train.effective_capacity() == 1200, "Steam Engine carry differs from workbook")
+	var tender := preload("res://scenes/Tender.tscn").instantiate()
+	add_child(tender)
+	_check(train.attach_car(tender) and train.effective_capacity() == 1700, "direct Tender did not add 500 carry")
+	var guns: Array[Turret] = []
+	for scene in [BasicTurretScene, MinigunScene, preload("res://scenes/TurretCoalCannon.tscn"), preload("res://scenes/TurretBallast.tscn"), preload("res://scenes/MailCarrier.tscn")]:
+		var gun: Turret = scene.instantiate()
+		add_child(gun)
+		gun.set_process(false)
+		_check(train.attach_car(gun), "baseline consist refused %s" % gun.name)
+		guns.append(gun)
+	var brake := preload("res://scenes/BrakeVan.tscn").instantiate()
+	add_child(brake)
+	_check(train.attach_car(brake), "Brake Van failed to attach")
+	var spider: EnemyMovement = EnemyScene.instantiate()
+	add_child(spider)
+	spider.set_physics_process(false)
+	spider.health.configure_hit_points(10000)
+	for gun in guns:
+		_check(gun.damage_multiplier() == 1.25 and gun.attack_speed_multiplier == 1.0, "Brake Van changed cadence or missed a weapon")
+		spider.position = gun.global_position + Vector2(0, 70)
+		gun.target = spider
+		var hp := spider.health.hit_points
+		if gun.get_script() == preload("res://scripts/turret_minigun.gd"):
+			gun._fire_burst_round(0)
+		else:
+			gun._shoot()
+		var projectile_found := false
+		for child in get_children():
+			if child is CoalCannonball:
+				projectile_found = true
+				_check(child.direct_damage == 15 and child.splash_damage == 5, "Brake Van missed Coal Cannon direct/splash damage")
+				child.free()
+			elif child is Bullet:
+				projectile_found = true
+				_check(child.bullet_damage == roundi(gun.base_projectile_damage * 1.25), "Brake Van missed projectile damage")
+				child.free()
+		if gun.get_script() == preload("res://scripts/turret_ballast.gd"):
+			_check(hp - spider.health.hit_points == 10, "Brake Van missed Ballast area damage")
+		else:
+			_check(projectile_found, "buffed weapon did not emit a projectile")
+	guns[0].set_meta("damage_multiplier", 2.0)
+	_check(train.remove_car(brake) and not train.capped, "removing Brake Van left the consist capped")
+	_check(guns[0].damage_multiplier() == 2.0, "removing Brake Van erased a car's own damage modifier")
+	for index in range(1, guns.size()):
+		_check(guns[index].damage_multiplier() == 1.0, "removed Brake Van left a stale damage buff")
+	train.remove_car(tender)
+	_check(train.effective_capacity() == 1200, "removing Tender left a stale carry bonus")
+	for car in train.followers:
+		car.queue_free()
+	spider.queue_free()
+	train.queue_free()
+	return true
+
+func _test_junction_and_jump_timing() -> bool:
+	var track := TrackRenderer.new()
+	add_child(track)
+	track.columns.assign([0.0, 65.5, 131.0])
+	track.rows.assign([0.0, 65.5, 131.0])
+	track.track_bounds = Rect2(0, 0, 131, 131)
+	var junction := Vector2i(1, 1)
+	var straight := Vector2i(2, 1)
+	var branch := Vector2i(1, 2)
+	track.graph = {junction: [Vector2i(0, 1), branch, straight], straight: [junction], branch: [junction]}
+	var navigator := RailNavigator.new()
+	navigator.setup_edge(track, Vector2(0, 65.5), Vector2(65.5, 65.5), Vector2(65.5, 65.5))
+	navigator._extend(true)
+	_check(track.cell_of(navigator.points[-1]) == straight, "equal-use junction did not prefer straight")
+	track.built_cells[branch] = true
+	navigator.setup_edge(track, Vector2(0, 65.5), Vector2(65.5, 65.5), Vector2(65.5, 65.5))
+	navigator._extend(true)
+	_check(track.cell_of(navigator.points[-1]) == branch, "fresh player branch was ignored")
+	# Both exits now visited once: built branch wins the tie; after that,
+	# lower-use straight must win so the built spur cannot starve the circuit.
+	navigator.setup_edge(track, Vector2(0, 65.5), Vector2(65.5, 65.5), Vector2(65.5, 65.5))
+	navigator._extend(true)
+	navigator.setup_edge(track, Vector2(0, 65.5), Vector2(65.5, 65.5), Vector2(65.5, 65.5))
+	navigator._extend(true)
+	_check(track.cell_of(navigator.points[-1]) == straight, "junction repeatedly favored a heavily used spur")
+	track.free()
+	for fps in [30, 60, 120]:
+		var spider: EnemyMovement = EnemyScene.instantiate()
+		add_child(spider)
+		spider.set_physics_process(false)
+		spider.configure_archetype(EnemyRoster.by_id("jump"), 1, 5)
+		spider.position = Vector2.ZERO
+		spider.configure_route(Vector2(0, 1000))
+		for frame in range(int(3.5 * fps)):
+			spider._physics_process(1.0 / fps)
+		_check(spider.position == Vector2.ZERO, "Jump Spider moved during its windup")
+		spider._special_clock = 3.55
+		for frame in range(ceili(0.75 * fps)):
+			spider._physics_process(1.0 / fps)
+		_check(is_equal_approx(spider.position.y, 131.0) and not spider._jumping, "Jump Spider hop length/duration depends on frame rate")
+		var landed := spider.position
+		spider._physics_process(1.0)
+		_check(spider.position == landed and not spider.is_biting(), "Jump Spider did not rest after landing")
+		spider.position = Vector2(0, 980)
+		spider._special_clock = 3.55
+		spider._physics_process(0.75)
+		_check(is_equal_approx(spider.position.y, 1000), "short final hop overshot station")
+		spider.free()
 	return true

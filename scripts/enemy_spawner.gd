@@ -25,7 +25,7 @@ signal wave_cleared(wave_number: int)
 @export var enemies_per_second_cap: float = 15.0
 ## Scaled up alongside the infowiki's car costs so early-wave payouts still
 ## feel proportionate to what things actually cost now.
-@export var early_bounty: int = 18 ## Kills are bonus income; coaches fund sustained expansion.
+@export var early_bounty: int = 12 ## Kills are bonus income; coaches fund sustained expansion.
 @export var wave_bonus_base: int = 35
 @export var wave_bonus_per_wave: int = 12
 ## Set by Main from CampaignManager's current level. 0 means endless — no
@@ -161,15 +161,12 @@ func _spawn_enemy() -> void:
 	enemy.global_position = Vector2(lane_x, spawn_y)
 	if enemy.has_method("configure_difficulty") and String(profile.get("id", "generic")) == "generic":
 		enemy.configure_difficulty(_hit_points_for_wave())
-	if enemy.has_method("configure_bounty") and current_wave <= 3 and String(profile.get("id", "generic")) == "generic":
-		enemy.configure_bounty(early_bounty)
-	var bounty_scale := float(CampaignManager.challenge_value("bounty", 1.0))
-	if enemy.has_method("configure_bounty") and not is_equal_approx(bounty_scale, 1.0):
-		var normal_bounty := early_bounty if current_wave <= 3 and String(profile.get("id", "generic")) == "generic" else int(profile.get("bounty", 45)) + campaign_level * 8
-		enemy.configure_bounty(maxi(1, roundi(normal_bounty * bounty_scale)))
+	if enemy.has_method("configure_bounty"):
+		enemy.configure_bounty(bounty_for(String(profile.id)))
 	if enemy.has_method("configure_lane"):
 		enemy.configure_lane(leak_y, _journey_duration_for_wave())
-	if profile.id == "roller": _add_roller_egg(enemy)
+	if profile.id == "roller":
+		_add_roller_egg(enemy)
 
 ## Player-requested deployment for Spider Assault. This deliberately uses the
 ## same scene, roster data, lane movement, health and station-attack behavior
@@ -197,7 +194,8 @@ func spawn_controlled_spider(profile_id: String, entrance: Vector2, destination:
 	enemy.set_meta("assault_lane_x", entrance.x)
 	enemy.set("assault_speed_multiplier", 1.6 if swarm_active else 1.0)
 	enemies_alive += 1
-	if profile_id == "roller": _add_roller_egg(enemy)
+	if profile_id == "roller":
+		_add_roller_egg(enemy)
 	return enemy
 
 func _hit_points_for_wave() -> int:
@@ -221,8 +219,9 @@ func _journey_duration_for_wave() -> float:
 	var early_bonus_seconds := maxf(0.0, 9.0 - 2.0 * (current_wave - 1))
 	return journey_duration_seconds + early_bonus_seconds
 
-func spawn_extra(profile_id: String, entrance: Vector2, destination_y: float, player_deployed: bool = false) -> EnemyMovement:
-	if enemy_prefabs.is_empty(): return null
+func spawn_extra(profile_id: String, entrance: Vector2, destination_y: float, player_deployed: bool = false, hatched: bool = false) -> EnemyMovement:
+	if enemy_prefabs.is_empty():
+		return null
 	var enemy := enemy_prefabs[0].instantiate() as EnemyMovement
 	get_tree().current_scene.add_child(enemy)
 	enemy.global_position = entrance
@@ -231,10 +230,22 @@ func spawn_extra(profile_id: String, entrance: Vector2, destination_y: float, pl
 	enemy.configure_archetype(EnemyRoster.by_id(profile_id), maxi(current_wave, 1), CampaignManager.current_level_index)
 	enemy.configure_lane(destination_y, _journey_duration_for_wave())
 	enemy.set_meta("player_deployed", player_deployed)
-	if player_deployed: enemy.configure_bounty(0)
+	enemy.configure_bounty(bounty_for(profile_id, player_deployed, hatched))
 	enemies_alive += 1
 	DiscoveryTracker.discover("enemy:" + profile_id)
 	return enemy
+
+## Shared by wave spawns and offspring, including challenge reductions.
+## Campaign difficulty raises health, not cash rewards.
+func bounty_for(profile_id: String, player_deployed: bool = false, hatched: bool = false) -> int:
+	if player_deployed:
+		return 0
+	var amount := int(EnemyRoster.by_id(profile_id).get("bounty", 0))
+	if profile_id == "generic" and current_wave <= 3:
+		amount = early_bounty
+	if profile_id == "baby" and hatched:
+		amount = balance.hatched_baby_bounty if balance else 2
+	return maxi(0, roundi(amount * float(CampaignManager.challenge_value("bounty", 1.0))))
 
 func _add_roller_egg(roller: EnemyMovement) -> void:
 	var egg := spawn_extra("egg", roller.global_position + Vector2.DOWN * EnemyMovement.GRID_STEP, roller.route_target.y, bool(roller.get_meta("player_deployed", false)))

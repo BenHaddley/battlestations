@@ -23,7 +23,6 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 GameEvents="*res://scripts/game_events.gd"
 LevelManager="*res://scripts/level_manager.gd"
 BuildManager="*res://scripts/build_manager.gd"
-UIManager="*res://scripts/ui_manager.gd"
 AudioFX="*res://scripts/audio_fx.gd"
 PhaseManager="*res://scripts/phase_manager.gd"
 CampaignManager="*res://scripts/campaign_manager.gd"

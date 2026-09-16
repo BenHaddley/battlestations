@@ -7,7 +7,6 @@ class_name Turret
 
 @onready var turret_rotation_point: Node2D = $RotationPoint
 @onready var firing_point: Node2D = $RotationPoint/FiringPoint
-@onready var targeting_area: Area2D = $TargetingArea
 @onready var train_chassis: Sprite2D = $Base
 
 @export_group("Attributes")
@@ -17,7 +16,6 @@ class_name Turret
 @export var base_projectile_damage: int = 20
 
 @export_group("Rail Patrol")
-@export var patrol_speed: float = 95.0
 @export var weight: float = 1.0
 
 @export_group("Directional Prototype")
@@ -34,10 +32,6 @@ var attack_speed_multiplier: float = 1.0
 
 var target: Node2D = null
 var time_until_fire: float = 0.0
-var patrol_enabled: bool = false
-var patrol_path: PackedVector2Array
-var patrol_index: int = 0
-var patrol_step: int = 1
 var _recoil_tween: Tween
 var fixed_direction_facing := 1
 var _convoy_direction := Vector2.DOWN
@@ -57,7 +51,6 @@ func _ready() -> void:
 	queue_redraw()
 
 func _process(delta: float) -> void:
-	_patrol_track(delta)
 	if not is_instance_valid(target):
 		target = _find_target()
 		# A fixed-direction lane is narrow and its cadence timer can otherwise
@@ -80,39 +73,11 @@ func _process(delta: float) -> void:
 			_shoot()
 			time_until_fire = 0.0
 
-func configure_track(track_path: PackedVector2Array, start_index: int) -> void:
-	patrol_path = track_path.duplicate()
-	if patrol_path.is_empty():
-		return
-	patrol_index = clampi(start_index, 0, patrol_path.size() - 1)
-	global_position = patrol_path[patrol_index]
-	patrol_step = -1 if patrol_index == patrol_path.size() - 1 else 1
-	patrol_enabled = patrol_path.size() > 1
-	if patrol_enabled:
-		_face_direction(patrol_path[patrol_index + patrol_step] - global_position)
-
 func set_convoy_transform(world_position: Vector2, direction: Vector2) -> void:
-	patrol_enabled = false
 	global_position = world_position
 	if not direction.is_zero_approx():
 		_convoy_direction = direction.normalized()
 	_face_direction(direction)
-
-func _patrol_track(delta: float) -> void:
-	if not patrol_enabled:
-		return
-	var target_index := patrol_index + patrol_step
-	if target_index < 0 or target_index >= patrol_path.size():
-		patrol_step *= -1
-		target_index = patrol_index + patrol_step
-	var target_point := patrol_path[target_index]
-	_face_direction(target_point - global_position)
-	var travel := patrol_speed * delta
-	if global_position.distance_to(target_point) <= travel:
-		global_position = target_point
-		patrol_index = target_index
-	else:
-		global_position = global_position.move_toward(target_point, travel)
 
 func _face_direction(direction: Vector2) -> void:
 	if not direction.is_zero_approx():
@@ -132,6 +97,11 @@ func _face_direction(direction: Vector2) -> void:
 			turret_rotation_point.rotation = direction.angle() + PI * 0.5
 		queue_redraw()
 
+## Keep train support separate from any per-car modifier so removing a
+## Brake Van restores exactly the car's own damage.
+func damage_multiplier() -> float:
+	return float(get_meta("damage_multiplier", 1.0)) * float(get_meta("train_damage_multiplier", 1.0))
+
 func _shoot() -> void:
 	if bullet_scene == null:
 		return
@@ -139,7 +109,10 @@ func _shoot() -> void:
 	_play_recoil(6.0)
 	var bullet: Node2D = bullet_scene.instantiate()
 	if bullet.get("bullet_damage") != null:
-		bullet.set("bullet_damage", maxi(1, int(round(float(base_projectile_damage) * float(get_meta("damage_multiplier", 1.0))))))
+		bullet.set("bullet_damage", maxi(1, int(round(float(base_projectile_damage) * damage_multiplier()))))
+	if bullet is CoalCannonball:
+		bullet.direct_damage = maxi(1, roundi(bullet.direct_damage * damage_multiplier()))
+		bullet.splash_damage = maxi(1, roundi(bullet.splash_damage * damage_multiplier()))
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_position = firing_point.global_position
 	if fixed_direction_enabled and bullet.has_method("set_direction"):
@@ -191,7 +164,8 @@ func _find_target() -> Node2D:
 			var spider_health := spider.get_node_or_null("Health") as Health
 			if spider_health != null and spider_health.is_destroyed:
 				continue
-			if spider.has_method("protected_by_egg") and spider.protected_by_egg(global_position, targeting_range): continue
+			if spider.has_method("protected_by_egg") and spider.protected_by_egg(global_position, targeting_range):
+				continue
 			var distance := global_position.distance_squared_to(spider.global_position)
 			if distance <= nearest_distance:
 				nearest_distance = distance
@@ -211,7 +185,8 @@ func _find_target() -> Node2D:
 	return nearest
 
 func _target_in_range() -> bool:
-	if target.has_method("protected_by_egg") and target.protected_by_egg(global_position, targeting_range): return false
+	if target.has_method("protected_by_egg") and target.protected_by_egg(global_position, targeting_range):
+		return false
 	if fixed_direction_enabled:
 		return _is_in_fixed_firing_line(target)
 	return global_position.distance_to(target.global_position) <= targeting_range

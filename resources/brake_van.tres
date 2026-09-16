@@ -7,9 +7,9 @@
 [resource]
 script = ExtResource("1")
 tower_name = "Brake Van"
-cost = 250
+cost = 175
 scene = ExtResource("2")
-summary = "Caps the train, boosts every other car's attack power, and starts/stops faster."
+summary = "Caps the train, grants attacking cars 1.25× damage, and starts/stops faster."
 icon = ExtResource("3")
 weight = 0.0
 health = 200

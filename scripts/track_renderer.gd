@@ -590,20 +590,6 @@ func remove_rail(cell: Vector2i, occupied: bool = false) -> Dictionary:
 	network_changed.emit()
 	return {"ok": true, "reason": "", "rerouted": route_index}
 
-## Route that a locomotive dropped on `cell` can drive. An existing route is
-## returned as its index; a closed player-built detour that no route uses yet
-## becomes a new route. -1 when the rail dead-ends and cannot loop.
-func route_for_engine(cell: Vector2i) -> int:
-	var existing := route_index_of(cell)
-	if existing >= 0:
-		return existing
-	var cycle := _cycle_through(cell)
-	if cycle.size() < 4:
-		return -1
-	routes.append(_cells_to_points(cycle))
-	revision += 1
-	return routes.size() - 1
-
 func _cells_to_points(cells: Array[Vector2i]) -> PackedVector2Array:
 	var points := PackedVector2Array()
 	for cell in cells:
@@ -771,37 +757,6 @@ func _route_without_cell(route_index: int, cell: Vector2i) -> Array[Vector2i]:
 	if not _ring_is_valid(result):
 		return []
 	return result
-
-## Longest simple cycle through `cell`, found by bounded depth-first search.
-## Rail networks are tiny (at most 108 cells) and mostly loops, so the budget
-## is generous in practice and merely guards against pathological ladders.
-func _cycle_through(cell: Vector2i) -> Array[Vector2i]:
-	if not is_rail(cell) or graph[cell].size() < 2:
-		return []
-	var best: Array[Vector2i] = []
-	var budget := [6000]
-	var visited: Dictionary = {}
-	visited[cell] = true
-	var trail: Array[Vector2i] = [cell]
-	_cycle_search(cell, cell, visited, trail, best, budget)
-	return best
-
-func _cycle_search(origin: Vector2i, cell: Vector2i, visited: Dictionary, trail: Array[Vector2i], best: Array[Vector2i], budget: Array) -> void:
-	if budget[0] <= 0:
-		return
-	budget[0] -= 1
-	for next in graph[cell]:
-		if next == origin and trail.size() >= 4:
-			if trail.size() > best.size():
-				best.assign(trail)
-			continue
-		if visited.has(next):
-			continue
-		visited[next] = true
-		trail.append(next)
-		_cycle_search(origin, next, visited, trail, best, budget)
-		trail.pop_back()
-		visited.erase(next)
 
 # ---------------------------------------------------------------------------
 # Rendering

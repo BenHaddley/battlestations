@@ -4,7 +4,7 @@ class_name TrainConvoy
 ## Open networks use RailNavigator; closed paths remain available for fixtures.
 ##
 ## Weight follows the infowiki Steam Engine card (#001): a hard
-## carry_capacity budget (1000 units by default), not a soft speed penalty.
+## carry_capacity budget (1200 units by default), not a soft speed penalty.
 ## A car that would push the train over capacity simply can't be attached
 ## (attach_car returns false) — every attached train always runs at full
 ## speed. A Tender coupled directly behind the engine (followers[0]) adds
@@ -25,7 +25,7 @@ class_name TrainConvoy
 @export var occupancy_debug: bool = false
 
 @export_group("Capacity")
-@export var carry_capacity: float = 1000.0 ## Steam Engine card: "Carry Capacity of 1000 Units of Weight."
+@export var carry_capacity: float = 1200.0 ## Reconciled workbook Steam Engine capacity.
 @export var tender_capacity_bonus: float = 500.0 ## Tender card: +500 if coupled directly behind the engine.
 ## Cars render at roughly 112.5 world units. This leaves a visible coupling gap
 ## on straights and enough clearance while two cars straddle a square corner.
@@ -137,16 +137,19 @@ func set_building_hidden(hidden: bool) -> void:
 	building_hidden = hidden
 	visible = not hidden
 	for car in followers:
-		if is_instance_valid(car): car.visible = not hidden
+		if is_instance_valid(car):
+			car.visible = not hidden
 	if hidden:
 		current_speed = 0.0
 		release_driver_controls()
 
 func _grabbed() -> bool:
 	for spider in get_tree().get_nodes_in_group("spiders"):
-		if spider.is_queued_for_deletion(): continue
+		if spider.is_queued_for_deletion():
+			continue
 		var victim = spider.get("biting_target")
-		if is_instance_valid(victim) and (victim == self or victim in followers): return true
+		if is_instance_valid(victim) and (victim == self or victim in followers):
+			return true
 	return false
 
 func _process(delta: float) -> void:
@@ -282,13 +285,6 @@ func release_driver_controls() -> void:
 	manual_hold_time = 0.0
 	set_driver_controls(0, 1)
 
-func place_at_route_distance(distance_on_route: float) -> bool:
-	if route_length <= 0.0 or not _positions_valid_at(distance_on_route, followers.size()):
-		return false
-	route_distance = fposmod(distance_on_route, route_length)
-	_apply_consist_positions()
-	return true
-
 var selected_number: int = 0
 
 func set_selected(value: bool, number: int = 0) -> void:
@@ -310,7 +306,8 @@ static func _metrics_for(ring: PackedVector2Array) -> Dictionary:
 	return {"starts": starts, "length": length}
 
 func _sample_route(distance_on_route: float) -> Dictionary:
-	if navigator: return navigator.sample(distance_on_route)
+	if navigator:
+		return navigator.sample(distance_on_route)
 	if route_length <= 0.0:
 		return {"position": global_position, "direction": Vector2.DOWN, "index": 0}
 	return _sample_on(path, segment_starts, route_length, distance_on_route)
@@ -351,7 +348,8 @@ static func _project_onto(ring: PackedVector2Array, starts: PackedFloat32Array, 
 ## straddling a stretch the new route no longer includes. Callers retry
 ## later when this returns false.
 func rebind_route(new_path: PackedVector2Array) -> bool:
-	if navigator: return true
+	if navigator:
+		return true
 	if new_path.size() < 4:
 		return false
 	var metrics := _metrics_for(new_path)
@@ -416,7 +414,8 @@ func _advance_safely(signed_distance: float) -> void:
 	_apply_consist_positions()
 
 func _positions_valid_at(engine_distance: float, follower_count: int) -> bool:
-	if navigator: return navigator.valid(engine_distance, follower_count, car_spacing, occupancy_distance)
+	if navigator:
+		return navigator.valid(engine_distance, follower_count, car_spacing, occupancy_distance)
 	if route_length <= 0.0:
 		return false
 	return _positions_valid_on(path, segment_starts, route_length, engine_distance, follower_count)
@@ -495,7 +494,8 @@ func attach_car(car: Node2D) -> bool:
 	# A closed loop has finite physical capacity. Reject a consist whose tail
 	# would wrap around onto its own engine or another car.
 	if navigator:
-		if not navigator.ensure_tail(requested_count * car_spacing): return false
+		if not navigator.ensure_tail(requested_count * car_spacing):
+			return false
 		route_distance = navigator.distance
 	elif requested_count * car_spacing + occupancy_distance >= route_length:
 		return false
@@ -510,19 +510,19 @@ func attach_car(car: Node2D) -> bool:
 	return true
 
 func _apply_brake_buff(brake_van: Node2D) -> void:
-	var bonus = brake_van.get("attack_speed_bonus")
+	var bonus = brake_van.get("attack_damage_bonus")
 	if bonus == null:
-		bonus = 1.2
+		bonus = 1.25
 	for car in followers:
-		if is_instance_valid(car) and car != brake_van and car.get("attack_speed_multiplier") != null:
-			car.set("attack_speed_multiplier", bonus)
+		if is_instance_valid(car) and car is Turret:
+			car.set_meta("train_damage_multiplier", bonus)
 	var time_bonus = brake_van.get("brake_time_multiplier")
 	_brake_time_multiplier = time_bonus if time_bonus != null else 0.85
 
-func _reset_attack_speed_buffs() -> void:
+func _reset_train_buffs() -> void:
 	for car in followers:
-		if is_instance_valid(car) and car.get("attack_speed_multiplier") != null:
-			car.set("attack_speed_multiplier", 1.0)
+		if is_instance_valid(car) and car.has_meta("train_damage_multiplier"):
+			car.remove_meta("train_damage_multiplier")
 	_brake_time_multiplier = 1.0
 
 func can_attach_at(world_position: Vector2) -> bool:
@@ -578,7 +578,7 @@ func remove_car_near(world_position: Vector2) -> bool:
 	followers.remove_at(closest_index)
 	if car.get("is_train_cap") == true:
 		capped = false
-		_reset_attack_speed_buffs()
+		_reset_train_buffs()
 	car.queue_free()
 	queue_redraw()
 	return true
@@ -590,7 +590,7 @@ func remove_car(car: Node2D) -> bool:
 	followers.remove_at(index)
 	if car.get("is_train_cap") == true:
 		capped = false
-		_reset_attack_speed_buffs()
+		_reset_train_buffs()
 	car.queue_free()
 	# Close the gap now rather than on the next frame so a destroyed car's
 	# neighbours never sit a frame apart from where the route says they are.

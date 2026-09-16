@@ -8,7 +8,8 @@ signal skip_wait_pressed
 @export var title_text := "BATTLE // STATIONS":
 	set(value):
 		title_text = value
-		if title_label: title_label.text = value
+		if title_label:
+			title_label.text = value
 @export var phase_text := "STATION"
 @export var status_text := "DEPARTURE 00:19"
 @export var subtitle_text := "PREPARE • BUY • COUPLE"
@@ -39,11 +40,6 @@ func configure(total_checkpoints: int) -> void:
 	if track:
 		track.checkpoint_count = checkpoint_count
 
-func set_level_progress(current_checkpoint: int, total_checkpoints: int, animate := true) -> void:
-	configure(total_checkpoints)
-	var denominator := float(maxi(total_checkpoints - 1, 1))
-	track.set_progress(clampf(float(current_checkpoint) / denominator, 0.0, 1.0), animate)
-
 func set_progress_fraction(value: float, total_checkpoints: int, animate := true) -> void:
 	configure(total_checkpoints)
 	track.set_progress(value, animate)
@@ -52,9 +48,12 @@ func set_phase(new_phase: String, new_status: String, new_subtitle: String) -> v
 	phase_text = new_phase
 	status_text = new_status
 	subtitle_text = new_subtitle
-	if phase_label: phase_label.text = phase_text
-	if status_label: status_label.text = status_text
-	if subtitle_label: subtitle_label.text = subtitle_text
+	if phase_label:
+		phase_label.text = phase_text
+	if status_label:
+		status_label.text = status_text
+	if subtitle_label:
+		subtitle_label.text = subtitle_text
 
 func set_button_state(label_text: String, disabled: bool) -> void:
 	if skip_button:

@@ -7,7 +7,7 @@
 [resource]
 script = ExtResource("1")
 tower_name = "Chaingunner Car"
-cost = 275
+cost = 225
 scene = ExtResource("2")
 summary = "Bursts of 7 pellets every 4 seconds; spread means some shots miss, but it can hit multiple spiders."
 icon = ExtResource("3")

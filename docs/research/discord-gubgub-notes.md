@@ -1,7 +1,7 @@
 # Battle Stations — Discord Conversation Source Notes (Gubgub DM)
 
 > This is preserved raw research, not the project wiki. Start at the
-> [Battle Stations Wiki](wiki/README.md) for consolidated, confidence-labelled
+> [Battle Stations Wiki](../../wiki/README.md) for consolidated, confidence-labelled
 > documentation.
 
 Source: Discord DM with **Gubgub** (`discord.com/channels/@me/947661024075595838`).

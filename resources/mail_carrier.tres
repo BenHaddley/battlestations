@@ -7,9 +7,9 @@
 [resource]
 script = ExtResource("1")
 tower_name = "Mail Carrier"
-cost = 200
+cost = 125
 scene = ExtResource("2")
 summary = "Rapidly fires envelopes at a random spider per shot within a 5×5 range."
 icon = ExtResource("3")
-weight = 150.0
+weight = 125.0
 health = 150

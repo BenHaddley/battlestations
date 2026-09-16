@@ -6,7 +6,7 @@
 [node name="BrakeVan" type="Node2D"]
 script = ExtResource("1")
 weight = 0.0
-attack_speed_bonus = 1.2
+attack_damage_bonus = 1.25
 z_index = 20
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

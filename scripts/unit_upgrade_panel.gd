@@ -57,7 +57,8 @@ func _build_ui() -> void:
 	shade.color = Color(0.03, 0.025, 0.02, 0.3)
 	shade.mouse_filter = Control.MOUSE_FILTER_STOP
 	shade.gui_input.connect(func(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.pressed: close_panel()
+		if event is InputEventMouseButton and event.pressed:
+			close_panel()
 	)
 	add_child(shade)
 
@@ -123,19 +124,21 @@ func _build_ui() -> void:
 	actions.add_child(close)
 
 func _refresh() -> void:
-	if not is_instance_valid(unit): return
+	if not is_instance_valid(unit):
+		return
 	var bps: float = float(unit.get("bps")) if unit.get("bps") != null else 0.0
 	var range_value: float = float(unit.get("targeting_range")) / BOARD_CELL if unit.get("targeting_range") != null else 0.0
-	var damage := float(unit.get_meta("damage_multiplier", 1.0))
+	var damage: float = unit.damage_multiplier() if unit is Turret else 1.0
 	var health := UnitHealth.of(unit)
 	var health_line := "\nHP   %d / %d" % [ceili(health.hit_points), roundi(health.max_hit_points)] if health else ""
 	if range_value > 0.0:
-		stats_label.text = "DAMAGE   %.1fx\nFIRE RATE   %.2f/s\nRANGE   %.1f tiles%s" % [damage, bps, range_value, health_line]
+		stats_label.text = "DAMAGE   %.2fx\nFIRE RATE   %.2f/s\nRANGE   %.1f tiles%s" % [damage, bps, range_value, health_line]
 	else:
 		stats_label.text = "NO WEAPON\nSUPPORT CAR%s" % health_line
 
 func _sell() -> void:
-	if not is_instance_valid(unit) or unit_data == null: return
+	if not is_instance_valid(unit) or unit_data == null:
+		return
 	var sold_unit := unit
 	var sold_convoy := convoy
 	var refund := int(round(unit_data.cost * 0.5))

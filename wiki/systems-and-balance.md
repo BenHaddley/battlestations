@@ -19,12 +19,13 @@ The currency is named **Delta** (`Δ`) throughout the HUD, per the
 | Parameter | Default |
 |---|---:|
 | Campaign starting currency | 300–600, by level |
-| Generic early-wave bounty (waves 1–3) | 18 |
-| Specialist bounty | 8–45, plus 8 per campaign level |
+| Generic bounty (including waves 1–3) | 12 |
+| Specialist bounty | 8–38, with no campaign-level multiplier |
+| Roller egg / hatched baby | 0 / 2 (four babies per egg) |
 | Passenger Coach income | 32 every 8 seconds while coupled |
 | Wave completion bonus | 35 + 12 × wave number |
 | Rail tile (STATIONS only) | 50, refunded in full when lifted |
-| Locomotive, or recovering a wrecked engine | 325 |
+| Locomotive, or recovering a wrecked engine | 250 |
 
 Dropping a shop car on a valid rail spends its `TowerData.cost`, but only after
 `TrainConvoy.attach_car()` also confirms the target train has capacity — see
@@ -44,12 +45,11 @@ values are an intentional first playtest baseline, not recovered canon or final 
 
 ## Placeable cars
 
-[Infowiki unit cards](infowiki-cards.md) is the authoritative design source for these
-cars' cost, range, weight, and role — the numbers below are adopted from it wholesale,
-not shipped independently. The roster is deliberately exactly the cards documented
-there: Slomo (no card in the recovered folder) and an earlier standalone Chaingun car
-(redundant with the Chaingunner Car card below) were both removed rather than kept
-alongside it.
+The [September 16 reconciliation](sources/2026-09-16-roadmap-verification.md)
+adopts the workbook's explicit costs, weights and Steam Engine capacity. Earlier
+infowiki behavior remains where the workbook is silent; the September 10 playtest
+revision retains precedence for combat behavior. These are implemented starting
+values for playtesting, not a claim of final balance.
 
 Eight cars can be dragged from the shop onto a train. Each has a `TowerData` resource
 (`resources/*.tres`) carrying its cost, a one-line shop summary, and a `weight` — see
@@ -60,20 +60,20 @@ Passenger Coach, Brake Van, and Tender are non-combat utility cars.
 | Car | Cost | Weight | Health | Rate of fire | Range | Damage |
 |---|---:|---:|---:|---:|---:|---|
 | Gunner Car | 150 | 150 | 200 | 0.45/s (≈2.2s) | 315 | 20 direct, single target |
-| Chaingunner Car | 275 | 200 | 200 | 0.25/s (4s), 7-shot burst | 315 | 4 per pellet (7/burst) |
-| Ballast Blaster | 200 | 200 | 200 | 0.45/s (≈2.2s) | 135 | 8 to every target in range |
+| Chaingunner Car | 225 | 200 | 200 | 0.25/s (4s), 7-shot burst | 315 | 4 per pellet (7/burst) |
+| Ballast Blaster | 200 | 175 | 200 | 0.45/s (≈2.2s) | 135 | 8 to every target in range |
 | Coal Cannon | 300 | 225 | 225 | 0.22/s (≈4.5s) | 225 | 12 direct + 4 splash, knockback |
-| Mail Carrier | 200 | 150 | 150 | 2.625/s | 225 | 4 per envelope, random recipient each shot |
-| Passenger Coach | 110 | 125 | 175 | — | — | none — generates Delta |
-| Brake Van | 250 | 0 | 200 | — | — | none — caps train, buffs it |
-| Tender | 50 | 50 | 125 | — | — | none — +500 capacity behind the engine |
+| Mail Carrier | 125 | 125 | 150 | 2.625/s | 225 | 4 per envelope, random recipient each shot |
+| Passenger Coach | 100 | 125 | 175 | — | — | none — generates Delta |
+| Brake Van | 175 | 0 | 200 | — | — | none — caps train, buffs it |
+| Tender | 75 | 50 | 125 | — | — | none — +500 capacity behind the engine |
 
 Health is the [asset workbook](asset-workbook.md) Health column, carried on each
 `TowerData` (`health`) and installed on the coupled car by `UnitHealth`
 (`scripts/unit_health.gd`); the Steam Engine's 300 lives in `game_balance.tres`. See
 [Train damage](#train-damage-avoidance-biting-ramming-and-wrecks) for what wears it
-down. Cost and weight remain the earlier infowiki values; the workbook's differing
-figures are still a pending designer decision.
+down. Cost and weight now use the workbook wherever it gives a number. Tender weight
+remains 50 and its carry bonus remains +500 because the workbook gives neither.
 
 Range is the infowiki cards' `NxN` grid notation converted to the shipped world-unit
 radius as `radius = (N / 2) * path_step` (`path_step = 65.5`) — this conversion factor
@@ -117,12 +117,12 @@ floating `+Δ32` popup on each payout.
 **Brake Van** (`scripts/brake_van.gd`) — no weapon. `weight = 0.0`, so it never counts
 toward its train's carry capacity. The moment one is attached, `TrainConvoy.attach_car()`
 sets that train's `capped` flag, which makes both `can_attach_at()` and the drop
-handler refuse any further car for that train; applies `attack_speed_bonus = 1.2`
-to every other car currently on it by writing directly to each car's
-`attack_speed_multiplier` (read by `Turret`'s fire-rate check as
-`bps * attack_speed_multiplier`); and improves braking by 15%
-(`brake_time_multiplier`) for as long as it's attached. Removing the Brake Van
-clears the cap and resets every other car's attack and braking multipliers.
+handler refuse any further car for that train. It applies a non-stacking 1.25×
+damage multiplier to all five attacking cars, including Coal Cannon direct and
+splash damage and Ballast area damage. Projectile damage is rounded to the nearest
+integer. Cadence is unchanged. The existing 15% braking-time reduction remains.
+Removing or destroying the Brake Van clears its damage and braking bonuses and
+uncaps the train; a car's own damage modifier is preserved.
 
 **Tender** (`scripts/tender.gd`) — no weapon. Adds its own 50 weight like any other
 car, but `TrainConvoy.effective_capacity()` also checks whether it's specifically
@@ -141,7 +141,7 @@ used to describe. A train's total weight is the sum of every attached car's `wei
 | Parameter | Default |
 |---|---:|
 | Cruise / boosted max speed | 46 / 82 world units/second |
-| Carry capacity | 1000 |
+| Carry capacity | 1200 |
 | Tender capacity bonus (directly behind the engine only) | +500 |
 | Forward acceleration | 28 world units/second² |
 | Reverse acceleration | 28 world units/second² |
@@ -152,7 +152,7 @@ used to describe. A train's total weight is the sum of every attached car's `wei
 | Attachment radius | 76 world units |
 
 `TrainConvoy.attach_car()` checks `total_weight() + new_car.weight` against
-`effective_capacity()` (1000, or 1500 with a Tender coupled as `followers[0]`)
+`effective_capacity()` (1200, or 1700 with a Tender coupled as `followers[0]`)
 *before* appending the car, and simply returns `false` — refusing the attachment
 entirely, refunding its cost — if it would exceed capacity. There is no partial
 weight penalty. During STATIONS a train is parked unless the player selects it
@@ -206,7 +206,7 @@ track generator remains playable and available for later modes.
 
 The acquisition model is implemented: campaign levels grant one starting engine,
 and a locomotive can be dragged from the Train Yard onto an empty rail stretch for
-Δ325. Each purchased engine is an independent train that can be selected and driven.
+Δ250. Each purchased engine is an independent train that can be selected and driven.
 Clicking an engine marks it with a ring and an `ENGINE n · weight / capacity` tag,
 and the compact readout at the top of the board lists weight, capacity and engine HP;
 all three refresh every frame, so coupling, selling, losing a Tender or taking bites
@@ -264,7 +264,7 @@ are proposed design.
   with it. A train left over capacity keeps its cars but cannot couple more.
 - A destroyed engine becomes a **wreck**: the train stops, its surviving cars keep
   firing where they stand, spiders walk past the rubble, and nothing can be coupled.
-  Dropping a locomotive from the Train Yard onto the wreck (Δ325) restores full engine
+  Dropping a locomotive from the Train Yard onto the wreck (Δ250) restores full engine
   health and the train rolls again.
 - Ramming is incidental: the per-spider cooldown and the recoil mean parking on a
   spider never out-damages a gun.

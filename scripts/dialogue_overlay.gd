@@ -4,8 +4,8 @@ class_name DialogueOverlay
 signal advance_requested
 signal skip_requested
 
-const DUCK := preload("res://duckTalking.png")
-const DAISY := preload("res://dasiyTalking.png")
+const DUCK := preload("res://assets/sprites/ui/portrait/duck_talking.png")
+const DAISY := preload("res://assets/sprites/ui/portrait/daisy_talking.png")
 
 var artwork: TextureRect
 var dialogue_label: Label

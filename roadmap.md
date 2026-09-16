@@ -8,6 +8,18 @@ The original Unity snapshot remains in [`legacy_unity/`](legacy_unity/). Do not 
 features merely because an asset filename suggests them: confirm the design or mark
 the interpretation as a proposal in the wiki.
 
+## September 16 — verification and roster baseline
+
+[Implementation and evidence](wiki/sources/2026-09-16-roadmap-verification.md).
+
+- [x] Verify junction priorities and branch reuse, buffer dwell/reversal, and Jump Spider windup, hop distance, duration and landing with deterministic tests.
+- [x] Fix Mail Carrier timer drift; verify 2.625 shots/s at 30, 60 and 144 FPS without banked idle volleys.
+- [x] Reconcile existing roster prices/weights and Steam carry with the workbook; apply Brake Van's 1.25× damage to every weapon type and remove it cleanly.
+- [x] Remove campaign-level bounty inflation and give egg offspring a bounded reward; apply Budget Railway reductions to offspring and keep player-deployed spiders reward-free.
+- [x] Exercise all seven stops and 35 waves with scripted kills, real scene transitions, persisted continue, skipped/replayed lessons, profile isolation and the endless finale.
+- [x] Recheck queued car objectives against the current wallet and train capacity so earlier purchases cannot leave a later introduction demanding an unavailable car.
+- [ ] Run the human/browser usability and balance pass below. Automated progression checks do not establish fresh-player comprehension or a winning combat strategy.
+
 ## September 10 playtest revision
 
 Source: [Gubgub's playtest notes](wiki/sources/2026-09-10-playtest-revision.md). These decisions supersede older upgrade-tree, train-navigation and spider-role proposals below.
@@ -222,11 +234,12 @@ release order. The following work groups are a proposed implementation sequence.
       fire, 5×5 range, and independent random target selection for each envelope.
       (Duck and Daisy car lesson, the level-complete card now names every car a stop
       unlocks, and the almanac card uses the placed car's own artwork.)
-- [ ] Reconcile Steam Engine cost 250/carry 1200, Tender cost 75, Delta Coach cost
+- [x] Reconcile Steam Engine cost 250/carry 1200, Tender cost 75, Delta Coach cost
       100, Mail Car cost 125/weight 125, and Brake Van cost 175 against current values.
       Tender weight and capacity bonus are `N/A`, not replacements for existing values.
-- [ ] Resolve Brake Van's specified 1.25× attack-power buff versus the current
-      1.2× attack-speed buff, including stacking, train-cap, and braking behavior.
+- [x] Resolve Brake Van as 1.25× damage across all attacks. Keep the tail cap and
+      existing braking bonus; remove its bonus on sale/destruction without changing
+      per-car modifiers. No stacking because the first van caps the train.
 - [ ] Translate Weak/Average/Great/Insta-Kill power and Fast/Average/Slow/Very Slow/
       Recharge speed labels into approved numeric stats. Define Coal Cannon's
       knockback chance and exact Close/Strong/All/Webs targeting rules.
@@ -740,17 +753,12 @@ has no unresolved asset-rights questions, and communicates what the game is.
 
 ## Next five tasks
 
-These priorities follow Gubgub's latest written direction; the workbook expansion
-backlog and existing release gates remain tracked above. The 2026-09-09 systems are
-built and regression-tested; what remains needs a person, an asset, or a decision.
-
-1. Playtest rail building, avoidance, biting, ramming recoil and car destruction in
-   the browser build; record observations and approve or replace the provisional
-   Δ50, 25 DPS, 20-damage and recoil values.
-2. Confirm or amend the proposed rail rules (explicit joins, detour adoption, full
-   refunds, run-local persistence, no junction switching) and the wreck/recover rule.
-3. Import the updated Gunner/Chaingunner Drive artwork as chassis/turret pairs.
-4. Run the fresh-player campaign pass covering every car lesson, save/continue,
-   skipped and replayed lessons, and profile switching.
-5. Decide the workbook cost/carry/buff differences and spider bounty targets, then
-   start the first expansion group (Barrier Car plugs into the obstacle rules).
+1. Play the reconciled roster in a browser, recording branch choices, buffer timing,
+   Jump Spider cadence, egg-family rewards and Mail Carrier effectiveness.
+2. Run a fresh-player campaign pass for comprehension and readability. Automated
+   coverage now verifies all seven stops, saves, skips/replays and profile switching.
+3. Record waves 1–10 with and without Passenger Coaches; tune the new bounty baseline
+   only from observed spending, survival and income, then approve the balance.
+4. Review the remaining proposed rail/wreck rules and obtain final UI and any missing
+   separate chassis/turret artwork from the artist.
+5. Resolve qualitative stats and behavior for the first expansion group before adding cars.

@@ -312,12 +312,15 @@ func rail_cell_occupied(cell: Vector2i) -> bool:
 	var point := track.world_of(cell)
 	for convoy_node in convoys:
 		var convoy := convoy_node as TrainConvoy
-		if not is_instance_valid(convoy): continue
-		if convoy.occupies_point(point, track.path_step * 0.7): return true
+		if not is_instance_valid(convoy):
+			continue
+		if convoy.occupies_point(point, track.path_step * 0.7):
+			return true
 		if convoy.navigator:
 			var at := convoy.navigator.distance - convoy.followers.size() * convoy.car_spacing
 			while at <= convoy.navigator.distance:
-				if Vector2(convoy.navigator.sample(at).position).distance_to(point) < track.path_step * 0.5: return true
+				if Vector2(convoy.navigator.sample(at).position).distance_to(point) < track.path_step * 0.5:
+					return true
 				at += track.path_step * 0.25
 	return false
 
@@ -739,8 +742,6 @@ func _find_attachable_convoy(world_position: Vector2) -> Node2D:
 			best_distance = distance
 			best = convoy
 	return best
-
-const UNTINTED_CARS := ["Minigun", "Ballast", "CoalCannon", "BrakeVan", "PassengerCoach", "Tender"]
 
 func _apply_car_palette(car: Node2D, _palette_index: int) -> void:
 	for name in ["Base", "Sprite2D", "RotationPoint/Top"]:

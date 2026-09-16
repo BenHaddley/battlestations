@@ -85,10 +85,6 @@ var _sidestep_time := 0.0
 ## unit instance id -> ms timestamp before which that unit cannot strike again
 var _impact_cooldowns: Dictionary = {}
 
-## Absolute ms timestamp (Time.get_ticks_msec()) the current slow expires at.
-## Tracking an expiry rather than a bool means a second overlapping pulse can
-## only extend the slow, never cut a longer one short.
-var _slow_expires_at: int = 0
 
 func _ready() -> void:
 	add_to_group("spiders")
@@ -119,8 +115,9 @@ func configure_archetype(profile: Dictionary, wave: int, campaign_level: int) ->
 	speed_multiplier = float(profile.get("speed", 1.0))
 	var difficulty_bonus := campaign_level + maxi(wave - 1, 0) / 2
 	health.configure_hit_points(int(profile.get("hp", 5)) + difficulty_bonus)
-	if archetype_id == "rally": health.configure_hit_points(mini(3 + maxi(wave - 1, 0) * 2, 15) + 2)
-	health.set_bounty(int(profile.get("bounty", 45)) + campaign_level * 8)
+	if archetype_id == "rally":
+		health.configure_hit_points(mini(3 + maxi(wave - 1, 0) * 2, 15) + 2)
+	health.set_bounty(int(profile.get("bounty", 0)))
 	# The complete one-to-six-dot artwork is now available, so the procedural
 	# dot overlay remains only as the stage signal source and is not rendered.
 	health_dots.visible = false
@@ -174,11 +171,16 @@ func _on_health_stage_changed(_previous_dots: int, current_dots: int) -> void:
 	puff_tween.chain().tween_callback(puff.queue_free)
 
 func _dot_count_for_hp(hp: int) -> int:
-	if hp >= 14: return 6
-	if hp >= 12: return 5
-	if hp >= 10: return 4
-	if hp >= 8: return 3
-	if hp >= 6: return 2
+	if hp >= 14:
+		return 6
+	if hp >= 12:
+		return 5
+	if hp >= 10:
+		return 4
+	if hp >= 8:
+		return 3
+	if hp >= 6:
+		return 2
 	return 1
 
 func _set_dot_stage(dot_count: int) -> void:
@@ -188,7 +190,8 @@ func _set_dot_stage(dot_count: int) -> void:
 	spider_sprite.texture = primary_texture
 
 func _physics_process(delta: float) -> void:
-	if health.is_destroyed: return
+	if health.is_destroyed:
+		return
 	if is_instance_valid(egg_pusher) and not egg_pusher.health.is_destroyed:
 		global_position = egg_pusher.global_position + Vector2.DOWN * GRID_STEP
 		_animate_walk(delta)
@@ -216,8 +219,6 @@ func _physics_process(delta: float) -> void:
 	_special_clock += delta
 	_update_special_state()
 	var speed: float = base_speed * assault_speed_multiplier
-	if Time.get_ticks_msec() < _slow_expires_at:
-		speed *= 0.5
 	if ability == "charge" and not charge_spent:
 		speed *= 2.1
 	if ability == "enrage" and health.hit_points <= health.max_hit_points / 2:
@@ -370,7 +371,8 @@ func _lane_clear(lane_x: float, travel_direction: Vector2) -> bool:
 		if health != null and health.is_destroyed:
 			continue
 		var across := Geometry2D.get_closest_point_to_segment(unit.global_position, global_position, probe)
-		if across.distance_to(unit.global_position) < unit_half_width: return false
+		if across.distance_to(unit.global_position) < unit_half_width:
+			return false
 		var offset := unit.global_position - probe
 		var forward := offset.dot(travel_direction)
 		var lateral := absf(offset.dot(travel_direction.orthogonal()))
@@ -381,8 +383,10 @@ func _lane_clear(lane_x: float, travel_direction: Vector2) -> bool:
 func _bite(delta: float) -> void:
 	velocity = Vector2.ZERO
 	var convoy: TrainConvoy = biting_target as TrainConvoy
-	if convoy == null and is_instance_valid(biting_target) and biting_target.has_meta("convoy"): convoy = biting_target.get_meta("convoy") as TrainConvoy
-	if is_instance_valid(convoy): convoy.current_speed = 0.0
+	if convoy == null and is_instance_valid(biting_target) and biting_target.has_meta("convoy"):
+		convoy = biting_target.get_meta("convoy") as TrainConvoy
+	if is_instance_valid(convoy):
+		convoy.current_speed = 0.0
 	_bite_timer -= delta
 	if _bite_timer > 0.0:
 		_animate_walk(delta)
@@ -422,10 +426,6 @@ func _animate_walk(delta: float) -> void:
 		spider_sprite.texture = alternate_texture if spider_sprite.texture == primary_texture else primary_texture
 		animation_time = 0.0
 
-## Slows the enemy to half its base speed for `duration` seconds. Safe to
-## call while already slowed — only extends the effect, never shortens it.
-func apply_slow(duration: float) -> void:
-	_slow_expires_at = max(_slow_expires_at, Time.get_ticks_msec() + int(duration * 1000.0))
 
 ## Pushes a spider away from its destination without changing its route.
 ## Coal Cannon uses one board tile (90 units) by default.
@@ -502,12 +502,6 @@ func _update_special_state() -> void:
 	if ability == "enrage" and health.hit_points <= health.max_hit_points / 2 and rage_texture_a:
 		primary_texture = rage_texture_a
 		alternate_texture = rage_texture_b
-func archetype_break_texture() -> Texture2D:
-	for profile in EnemyRoster.PROFILES:
-		if String(profile.id) == archetype_id:
-			return profile.get("break", primary_texture)
-	return primary_texture
-
 func _play_block_effect() -> void:
 	var label := Label.new()
 	label.text = "BLOCK"
@@ -529,7 +523,7 @@ func play_destroyed_effect(bounty: int) -> void:
 			for offset in [Vector2.ZERO, Vector2(-GRID_STEP, 0), Vector2(GRID_STEP, 0), Vector2(0, -GRID_STEP)]:
 				var entrance: Vector2 = global_position + offset
 				entrance.x = clampf(entrance.x, lane_x_positions[0], lane_x_positions[-1])
-				spawner.spawn_extra("baby", entrance, route_target.y, bool(get_meta("player_deployed", false)))
+				spawner.spawn_extra("baby", entrance, route_target.y, bool(get_meta("player_deployed", false)), true)
 	if death_texture:
 		var death := Sprite2D.new()
 		death.texture = death_texture
@@ -563,20 +557,26 @@ func play_destroyed_effect(bounty: int) -> void:
 	tween.chain().tween_callback(reward.queue_free)
 
 func _cardinal_direction() -> Vector2:
-	if not has_route_target: return Vector2.DOWN
+	if not has_route_target:
+		return Vector2.DOWN
 	var difference := route_target - global_position
-	if absf(difference.x) > 0.1: return Vector2(signf(difference.x), 0)
+	if absf(difference.x) > 0.1:
+		return Vector2(signf(difference.x), 0)
 	return Vector2(0, signf(difference.y))
 
 func _charge_hit(unit: Node2D) -> void:
-	if charge_spent: return
+	if charge_spent:
+		return
 	charge_spent = true
 	velocity = Vector2.ZERO
 	var convoy: TrainConvoy = unit as TrainConvoy
-	if convoy == null and unit.has_meta("convoy"): convoy = unit.get_meta("convoy") as TrainConvoy
-	if is_instance_valid(convoy): convoy.force_stop()
+	if convoy == null and unit.has_meta("convoy"):
+		convoy = unit.get_meta("convoy") as TrainConvoy
+	if is_instance_valid(convoy):
+		convoy.force_stop()
 	var unit_health := UnitHealth.of(unit)
-	if unit_health: unit_health.take_damage(250.0, true)
+	if unit_health:
+		unit_health.take_damage(250.0, true)
 
 func protected_by_egg(origin: Vector2, radius: float) -> bool:
 	return is_instance_valid(pushed_egg) and not pushed_egg.health.is_destroyed and origin.distance_to(pushed_egg.global_position) <= radius

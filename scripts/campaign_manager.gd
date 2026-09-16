@@ -169,19 +169,6 @@ func save_progress() -> void:
 	config.set_value("campaign", "campaign_complete", campaign_complete)
 	config.save(ProfileManager.profile_path(SAVE_FILE))
 
-## True only once a save exists AND it represents real progress (past level
-## 1, or the campaign finished) — a fresh save from restart_campaign() at
-## level 0 shouldn't make the title screen offer to "continue" nothing.
-func has_saved_progress() -> bool:
-	if not has_campaign_save():
-		return false
-	var config := ConfigFile.new()
-	if config.load(ProfileManager.profile_path(SAVE_FILE)) != OK:
-		return false
-	var index: int = config.get_value("campaign", "current_level_index", 0)
-	var complete: bool = config.get_value("campaign", "campaign_complete", false)
-	return index > 0 or complete
-
 ## Any campaign save counts for Start Game, including a saved first mission.
 ## Challenges are transient and deliberately never affect this check.
 func has_campaign_save() -> bool:

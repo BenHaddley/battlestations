@@ -11,7 +11,7 @@ radius = 135.0
 script = ExtResource("1")
 targeting_range = 135.0
 bps = 0.45
-weight = 200.0
+weight = 175.0
 z_index = 20
 
 [node name="Base" type="Sprite2D" parent="."]

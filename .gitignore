@@ -13,3 +13,10 @@ legacy_unity/obj/
 /.godot/
 /export/
 *.translation
+
+# Local editor and operating-system clutter
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo

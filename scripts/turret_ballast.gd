@@ -18,7 +18,7 @@ func _shoot() -> void:
 	_play_recoil(8.0)
 	for body in _spiders_in_range():
 		if body.has_method("take_damage"):
-			body.take_damage(BLAST_DAMAGE)
+			body.take_damage(maxi(1, roundi(BLAST_DAMAGE * damage_multiplier())))
 	_spawn_ballast_spray(target.global_position)
 
 func _spawn_ballast_spray(target_position: Vector2) -> void:

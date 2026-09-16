@@ -30,10 +30,6 @@ signal remove_requested(screen_position: Vector2)
 @onready var portrait: TextureRect = $RightPanel/Margin/VBox/PortraitPanel/Portrait
 
 @onready var schedule_panel: PanelContainer = $RightPanel/Margin/VBox/SchedulePanel
-@onready var phase_dots: Control = $RightPanel/Margin/VBox/SchedulePanel/Margin/VBox/PhaseDots
-@onready var phase_label: Label = $RightPanel/Margin/VBox/SchedulePanel/Margin/VBox/PhaseLabel
-@onready var phase_status: Label = $RightPanel/Margin/VBox/SchedulePanel/Margin/VBox/PhaseStatus
-@onready var phase_instruction: Label = $RightPanel/Margin/VBox/SchedulePanel/Margin/VBox/PhaseInstruction
 @onready var advance_button: Button = $RightPanel/Margin/VBox/SchedulePanel/Margin/VBox/AdvanceButton
 
 @onready var hp_fill: HpGauge = $HpRail/Margin/VBox/HpFill
@@ -52,8 +48,6 @@ const TOWER_BUTTONS := ["gunner_button", "chaingunner_button", "ballast_button",
 static var ENGINE_COST: int = (preload("res://resources/game_balance.tres") as GameBalance).locomotive_cost
 const ENGINE_ICON := preload("res://assets/sprites/engines/revised/001_Blue.png")
 
-const SCHEDULE_STATION_COLOR := Color(0.32, 0.58, 0.86, 1)
-const SCHEDULE_BATTLE_COLOR := Color(0.72, 0.16, 0.1, 1)
 
 const PORTRAIT_STATION := preload("res://assets/sprites/ui/portrait/portrait_station.png")
 const PORTRAIT_BATTLE := preload("res://assets/sprites/ui/portrait/portrait_battle.png")
@@ -729,20 +723,6 @@ func _on_phase_changed(phase_name: String) -> void:
 	if build_track_button:
 		build_track_button.disabled = is_battle
 	portrait.texture = PORTRAIT_BATTLE if is_battle else PORTRAIT_STATION
-
-func _schedule_style(is_battle: bool) -> StyleBox:
-	var style := StyleBoxFlat.new()
-	style.bg_color = SCHEDULE_BATTLE_COLOR if is_battle else SCHEDULE_STATION_COLOR
-	style.border_width_left = 4
-	style.border_width_top = 4
-	style.border_width_right = 4
-	style.border_width_bottom = 4
-	style.border_color = Color(0.08, 0.06, 0.04, 1)
-	style.corner_radius_top_left = 6
-	style.corner_radius_top_right = 6
-	style.corner_radius_bottom_right = 6
-	style.corner_radius_bottom_left = 6
-	return style
 
 func _on_advance_pressed() -> void:
 	if PhaseManager.request_wave_start():

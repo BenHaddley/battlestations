@@ -2,6 +2,15 @@
 
 [Wiki home](README.md)
 
+## September 16 verification and balance baseline
+
+The [roster reconciliation and verification report](sources/2026-09-16-roadmap-verification.md)
+records the current prices, carry, damage buff and bounty baseline. Automated
+coverage now includes all seven campaign stops, save/continue, profile isolation,
+skipped/replayed guidance, junctions, buffers, Jump timing, offspring payouts and
+Mail Carrier cadence. These checks use scripted kills and do not close the human
+usability or combat-balance playtest gates.
+
 ## Status
 
 The active codebase is a Godot 4 scaffold port of the archived Unity prototype. Its
@@ -84,11 +93,10 @@ three-car consist a full lap of every route on all ten campaign layouts.
 |---|---|
 | `LevelManager` | Global waypoint list and currency wallet |
 | `BuildManager` | Global tower catalog and current shop selection |
-| `UIManager` | Prevents board clicks passing through UI |
 | `GameEvents` | Global `enemy_destroyed` signal used for wave accounting |
 | `Main` | Generates the railway, spawns one TrainConvoy per route, routes car purchases to whichever train the drop lands near, registers coupled cars as obstacles with health, rebinds convoys after rail edits, and recovers wrecked engines when a locomotive is dropped on them |
 | `EnemySpawner` | Wave timing, alive count, and a hand-tuned gentle-start difficulty/spawn-rate/HP curve |
-| `EnemyMovement` + `Health` | Wave-scaled lane traversal speed, staged dot transformations, slowing, damage, death, bounty, plus train avoidance (sidestep to a clear lane), biting when boxed in, and ramming impacts |
+| `EnemyMovement` + `Health` | Wave-scaled lane traversal speed, staged dot transformations, damage, death, bounty, plus train avoidance (sidestep to a clear lane), biting when boxed in, and ramming impacts |
 | `TowerData` | Train shop data, scene, description, price, drag icon, weight, and workbook health |
 | `TrackRenderer` | Owns the closed routes and the rail graph: authored/generated loops, STATIONS-built spurs, dead ends and join-closed detours; draws every cell from its connection set (straight, curve, buffer stop, junction pairs) and reroutes a ring when a longer player-built detour is joined |
 | `RailBuilder` | STATION hover/plus construction, join markers for dead ends, right-click removal with refunds, and the specific refusal reasons |
@@ -187,7 +195,7 @@ kept alongside them.
 | `TurretBallast.tscn` | Purple/yellow close-range car with a 135-unit area blast |
 | `TurretCoalCannon.tscn` | 225-unit range, ~4.5s cooldown, weight 225, fires `CoalCannonball.tscn` |
 | `PassengerCoach.tscn` | Weight 125, pays Δ50 every 10 seconds while coupled |
-| `BrakeVan.tscn` | Weight 0, caps its train, +20% attack speed, ×0.85 accel/coast time |
+| `BrakeVan.tscn` | Weight 0, caps its train, +25% damage, ×0.85 braking time |
 | `Tender.tscn` | Weight 50, no weapon — +500 capacity only as the car directly behind the engine |
 | `Bullet.tscn` | Homing gunner projectile with enemy collision mask |
 
@@ -228,8 +236,9 @@ actions beneath the title treatment.
 - Campaign boards use deterministic artist-reference layouts and receive one train
   per closed circuit. Additional locomotives are purchasable and can be parked on any
   free ring, including a player-built one.
-- Spider bounties and the workbook's cost/carry/buff differences are unchanged pending
-  the designer decisions in [roadmap blockers](../docs/roadmap-blockers.md).
+- The September 16 baseline adopts workbook cost/carry and Brake Van damage, and
+  reduces bounty inflation. Human balance approval remains in
+  [roadmap blockers](../docs/roadmap-blockers.md).
 
 Resolved this session (were previously listed here): the slow effect now reduces
 speed relative to each enemy's own base speed and safely extends under overlapping

@@ -1,4 +1,4 @@
-[gd_scene load_steps=50 format=3]
+[gd_scene load_steps=43 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/the_new_map.png" id="1"]
 [ext_resource type="Texture2D" path="res://assets/sprites/board/Rail End.png" id="11"]
@@ -22,8 +22,6 @@
 [ext_resource type="Script" path="res://scripts/comic_card.gd" id="32"]
 [ext_resource type="Script" path="res://scripts/gem_icon.gd" id="44"]
 [ext_resource type="Texture2D" path="res://assets/sprites/units/TENDER.png" id="47"]
-[ext_resource type="Texture2D" path="res://assets/sprites/ui/hp/hp_variants.png" id="50"]
-[ext_resource type="Script" path="res://scripts/phase_dots.gd" id="52"]
 [ext_resource type="Script" path="res://scripts/battlefield_tiles.gd" id="53"]
 [ext_resource type="Texture2D" path="res://assets/sprites/board/tile_sample_light.png" id="54"]
 [ext_resource type="Texture2D" path="res://assets/sprites/board/tile_sample_dark.png" id="55"]
@@ -59,26 +57,6 @@ corner_radius_top_left = 4
 corner_radius_top_right = 8
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 8
-
-[sub_resource type="AtlasTexture" id="HpFrame100"]
-atlas = ExtResource("50")
-region = Rect2(0, 0, 39.2, 140)
-
-[sub_resource type="AtlasTexture" id="HpFrame75"]
-atlas = ExtResource("50")
-region = Rect2(39.2, 0, 39.2, 140)
-
-[sub_resource type="AtlasTexture" id="HpFrame50"]
-atlas = ExtResource("50")
-region = Rect2(78.4, 0, 39.2, 140)
-
-[sub_resource type="AtlasTexture" id="HpFrame25"]
-atlas = ExtResource("50")
-region = Rect2(117.6, 0, 39.2, 140)
-
-[sub_resource type="AtlasTexture" id="HpFrame0"]
-atlas = ExtResource("50")
-region = Rect2(156.8, 0, 39.2, 140)
 
 [sub_resource type="StyleBoxFlat" id="CreamPanel"]
 bg_color = Color(0.88, 0.75, 0.57, 1)
@@ -1130,12 +1108,6 @@ theme_override_font_sizes/font_size = 17
 text = "BATTLE // STATIONS"
 horizontal_alignment = 1
 rotation = -0.015
-
-[node name="PhaseDots" type="Control" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/SchedulePanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 30)
-layout_mode = 2
-mouse_filter = 2
-script = ExtResource("52")
 
 [node name="PhaseLabel" type="Label" parent="CanvasLayer/Menu/RightPanel/Margin/VBox/SchedulePanel/Margin/VBox"]
 layout_mode = 2

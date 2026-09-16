@@ -11,5 +11,5 @@ cost = 200
 scene = ExtResource("2")
 summary = "Shotgun blast of ballast — 3-tile-wide radius, good for spiders getting close."
 icon = ExtResource("3")
-weight = 200.0
+weight = 175.0
 health = 200

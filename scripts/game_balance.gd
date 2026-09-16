@@ -13,12 +13,14 @@ class_name GameBalance
 @export var station_phase_duration: float = 45.0
 
 @export_group("Economy")
-@export var early_generic_bounty: int = 18
+@export var early_generic_bounty: int = 12
+## Egg offspring share a small reward budget; the shell itself pays nothing.
+@export var hatched_baby_bounty: int = 2
 @export var wave_bonus_base: int = 35
 @export var wave_bonus_per_wave: int = 12
 @export var passenger_income: int = 32
 @export var passenger_income_interval: float = 8.0
-@export var locomotive_cost: int = 325
+@export var locomotive_cost: int = 250
 ## Provisional STATIONS rail price per tile (2026-09-09 notes); to be
 ## workshopped after playtesting. Removal refunds the same amount.
 @export var rail_tile_cost: int = 50
@@ -50,7 +52,7 @@ class_name GameBalance
 @export var acceleration: float = 28.0
 @export var deceleration: float = 34.0
 @export var reverse_acceleration: float = 28.0
-@export var carry_capacity: float = 1000.0
+@export var carry_capacity: float = 1200.0
 @export var tender_capacity_bonus: float = 500.0
 @export var car_spacing: float = 88.0
 @export var minimum_consist_clearance: float = 64.0

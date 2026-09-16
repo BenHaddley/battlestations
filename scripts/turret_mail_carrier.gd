@@ -2,13 +2,15 @@ extends "res://scripts/turret.gd"
 ## Picks independently for every envelope; consecutive shots may pick the same spider.
 
 func _process(delta: float) -> void:
-	_patrol_track(delta)
-	time_until_fire += delta
 	var interval := 1.0 / (bps * attack_speed_multiplier)
-	if time_until_fire >= interval:
-		_shoot()
-		# No banked volley when spiders enter an empty radius.
+	# Idle time cannot buy a burst when a target enters range.
+	if _find_target() == null:
 		time_until_fire = 0.0
+		return
+	time_until_fire += delta
+	while time_until_fire + 0.000001 >= interval:
+		_shoot()
+		time_until_fire = maxf(0.0, time_until_fire - interval)
 
 func _find_target() -> Node2D:
 	var candidates: Array[Node2D] = []
@@ -19,7 +21,8 @@ func _find_target() -> Node2D:
 		var health := spider.get_node_or_null("Health") as Health
 		if health != null and health.is_destroyed:
 			continue
-		if spider.has_method("protected_by_egg") and spider.protected_by_egg(global_position, targeting_range): continue
+		if spider.has_method("protected_by_egg") and spider.protected_by_egg(global_position, targeting_range):
+			continue
 		if global_position.distance_squared_to(spider.global_position) <= targeting_range * targeting_range:
 			candidates.append(spider)
 	return null if candidates.is_empty() else candidates.pick_random()

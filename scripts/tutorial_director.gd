@@ -174,7 +174,7 @@ func _car_lesson(tower_index: int) -> Array[Dictionary]:
 		4:
 			lines = [_entry("Duck", "Coal Cannon. Big shell, big noise, very satisfying."), _entry("Daisy", "Slow, heavy, 5×5 reach, and the shell knocks spiders back. Save it for the tough ones.")]
 		5:
-			lines = [_entry("Duck", "Brake Van on the tail. Now the whole train means business."), _entry("Daisy", "It weighs nothing and strengthens the cars ahead of it, but nothing couples behind it. Put it on last.")]
+			lines = [_entry("Duck", "Brake Van on the tail. Now the whole train means business."), _entry("Daisy", "It weighs nothing and gives attacking cars 25% more damage, but nothing couples behind it. Put it on last.")]
 		6:
 			lines = [_entry("Duck", "The Tender lets the engine haul a much heavier defense."), _entry("Daisy", "Directly behind the engine or the extra capacity will not count. Click the engine afterwards and watch its capacity jump.")]
 		7:
@@ -292,6 +292,24 @@ func _process(_delta: float) -> void:
 		return
 	if _requirement_met(requirement):
 		_complete_requirement()
+	elif _relax_unavailable_car_objective():
+		overlay.show_entry(current)
+
+## Keep the introduction, but do not demand a purchase the current wallet
+## and consist cannot support. The player can continue and buy later.
+func _relax_unavailable_car_objective() -> bool:
+	var requirement := String(current.get("wait_for", ""))
+	if not requirement.begins_with("car_placed:") and requirement != "gunner_placed":
+		return false
+	var index := 0 if requirement == "gunner_placed" else int(requirement.trim_prefix("car_placed:"))
+	var tower: TowerData = BuildManager.towers[index]
+	if _car_lesson_feasible(tower):
+		return false
+	current["wait_for"] = ""
+	current["text"] = "%s costs Δ%d and weighs %d. Couple one when the wallet and an uncapped train have room." % [tower.tower_name, tower.cost, roundi(tower.weight)]
+	current.erase("highlight")
+	current.erase("action_hint")
+	return true
 
 func _requirement_met(requirement: String) -> bool:
 	match requirement:
@@ -406,6 +424,9 @@ func _show_next() -> void:
 		_finish_lesson(current_lesson)
 		current_lesson = next_lesson
 	current = next
+	# Several cars can unlock together. Earlier purchases can spend the money
+	# or cap a train after this instruction was queued, so check again now.
+	_relax_unavailable_car_objective()
 	# Even requirement-bearing entries begin as conversation. The first advance
 	# switches them into objective mode; the departure clock stays held until
 	# the objective is done so combat cannot interrupt an unfinished lesson.

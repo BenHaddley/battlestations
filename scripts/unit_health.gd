@@ -23,7 +23,6 @@ var is_destroyed := false
 var unit_label := "UNIT"
 ## Milliseconds of the most recent bite, so the marker fades on its own.
 var _last_bite_ms: int = -100000
-var _biters: int = 0
 var _flash_tween: Tween
 
 ## Installs a health node on `unit` (idempotent) and returns it.
@@ -95,9 +94,6 @@ func repair_fully() -> void:
 	damaged.emit(hit_points, max_hit_points)
 	queue_redraw()
 
-func set_biters(count: int) -> void:
-	_biters = maxi(count, 0)
-
 func _flash_parent() -> void:
 	var parent := get_parent() as CanvasItem
 	if parent == null:
@@ -112,7 +108,7 @@ func _draw() -> void:
 	if is_destroyed:
 		return
 	var recently_bitten := Time.get_ticks_msec() - _last_bite_ms < 450
-	if not is_damaged() and not recently_bitten and _biters == 0:
+	if not is_damaged() and not recently_bitten:
 		return
 	# Bar sits just below the unit's footprint, in screen space.
 	var width := 44.0
@@ -122,7 +118,7 @@ func _draw() -> void:
 	var fill := fraction()
 	var color := Color(0.35, 0.85, 0.45, 1.0).lerp(Color(0.92, 0.22, 0.16, 1.0), 1.0 - fill)
 	draw_rect(Rect2(bar.position, Vector2(width * fill, bar.size.y)), color, true)
-	if recently_bitten or _biters > 0:
+	if recently_bitten:
 		# Jaws marker: two red fangs above the unit, pulsing while chewed on.
 		var pulse := 1.0 + 0.12 * sin(Time.get_ticks_msec() / 70.0)
 		var top := Vector2(0.0, -36.0)

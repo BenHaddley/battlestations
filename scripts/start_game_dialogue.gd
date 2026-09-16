@@ -5,7 +5,7 @@ signal continue_selected
 signal restart_selected
 signal closed
 
-const DAISY := preload("res://dasiyTalking.png")
+const DAISY := preload("res://assets/sprites/ui/portrait/daisy_talking.png")
 
 var artwork: TextureRect
 var dialogue_label: Label

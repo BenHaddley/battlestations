@@ -5,6 +5,15 @@ work has been completed as far as current evidence and settled design allow. The
 remaining gates require a human decision, external account/device, contributor
 confirmation, or observed playtest. Do not close them from code inspection alone.
 
+## September 16 implementation update
+
+The existing roster now uses the workbook's explicit prices, weights and engine
+capacity. Brake Van supplies 1.25× damage. Campaign bounty inflation and duplicate
+egg-family rewards have been reduced, and offspring honor challenge multipliers.
+The deterministic suite covers all seven campaign stops with scripted kills;
+[this evidence](../wiki/sources/2026-09-16-roadmap-verification.md) does not replace
+the human balance and usability gates below.
+
 ## Balance and usability playtests
 
 Owner needed: designer/playtester.
@@ -60,8 +69,8 @@ Owner needed: artist/designer.
 Owner needed: designer and artist; source is the
 [25-unit workbook register](../wiki/asset-workbook.md).
 
-- Resolve spreadsheet-versus-build costs, Steam carry capacity, and Brake Van's
-  attack-power versus attack-speed behavior; Mail cost/weight are currently provisional.
+- Playtest the adopted workbook costs/carry and Brake Van damage bonus; retain
+  Tender weight 50 and +500 capacity until a replacement is specified.
 - Define numeric power/cadence, targeting rules, knockback chance, buff stacking,
   train-health/destruction rules, and new board-effect durations and interactions.
 - Audit delivered assets and supply missing chassis/top/icon/projectile/effect art,

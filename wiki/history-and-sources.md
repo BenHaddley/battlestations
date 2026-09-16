@@ -60,7 +60,7 @@ the raw notes for identification, but not repeated here as a usable reference.
 
 - [Assets to make.xlsx](sources/Assets%20to%20make.xlsx) — `Sheet1!A1:L26`, 25 unit concepts with costs, footprints, carry/weight, health, range, power, speed, targeting priorities, and roles. See the [transcription and build comparison](asset-workbook.md); distinct from the deleted 2023 sheet.
 
-- [Discord conversation research](../discord-gubgub-notes.md) — search scope,
+- [Discord conversation research](../docs/research/discord-gubgub-notes.md) — search scope,
   excerpts, broken link, and caveats.
 - [2026-08-28–29 playtest and design notes](sources/2026-08-28-29-playtest-and-design-notes.md)
   — supplied Discord conversation covering balance, engine controls/acquisition,

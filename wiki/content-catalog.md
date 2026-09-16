@@ -43,7 +43,7 @@ All eight placeable cars are implemented and purchasable from the in-game shop; 
 | Ballast Blaster | Unit plus 5 ballast frames | Short-range hit-everyone-in-range blast |
 | Coal Cannon | Base, top, cannonball; 3 break frames unused | Slow splash shot: 3 direct, 1 splash |
 | Passenger Coach | Unit | Passive income, no weapon |
-| Brake Van | Unit | Caps the train, +20% attack speed buff, no weapon |
+| Brake Van | Unit | Caps the train, +25% damage buff, no weapon |
 | Oil Tanker | 2 unit variants, 4 tar-tile frames | None |
 | Slate Return | 2 unit frames, 2 slate frames | None |
 | Delta | 3 projectile frames, no clearly named unit | None |
