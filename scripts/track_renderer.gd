@@ -501,9 +501,8 @@ func place_rail(anchor: Vector2i, cell: Vector2i) -> Dictionary:
 func is_dead_end(cell: Vector2i) -> bool:
 	return is_rail(cell) and graph[cell].size() == 1
 
-## Pairs [cell, target] the link gesture offers while hovering `cell`: a dead
-## end can be joined to any adjacent unconnected rail of its own circuit, and
-## hovering that rail offers the same join from the other side.
+## Offer an explicit join between any adjacent, unconnected rail tiles,
+## including two authored circuits. Hovering either side offers the same join.
 func link_candidates(cell: Vector2i) -> Array:
 	var pairs: Array = []
 	if not is_rail(cell):
@@ -521,13 +520,9 @@ func evaluate_link(a: Vector2i, b: Vector2i) -> Dictionary:
 		return {"ok": false, "reason": "Only touching rails can be joined."}
 	if b in graph[a]:
 		return {"ok": false, "reason": "Those rails are already joined."}
-	if not is_dead_end(a) and not is_dead_end(b):
-		return {"ok": false, "reason": "Only a dead end can be joined to other rail."}
-	if not network_of(a).has(b):
-		return {"ok": false, "reason": "That would join two separate circuits. Extend one circuit at a time."}
 	return {"ok": true, "reason": ""}
 
-## Joins a dead end to adjacent rail. If the join closes a detour off a
+## Joins adjacent rails, including separate networks. If the join closes a detour off a
 ## route and the detour is longer than the stretch it bypasses, the route is
 ## rerouted through it and route_changed fires for the convoys driving it.
 ## Returns the evaluate_link() verdict, extended with "rerouted": route

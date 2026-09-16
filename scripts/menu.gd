@@ -305,7 +305,7 @@ func _show_shop_detail(index: int) -> void:
 	if index == -2:
 		shop_detail_name.text = "BUILDING TRACK"
 		shop_detail_stats.text = "Δ%d PER TILE   ·   STATION ONLY" % (main_rail_cost())
-		shop_detail_body.text = "Hover a rail to show its connection points, then click one to lay track. Click a link ring to join a dead end back onto the circuit. Right-click your own track to lift it for a refund."
+		shop_detail_body.text = "Hover a rail, then click the blue ring between touching tracks to join them for free. Use + to fill gaps. Right-click your rail to lift it."
 		return
 	if index == -1:
 		shop_detail_name.text = "LOCOMOTIVE"

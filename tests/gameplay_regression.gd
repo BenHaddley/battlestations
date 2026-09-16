@@ -46,6 +46,7 @@ func _run() -> void:
 	_check((await _test_main_scene_train_integration()) == true, "_test_main_scene_train_integration aborted on a script error")
 	_check((await _test_wave_button_and_phase_clock()) == true, "_test_wave_button_and_phase_clock aborted on a script error")
 	_check((await _test_rail_building()) == true, "_test_rail_building aborted on a script error")
+	_check((await _test_connect_existing_tracks()) == true, "existing track joins checks aborted")
 	_check((await _test_train_obstacles()) == true, "_test_train_obstacles aborted on a script error")
 	_check((await _test_range_preview_and_readout()) == true, "_test_range_preview_and_readout aborted on a script error")
 	_check((await _test_lessons_and_profiles()) == true, "_test_lessons_and_profiles aborted on a script error")
@@ -782,8 +783,8 @@ func _test_rail_building() -> bool:
 	_check(not track.evaluate_placement(Vector2i(2, 2), Vector2i(4, 4)).ok, "placement away from the anchor was accepted")
 	_check(builder.attempt_build(Vector2i(2, 6), Vector2i(1, 6)), "spur toward loop B could not be laid")
 	var join_verdict: Dictionary = track.evaluate_link(Vector2i(1, 6), Vector2i(1, 7))
-	_check(not join_verdict.ok and String(join_verdict.reason).contains("separate circuits"), "joining two separate circuits was accepted")
-	_check(track.link_candidates(Vector2i(1, 6)).is_empty(), "a foreign circuit was offered as a join target")
+	_check(join_verdict.ok, "a bridge between separate circuits was refused")
+	_check(track.link_candidates(Vector2i(1, 6)).has([Vector2i(1, 6), Vector2i(1, 7)]), "bridge join marker is missing")
 	_check(builder.attempt_remove(Vector2i(1, 6)) and LevelManager.currency == before_currency and track.graph.size() == before_cells, "probe spur could not be lifted for a refund")
 	LevelManager.currency = cost - 1
 	_check(not builder.attempt_build(Vector2i(2, 0), Vector2i(1, 0)), "unaffordable rail was laid")
@@ -1926,4 +1927,53 @@ func _test_junction_and_jump_timing() -> bool:
 		spider._physics_process(0.75)
 		_check(is_equal_approx(spider.position.y, 1000), "short final hop overshot station")
 		spider.free()
+	return true
+
+func _test_connect_existing_tracks() -> bool:
+	var main = await _start_campaign_scene(0, false)
+	(main.get_node("TutorialDirector") as TutorialDirector)._skip_all()
+	var track: TrackRenderer = main.track
+	var builder: RailBuilder = main.rail_builder
+	main.menu.set_build_track(true)
+	LevelManager.currency = 300
+	# The two authored rings touch at adjacent cells without sharing an edge.
+	var a := Vector2i(3, 6)
+	var b := Vector2i(3, 7)
+	var original_routes := track.routes.duplicate()
+	var revision := track.revision
+	_check(not track.is_dead_end(a) and not track.is_dead_end(b) and not track.network_of(a).has(b), "join fixture is not two separate authored loops")
+	_check(track.link_candidates(a).has([a, b]) and track.link_candidates(b).has([b, a]), "existing-track join cannot be selected from either side")
+	_check(builder.attempt_link(a, b), "two adjacent existing loops could not be joined")
+	_check(LevelManager.currency == 300 and track.revision == revision + 1, "existing-track join charged money or failed to invalidate navigation")
+	_check(track.network_of(a).has(b) and b in track.neighbours(a) and a in track.neighbours(b), "join did not create a bidirectional connection")
+	_check(track.routes == original_routes and track.routes_are_traversable(), "joining loops rewrote an authored ring")
+	_check(track.tiles_at(a).size() > 1 and track.tiles_at(b).size() > 1, "join did not render both junctions")
+	_check(not builder.attempt_link(b, a) and track.revision == revision + 1, "duplicate join changed the network")
+	_check(not track.evaluate_link(a, Vector2i(4, 7)).ok, "diagonal track join was accepted")
+	_check(not track.evaluate_link(a, Vector2i(3, 9)).ok, "join skipped a gap")
+	# A second connection between the now-shared network is also valid.
+	_check(builder.attempt_link(Vector2i(5, 6), Vector2i(5, 7)), "a second cross-connection between existing tracks was refused")
+	main.menu.set_build_track(false)
+	PhaseManager.phase = PhaseManager.Phase.BATTLE
+	var edges_before := track.revision
+	_check(not builder.attempt_link(Vector2i(4, 6), Vector2i(4, 7)) and track.revision == edges_before, "existing circuits were joined during BATTLE")
+	var train: TrainConvoy = main.convoys[0]
+	train.set_process(false)
+	var upper_cells := track.route_cells(0)
+	var visited_upper := false
+	var visited_lower_after := false
+	for frame in range(18000):
+		train._process(1.0 / 60.0)
+		var cell := track.cell_of(train.global_position)
+		visited_upper = visited_upper or cell in upper_cells
+		if visited_upper and cell.y >= 8:
+			visited_lower_after = true
+		_check(not train.movement_blocked, "train stalled while crossing joined circuits")
+		_check(train._positions_valid_at(train.route_distance, train.followers.size()), "joined circuits caused the train to overlap itself")
+		if visited_lower_after:
+			break
+	_check(visited_upper and visited_lower_after, "train did not travel into the joined circuit and return")
+	main.queue_free()
+	await get_tree().process_frame
+	PhaseManager.reset()
 	return true

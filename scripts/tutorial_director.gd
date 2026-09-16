@@ -229,7 +229,7 @@ func _station_lessons_for_level() -> void:
 		var rail_cost := _rail_cost()
 		var rail_lines: Array[Dictionary] = [
 			_entry("Duck", "Choose BUILD TRACK to clear the trains from view. Hover a rail and click a plus; choose DONE BUILDING when finished."),
-			_entry("Daisy", "Δ%d a tile, for now. Trains pause at a buffer stop, then reverse. You can also join the end back onto the circuit." % rail_cost),
+			_entry("Daisy", "Δ%d a tile, for now. Trains pause at a buffer stop, then reverse. Blue join rings connect touching tracks, even separate circuits, for free." % rail_cost),
 		]
 		if LevelManager.currency >= rail_cost:
 			rail_lines.append(_entry("Duck", "Lay one tile.", "rail_built", "HOVER A RAIL TILE, CLICK A PLUS  (Δ%d)" % rail_cost, _highlight_first_engine))

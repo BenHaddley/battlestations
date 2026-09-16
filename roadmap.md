@@ -12,6 +12,7 @@ the interpretation as a proposal in the wiki.
 
 [Implementation and evidence](wiki/sources/2026-09-16-roadmap-verification.md).
 
+- [x] Allow explicit free joins between adjacent pre-existing tracks and player-built bridges; verify trains cross between joined loops and return.
 - [x] Verify junction priorities and branch reuse, buffer dwell/reversal, and Jump Spider windup, hop distance, duration and landing with deterministic tests.
 - [x] Fix Mail Carrier timer drift; verify 2.625 shots/s at 30, 60 and 144 FPS without banked idle volleys.
 - [x] Reconcile existing roster prices/weights and Steam carry with the workbook; apply Brake Van's 1.25× damage to every weapon type and remove it cleanly.
@@ -86,7 +87,8 @@ its earlier deferred status. Tasks below remain unimplemented unless checked.
 - [x] Hover an existing rail tile to show clickable plus signs on surrounding empty
       tiles; clicking a plus adds a connected rail tile. Settle adjacency rules.
       (Orthogonal neighbours only; a new tile connects to the hovered tile; dead
-      ends are joined to adjacent rail by an explicit free click on a join ring.)
+      rails are joined to adjacent rail by an explicit free click on a blue join ring,
+      including two pre-existing circuits as requested September 16.)
 - [x] Charge **Δ50 per rail tile provisionally**, with clear affordability feedback;
       charge only for a valid placement. Workshop the final price after playtesting.
 - [x] Explain failed rail placements with a specific reason: insufficient Delta,

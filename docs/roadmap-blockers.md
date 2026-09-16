@@ -92,11 +92,12 @@ values. Current answers, all documented in
 
 1. Inventory is unlimited; the price is Δ50 per tile and refunds are full.
 2. Players may lift the rail they laid; authored rail cannot be removed.
-3. No switching. New tiles attach only to the tile they extend; a dead end is joined
-   by a separate free click; a longer player-built detour replaces the stretch it
-   bypasses and trains still drive one closed ring.
-4. Dead ends are construction: trains never enter them and no locomotive can be
-   parked on one until it closes into a circuit.
+3. New tiles attach only to the tile they extend. A separate free click joins
+   touching rails, including different authored circuits (requested September 16).
+   Trains use the shared graph and choose branches automatically; manual junction
+   switches are not implemented.
+4. Trains enter open spurs, pause at buffers and reverse; locomotives can be placed
+   on open rails (September 10 direction).
 5. A closed player-built lobe becomes its own circuit; two trains may share the cell
    where it touches an authored ring, with no collision between them.
 6. A convoy rebinds only when its whole consist is on shared track, retrying every

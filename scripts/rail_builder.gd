@@ -123,9 +123,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		attempt_remove(hovered_removable)
 		get_viewport().set_input_as_handled()
 
-## Joining a dead end to its circuit costs nothing; the tiles were paid for
-## when they were laid. This is what closes a detour and hands it to the
-## train.
+## Joining adjacent rails costs nothing, including bridges between authored
+## circuits. New tiles are paid for when laid; live trains use the joined graph.
 func attempt_link(end_cell: Vector2i, target: Vector2i) -> bool:
 	if not PhaseManager.rail_building_enabled or not PhaseManager.is_station():
 		_feedback("Rails can only be joined during STATIONS.", false)
@@ -174,7 +173,7 @@ func attempt_build(from_cell: Vector2i, cell: Vector2i) -> bool:
 	if joinable.is_empty():
 		_feedback("Rail laid for Δ%d." % rail_cost, true)
 	else:
-		_feedback("Rail laid for Δ%d. Click the link ring to join it to the circuit." % rail_cost, true)
+		_feedback("Rail laid for Δ%d. Click the blue ring to join the neighbouring track." % rail_cost, true)
 	# Keep the hover anchored on the fresh tile so a straight run can be laid
 	# with repeated clicks rather than re-hovering after every piece.
 	has_anchor = true
@@ -277,7 +276,7 @@ func _draw_preview_tile(center: Vector2, direction: Vector2i, color: Color) -> v
 	var half := track.path_step * 0.5
 	draw_rect(Rect2(center - Vector2(half, half), Vector2(track.path_step, track.path_step)), Color(color.r, color.g, color.b, 0.5), false, 2.0)
 
-## Two interlocked rings between the dead end and the rail it can join.
+## Two interlocked rings between adjacent rails that can be joined.
 func _draw_link(center: Vector2, hovered: bool) -> void:
 	var color := Color(0.55, 0.85, 1.0, 1.0) if hovered else Color(0.45, 0.72, 0.95, 0.9)
 	var radius := 9.0 if hovered else 7.5

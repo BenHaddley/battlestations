@@ -4,6 +4,10 @@
 
 ## September 16 verification and balance baseline
 
+BUILD TRACK now allows joining two pre-existing circuits: hover either rail and
+click the blue ring between adjacent tracks. Fill any gap with new rail first.
+Joins are free; new tiles retain their Δ50 price.
+
 The [roster reconciliation and verification report](sources/2026-09-16-roadmap-verification.md)
 records the current prices, carry, damage buff and bounty baseline. Automated
 coverage now includes all seven campaign stops, save/continue, profile isolation,
