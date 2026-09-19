@@ -12,10 +12,18 @@ func _ready() -> void:
 		add_child(title)
 		for frame in range(12):
 			await get_tree().process_frame
+		# Opens the job-card list so its layout can be checked at full height.
+		if "--challenges-modal" in arguments:
+			title._show_challenges()
+			for frame in range(6):
+				await get_tree().process_frame
 		_save_capture(arguments, "/tmp/battle-stations-title.png")
 		return
 	if "--spider-assault" in arguments:
 		CampaignManager.start_challenge("spider_assault")
+	var challenge_flag := arguments.find("--challenge")
+	if challenge_flag >= 0 and challenge_flag + 1 < arguments.size():
+		CampaignManager.start_challenge(String(arguments[challenge_flag + 1]))
 	if "--open-rails" in arguments:
 		CampaignManager.campaign_complete = true
 	var level_flag := arguments.find("--campaign-level")

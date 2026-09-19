@@ -37,6 +37,7 @@ func _run() -> void:
 	_check(_test_mail_carrier() == true, "_test_mail_carrier aborted on a script error")
 	_check(_test_wallet_wave_and_selection_rules() == true, "_test_wallet_wave_and_selection_rules aborted on a script error")
 	_check(_test_challenge_job_cards() == true, "_test_challenge_job_cards aborted on a script error")
+	_check((await _test_unit_sandbox()) == true, "_test_unit_sandbox aborted on a script error")
 	_check(_test_music_playlist_rotation() == true, "_test_music_playlist_rotation aborted on a script error")
 	_check(_test_game_over_modes() == true, "_test_game_over_modes aborted on a script error")
 	_check((await _test_title_feature_modals()) == true, "_test_title_feature_modals aborted on a script error")
@@ -312,7 +313,7 @@ func _test_convoy_never_self_blocks() -> bool:
 	return true
 
 func _test_challenge_job_cards() -> bool:
-	_check(CampaignManager.CHALLENGES.size() == 6, "challenge menu should expose six launchable job cards")
+	_check(CampaignManager.CHALLENGES.size() == 7, "challenge menu should expose seven launchable job cards")
 	var seen_ids: Dictionary = {}
 	for challenge in CampaignManager.CHALLENGES:
 		var challenge_id := String(challenge.get("id", ""))
@@ -321,8 +322,62 @@ func _test_challenge_job_cards() -> bool:
 		_check(CampaignManager.start_challenge(challenge_id), "challenge %s did not start" % challenge_id)
 		var level := CampaignManager.current_level()
 		_check(level != null and level.level_name == String(challenge.name), "challenge %s did not supply its level data" % challenge_id)
-		_check(level.wave_count > 0, "challenge %s must have a finite wave target" % challenge_id)
+		# The sandbox is deliberately endless; every scored job card ends.
+		if challenge_id == "sandbox":
+			_check(level.wave_count == 0, "the sandbox should run endlessly")
+		else:
+			_check(level.wave_count > 0, "challenge %s must have a finite wave target" % challenge_id)
 	CampaignManager.clear_challenge()
+	return true
+
+## The unit lab has to hand over every car at no cost and lift the carry limit,
+## and — just as importantly — must not leak either of those into normal play.
+func _test_unit_sandbox() -> bool:
+	_check(not CampaignManager.is_sandbox(), "sandbox reported active before it was started")
+	_check(CampaignManager.start_challenge("sandbox"), "sandbox challenge did not start")
+	_check(CampaignManager.is_sandbox(), "sandbox challenge did not report itself as a sandbox")
+	var level := CampaignManager.current_level()
+	for index in range(BuildManager.towers.size()):
+		_check(index in level.unlocked_tower_indices, "sandbox did not unlock tower %d" % index)
+		var tower: TowerData = BuildManager.towers[index]
+		_check(CampaignManager.cost_of(tower) == 0, "%s was not free in the sandbox" % tower.tower_name)
+	_check(CampaignManager.challenge_shop_enabled(), "sandbox must leave the shop open")
+
+	var train: TrainConvoy = ConvoyScene.instantiate()
+	add_child(train)
+	train.set_process(false)
+	train.configure_path(PackedVector2Array([Vector2.ZERO, Vector2(3000, 0), Vector2(3000, 3000), Vector2(0, 3000)]))
+	_check(is_inf(train.effective_capacity()), "sandbox did not lift the carry limit")
+	# The whole current roster is only 1050 weight, so it already fits inside the
+	# normal 1200 limit — coupling it once would prove nothing. Two of everything
+	# is 2100 and could never be attached without the lift. The Brake Van caps
+	# the consist by design and is left out rather than fought with.
+	var cars: Array[Node2D] = []
+	for _copy in range(2):
+		for index in range(BuildManager.towers.size()):
+			var car: Node2D = BuildManager.towers[index].scene.instantiate()
+			add_child(car)
+			if car.get("is_train_cap") == true:
+				car.free()
+				continue
+			cars.append(car)
+	var attached := 0
+	for car in cars:
+		if train.attach_car(car):
+			attached += 1
+	_check(attached == cars.size(), "sandbox could not couple a double roster: %d of %d" % [attached, cars.size()])
+	_check(train.total_weight() > 1200.0, "double roster should outweigh the normal 1200 limit, else the lift is untested")
+	train.free()
+
+	CampaignManager.clear_challenge()
+	_check(not CampaignManager.is_sandbox(), "sandbox stayed active after being cleared")
+	var paid: TowerData = BuildManager.towers[0]
+	_check(CampaignManager.cost_of(paid) == paid.cost, "clearing the sandbox did not restore real prices")
+	var normal: TrainConvoy = ConvoyScene.instantiate()
+	add_child(normal)
+	normal.set_process(false)
+	_check(normal.effective_capacity() == 1200.0, "clearing the sandbox did not restore the carry limit")
+	normal.free()
 	return true
 
 func _test_campaign_track_library() -> bool:

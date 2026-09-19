@@ -414,7 +414,7 @@ func _on_engine_drop_requested(screen_position: Vector2) -> void:
 	var world_position: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * screen_position
 	var wreck := _find_wreck_near(world_position)
 	if wreck != null:
-		if not LevelManager.spend_currency(Menu.ENGINE_COST):
+		if not LevelManager.spend_currency(CampaignManager.engine_cost()):
 			menu.show_placement_feedback("Not enough funds for a locomotive.", false)
 			return
 		wreck.recover_engine()
@@ -425,7 +425,7 @@ func _on_engine_drop_requested(screen_position: Vector2) -> void:
 	if placement.is_empty():
 		menu.show_placement_feedback("Place the locomotive on an empty stretch of rail.", false)
 		return
-	if not LevelManager.spend_currency(Menu.ENGINE_COST):
+	if not LevelManager.spend_currency(CampaignManager.engine_cost()):
 		menu.show_placement_feedback("Not enough funds for a locomotive.", false)
 		return
 	var convoy: TrainConvoy = TrainConvoyScene.instantiate()
@@ -589,7 +589,7 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2, facing
 	if tower == null or tower.scene == null:
 		menu.show_placement_feedback("That train is not configured.", false)
 		return
-	if not LevelManager.spend_currency(tower.cost):
+	if not LevelManager.spend_currency(CampaignManager.cost_of(tower)):
 		menu.show_placement_feedback("Not enough funds for %s." % tower.tower_name, false)
 		return
 
@@ -603,7 +603,7 @@ func _on_train_drop_requested(tower_index: int, screen_position: Vector2, facing
 	_apply_car_palette(car, _car_palette_cursor)
 	_car_palette_cursor += 1
 	if not target_convoy.attach_car(car):
-		LevelManager.increase_currency(tower.cost)
+		LevelManager.increase_currency(CampaignManager.cost_of(tower))
 		car.queue_free()
 		menu.show_placement_feedback("That train cannot take another car.", false)
 		return

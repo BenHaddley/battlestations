@@ -139,6 +139,9 @@ func _ready() -> void:
 		if not CampaignManager.challenge_shop_enabled():
 			_set_price_text(button, "FIXED")
 			continue
+		if CampaignManager.is_sandbox():
+			_set_price_text(button, "FREE")
+			continue
 		_set_price_text(button, "%d" % (BuildManager.towers[index].cost if index < BuildManager.towers.size() else 0))
 	_show_shop_detail(BuildManager.selected_tower)
 	_install_build_track_button()
@@ -309,7 +312,7 @@ func _show_shop_detail(index: int) -> void:
 		return
 	if index == -1:
 		shop_detail_name.text = "LOCOMOTIVE"
-		shop_detail_stats.text = "Δ%d   ·   ENGINE" % ENGINE_COST
+		shop_detail_stats.text = "Δ%d   ·   ENGINE" % CampaignManager.engine_cost()
 		shop_detail_body.text = "Drag onto an empty stretch of railway to start an independent train, or onto a wrecked engine to put it back into service."
 		return
 	if index < 0 or index >= BuildManager.towers.size():
@@ -318,7 +321,7 @@ func _show_shop_detail(index: int) -> void:
 	var unlocked := CampaignManager.is_tower_unlocked(index)
 	shop_detail_name.text = tower.tower_name.to_upper()
 	var range_radius := float(CarArt.for_tower(tower).get("range", 0.0))
-	var stats := "Δ%d · %d WEIGHT · %d HP" % [tower.cost, roundi(tower.weight), tower.health]
+	var stats := "Δ%d · %d WEIGHT · %d HP" % [CampaignManager.cost_of(tower), roundi(tower.weight), tower.health]
 	if range_radius > 0.0:
 		stats += " · %d×%d RANGE" % [_card_range_grid(range_radius), _card_range_grid(range_radius)]
 	shop_detail_stats.text = stats
@@ -829,7 +832,7 @@ func _install_engine_shop_row() -> void:
 	var shop_list: VBoxContainer = $LeftPanel/Margin/VBox/ScrollContainer/ShopList
 	var button := Button.new()
 	button.name = "EngineRow"
-	button.text = "LOCOMOTIVE        Δ%d" % ENGINE_COST
+	button.text = ("LOCOMOTIVE        FREE" if CampaignManager.is_sandbox() else "LOCOMOTIVE        Δ%d" % ENGINE_COST)
 	button.custom_minimum_size.y = 65
 	button.add_theme_font_size_override("font_size", 20)
 	# The heading sat almost invisible against the paper card; ink it properly.
@@ -904,7 +907,7 @@ func _style_tower_button(button: Button, index: int) -> void:
 		button.visible = false
 		return
 	var is_selected: bool = BuildManager.selected_tower == index
-	var affordable := LevelManager.currency >= BuildManager.towers[index].cost
+	var affordable := LevelManager.currency >= CampaignManager.cost_of(BuildManager.towers[index])
 	var style_state := "selected" if is_selected else ("ready" if affordable else "poor")
 	if String(button.get_meta("train_yard_style_state", "")) == style_state:
 		return

@@ -28,7 +28,8 @@ func _ready() -> void:
 func status_line() -> String:
 	if not is_instance_valid(_convoy):
 		return ""
-	var line := "WEIGHT %d / %d" % [roundi(_convoy.total_weight()), roundi(_convoy.effective_capacity())]
+	var capacity := _convoy.effective_capacity()
+	var line := ("WEIGHT %d / ∞" % roundi(_convoy.total_weight())) if is_inf(capacity) else ("WEIGHT %d / %d" % [roundi(_convoy.total_weight()), roundi(capacity)])
 	if _convoy.unit_health:
 		line += "   ENGINE HP %d / %d" % [ceili(_convoy.unit_health.hit_points), roundi(_convoy.unit_health.max_hit_points)]
 	if _convoy.wrecked:

@@ -479,6 +479,11 @@ func total_weight() -> float:
 ## behind the engine (followers[0]) — anywhere else in the train it's just
 ## another car, per its card's second paragraph.
 func effective_capacity() -> float:
+	# The sandbox exists to see the whole roster running at once, which the
+	# workbook capacity would never allow. The physical tail-length check in
+	# attach_car() still applies, so the consist can't wrap onto itself.
+	if CampaignManager.is_sandbox():
+		return INF
 	if not followers.is_empty() and is_instance_valid(followers[0]) and followers[0].get("is_tender") == true:
 		return carry_capacity + tender_capacity_bonus
 	return carry_capacity
@@ -693,12 +698,13 @@ func _draw_engine_card() -> void:
 	draw_rect(box, Color(0.21, 0.85, 1.0, 0.75), false, 2.0)
 	var font: Font = CAPTION_FONT
 	draw_string(font, box.position + Vector2(9.0, 15.0), "ENGINE %d" % selected_number, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("9fe9ff"))
-	var load_text := "%d / %d" % [roundi(total_weight()), roundi(effective_capacity())]
+	var capacity := effective_capacity()
+	var load_text := ("%d / ∞" % roundi(total_weight())) if is_inf(capacity) else ("%d / %d" % [roundi(total_weight()), roundi(capacity)])
 	var load_width := font.get_string_size(load_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
 	draw_string(font, Vector2(box.end.x - 9.0 - load_width, box.position.y + 15.0), load_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("ffe9b4"))
 	var bar := Rect2(box.position.x + 9.0, box.position.y + 20.0, card_width - 18.0, 6.0)
 	draw_rect(bar, Color(0.18, 0.15, 0.12, 1.0), true)
-	var load_fraction := clampf(total_weight() / maxf(effective_capacity(), 1.0), 0.0, 1.0)
+	var load_fraction := 0.0 if is_inf(capacity) else clampf(total_weight() / maxf(capacity, 1.0), 0.0, 1.0)
 	var fill_color := Color(0.42, 0.86, 0.55).lerp(Color(0.95, 0.65, 0.25), load_fraction)
 	draw_rect(Rect2(bar.position, Vector2(bar.size.x * load_fraction, bar.size.y)), fill_color, true)
 

@@ -28,6 +28,7 @@ const CHALLENGES: Array[Dictionary] = [
 	{"id":"sturdy", "name":"STURDY SITUATION", "tagline":"Direct damage only. The heavy spiders are here.", "waves":4, "currency":500, "track":2, "trains":2, "cars":2, "shop":true, "speed":1.0, "reverse":true, "enemy":"sturdy"},
 	{"id":"budget", "name":"BUDGET RAILWAY", "tagline":"Make every diamond and every car count.", "waves":5, "currency":175, "track":6, "trains":2, "cars":1, "shop":true, "speed":1.0, "reverse":true, "enemy":"", "bounty":0.45},
 	{"id":"spider_assault", "name":"SPIDER ASSAULT", "tagline":"Command the swarm. Destroy the station.", "waves":1, "currency":0, "track":3, "trains":2, "cars":0, "shop":false, "speed":0.72, "reverse":true, "enemy":"", "reverse_mode":true},
+	{"id":"sandbox", "name":"UNIT SANDBOX", "tagline":"Every car free, no carry limit, endless waves.", "waves":0, "currency":9999, "track":3, "trains":2, "cars":0, "shop":true, "speed":1.0, "reverse":true, "enemy":"", "sandbox":true},
 ]
 
 var _endless_level: LevelData
@@ -90,6 +91,27 @@ func active_challenge() -> Dictionary:
 
 func challenge_value(key: String, fallback: Variant) -> Variant:
 	return active_challenge().get(key, fallback)
+
+## The unit lab: every car buyable at no cost with the engine's carry limit
+## lifted, so a whole roster can be coupled to one train and watched at once.
+## Deliberately a challenge rather than a campaign level — challenge runs never
+## write campaign progress, so testing here cannot disturb a real save.
+func is_sandbox() -> bool:
+	return bool(challenge_value("sandbox", false))
+
+## Price a car actually costs right now. Everything that charges, refunds or
+## displays a price goes through this so the sandbox stays free in one place
+## instead of each caller remembering to check.
+func cost_of(tower: TowerData) -> int:
+	if tower == null:
+		return 0
+	return 0 if is_sandbox() else tower.cost
+
+## Locomotives are bought from the same yard, so the sandbox hands those over
+## free too — otherwise the one row in the list still asking for Δ250 looks
+## like an oversight.
+func engine_cost() -> int:
+	return 0 if is_sandbox() else Menu.ENGINE_COST
 
 func challenge_shop_enabled() -> bool:
 	return not is_challenge_active() or bool(challenge_value("shop", true))

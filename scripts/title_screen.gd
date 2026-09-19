@@ -243,7 +243,7 @@ func _show_challenges() -> void:
 	for challenge in CampaignManager.CHALLENGES:
 		var button := Button.new()
 		button.name = "Challenge%s" % String(challenge.id).to_pascal_case()
-		button.custom_minimum_size = Vector2(0, 48)
+		button.custom_minimum_size = Vector2(0, 42)
 		button.text = "%s. %s" % [String(challenge.name), String(challenge.tagline)]
 		button.add_theme_font_size_override("font_size", 18)
 		button.add_theme_color_override("font_color", Color("2b160d"))
@@ -252,8 +252,11 @@ func _show_challenges() -> void:
 		$Modal/Margin/VBox.move_child(button, back_button.get_index())
 	modal.offset_left = -330.0
 	modal.offset_right = 330.0
-	modal.offset_top = -335.0
-	modal.offset_bottom = 335.0
+	# Height follows the job-card count so adding a challenge can't push the
+	# Back button off the bottom of a 720-tall viewport.
+	var half_height := minf(215.0 + CampaignManager.CHALLENGES.size() * 40.0, size.y * 0.5 - 8.0)
+	modal.offset_top = -half_height
+	modal.offset_bottom = half_height
 	modal.show()
 	var first_button := $Modal/Margin/VBox.get_node_or_null("ChallengeLastTrain") as Button
 	if first_button:

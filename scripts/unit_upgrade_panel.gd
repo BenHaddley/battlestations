@@ -29,7 +29,7 @@ func open_for(selected_unit: Node2D, selected_convoy: Node2D, data: TowerData) -
 	unit.modulate = Color(1.25, 1.15, 0.35, 1.0)
 	title_label.text = "%s" % data.tower_name.to_upper()
 	preview.texture = CarArt.icon_for(data)
-	sell_button.text = "SELL\n+%d Δ" % int(round(data.cost * 0.5))
+	sell_button.text = "SELL\n+%d Δ" % int(round(CampaignManager.cost_of(data) * 0.5))
 	visible = true
 	_refresh()
 
@@ -141,7 +141,7 @@ func _sell() -> void:
 		return
 	var sold_unit := unit
 	var sold_convoy := convoy
-	var refund := int(round(unit_data.cost * 0.5))
+	var refund := int(round(CampaignManager.cost_of(unit_data) * 0.5))
 	_close_current(false)
 	sell_requested.emit(sold_unit, sold_convoy, refund)
 
