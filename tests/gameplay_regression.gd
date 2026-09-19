@@ -337,6 +337,7 @@ func _test_unit_sandbox() -> bool:
 	_check(CampaignManager.start_challenge("sandbox"), "sandbox challenge did not start")
 	_check(CampaignManager.is_sandbox(), "sandbox challenge did not report itself as a sandbox")
 	var level := CampaignManager.current_level()
+	_check(BuildManager.towers.size() == 22, "sandbox is missing the 14 draft-art cars")
 	for index in range(BuildManager.towers.size()):
 		_check(index in level.unlocked_tower_indices, "sandbox did not unlock tower %d" % index)
 		var tower: TowerData = BuildManager.towers[index]
@@ -369,8 +370,23 @@ func _test_unit_sandbox() -> bool:
 	_check(train.total_weight() > 1200.0, "double roster should outweigh the normal 1200 limit, else the lift is untested")
 	train.free()
 
+	var sandbox_main := MainScene.instantiate()
+	add_child(sandbox_main)
+	await get_tree().process_frame
+	_check(sandbox_main.menu.sandbox_art_buttons.size() == 14, "sandbox shop is missing art prototype rows")
+	var engine: TrainConvoy = sandbox_main.convoys[0]
+	var engine_screen: Vector2 = get_viewport().get_canvas_transform() * engine.global_position
+	sandbox_main._on_train_drop_requested(8, engine_screen)
+	_check(engine.followers.size() == 1, "draft car could not be placed from sandbox shop")
+	if not engine.followers.is_empty():
+		_check(engine.followers[0].get_node("Base").texture.resource_path.ends_with("DIESEL ENGINE.png"), "placed draft car did not use generated texture")
+	BuildManager.set_selected_tower(21)
+	sandbox_main.queue_free()
+	await get_tree().process_frame
+
 	CampaignManager.clear_challenge()
 	_check(not CampaignManager.is_sandbox(), "sandbox stayed active after being cleared")
+	_check(BuildManager.towers.size() == 8, "draft-art cars leaked into the campaign roster")
 	var paid: TowerData = BuildManager.towers[0]
 	_check(CampaignManager.cost_of(paid) == paid.cost, "clearing the sandbox did not restore real prices")
 	var normal: TrainConvoy = ConvoyScene.instantiate()

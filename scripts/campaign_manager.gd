@@ -59,12 +59,16 @@ func _make_level(level_name: String, waves: int, currency: int, unlocked: Array[
 func current_level() -> LevelData:
 	if is_challenge_active():
 		var challenge := active_challenge()
-		return _make_level(String(challenge.name), int(challenge.waves), int(challenge.currency), [0, 1, 2, 3, 4, 5, 6, 7], [], int(challenge.track))
+		var unlocked: Array[int] = []
+		unlocked.assign(range(BuildManager.towers.size()))
+		return _make_level(String(challenge.name), int(challenge.waves), int(challenge.currency), unlocked, [], int(challenge.track))
 	if campaign_complete or levels.is_empty():
 		return _endless_level
 	return levels[mini(current_level_index, levels.size() - 1)]
 
 func is_tower_unlocked(tower_index: int) -> bool:
+	if is_sandbox():
+		return tower_index >= 0 and tower_index < BuildManager.towers.size()
 	var level := current_level()
 	return level != null and tower_index in level.unlocked_tower_indices
 
@@ -79,6 +83,8 @@ func start_challenge(challenge_id: String) -> bool:
 
 func clear_challenge() -> void:
 	active_challenge_id = ""
+	if BuildManager.selected_tower >= BuildManager.towers.size():
+		BuildManager.selected_tower = 0
 
 func is_challenge_active() -> bool:
 	return not active_challenge_id.is_empty()

@@ -42,6 +42,7 @@ signal remove_requested(screen_position: Vector2)
 @export var selected_style: StyleBox
 @export var unaffordable_style: StyleBox
 
+var sandbox_art_buttons: Array[Button] = []
 var mail_carrier_button: Button
 
 const TOWER_BUTTONS := ["gunner_button", "chaingunner_button", "ballast_button", "passenger_button", "coal_cannon_button", "brake_van_button", "tender_button", "mail_carrier_button"]
@@ -117,6 +118,7 @@ func _ready() -> void:
 	_install_wave_banner()
 	_install_placement_banner()
 	_install_mail_carrier_row()
+	_install_sandbox_art_rows()
 	_style_train_yard()
 	_install_shop_detail_panel()
 	for index in range(TOWER_BUTTONS.size()):
@@ -651,6 +653,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 func _process(_delta: float) -> void:
+	for offset in range(sandbox_art_buttons.size()):
+		_style_tower_button(sandbox_art_buttons[offset], 8 + offset)
 	currency_label.text = "Δ%d" % LevelManager.currency
 	for index in range(TOWER_BUTTONS.size()):
 		_style_tower_button(get(TOWER_BUTTONS[index]), index)
@@ -928,3 +932,28 @@ func _install_mail_carrier_row() -> void:
 	(mail_carrier_button.find_child("Icon", true, false) as TextureRect).texture = BuildManager.towers[7].icon
 	(mail_carrier_button.find_child("NameLabel", true, false) as Label).text = "MAIL CARRIER"
 	tender_button.get_parent().add_child(mail_carrier_button)
+
+func _install_sandbox_art_rows() -> void:
+	if not CampaignManager.is_sandbox():
+		return
+	for index in range(8, BuildManager.towers.size()):
+		var data: TowerData = BuildManager.towers[index]
+		var button := Button.new()
+		button.name = "SandboxArt%d" % index
+		button.text = data.tower_name + "\nART PROTOTYPE · FREE"
+		button.icon = CarArt.icon_for(data)
+		button.expand_icon = true
+		button.add_theme_constant_override("icon_max_width", 58)
+		button.add_theme_font_size_override("font_size", 13)
+		for color_name in ["font_color", "font_hover_color", "font_pressed_color"]:
+			button.add_theme_color_override(color_name, Color("24160d"))
+		button.add_theme_stylebox_override("hover", _train_yard_row_style(index, true))
+		button.custom_minimum_size = Vector2(0, 70)
+		button.focus_mode = Control.FOCUS_NONE
+		button.pressed.connect(_select_tower.bind(index))
+		button.gui_input.connect(_on_tower_gui_input.bind(index))
+		button.mouse_entered.connect(_show_shop_detail.bind(index))
+		button.mouse_exited.connect(_clear_shop_detail)
+		tender_button.get_parent().add_child(button)
+		tender_button.get_parent().move_child(button, index - 7)
+		sandbox_art_buttons.append(button)

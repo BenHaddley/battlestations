@@ -8,7 +8,7 @@ extends Node
 ## (assets/infowiki/, transcribed in wiki/infowiki-cards.md) — Slomo and the
 ## earlier standalone Chaingun car had no card and were removed; Minigun's
 ## card names it "Chaingunner Car," so that's what ships under.
-@export var towers: Array[TowerData] = [
+var _standard_towers: Array[TowerData] = [
 	preload("res://resources/basic_turret.tres"),
 	preload("res://resources/minigun_turret.tres"),
 	preload("res://resources/ballast_turret.tres"),
@@ -18,6 +18,17 @@ extends Node
 	preload("res://resources/tender_car.tres"),
 	preload("res://resources/mail_carrier.tres"),
 ]
+
+# Draft artwork is placeable only in Unit Sandbox, never in campaign saves.
+var _sandbox_towers: Array[TowerData] = []
+var towers: Array[TowerData]:
+	get:
+		if not CampaignManager.is_sandbox():
+			return _standard_towers
+		if _sandbox_towers.is_empty():
+			_sandbox_towers.assign(_standard_towers)
+			_sandbox_towers.append_array(SandboxArtCatalog.create_towers())
+		return _sandbox_towers
 
 var selected_tower: int = 0
 ## Per-tower preview art and composited icons built lazily by CarArt.
