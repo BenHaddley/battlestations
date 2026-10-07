@@ -1,22 +1,29 @@
 extends Control
-## Functional shell over the authored 16:9 title-screen illustration.
+## Authored A/B menu plates over silent archival railway footage.
 
 const StartGameDialogueScript := preload("res://scripts/start_game_dialogue.gd")
 const AlmanacPanelScript := preload("res://scripts/almanac_panel.gd")
 const TUTORIAL_SAVE_FILE := "tutorial.cfg"
+const TITLE_MUSIC_TRACKS: Array[AudioStreamOggVorbis] = [
+	preload("res://assets/audio/title_menu/track_1.ogg"),
+	preload("res://assets/audio/title_menu/track_2.ogg"),
+	preload("res://assets/audio/title_menu/track_3.ogg"),
+	preload("res://assets/audio/title_menu/track_4.ogg"),
+]
 
-@onready var start_button: Button = $StartButton
-@onready var level_select_button: Button = $LevelSelectButton
-@onready var challenges_button: Button = $ChallengesButton
-@onready var almanac_button: Button = $AlmanacButton
-@onready var achievements_button: Button = $AchievementsButton
-@onready var options_button: Button = $OptionsButton
-@onready var profile_button: Button = $ProfileButton
-@onready var quit_button: Button = $QuitButton
+## Pick once per app launch, including when gameplay later returns to this scene.
+static var _title_track_index := -1
+
+@onready var start_button: Button = $MenuCanvas/StartButton
+@onready var almanac_button: Button = $MenuCanvas/AlmanacButton
+@onready var achievements_button: Button = $MenuCanvas/AchievementsButton
+@onready var options_button: Button = $MenuCanvas/OptionsButton
+@onready var profile_button: Button = $MenuCanvas/ProfileButton
 @onready var modal: PanelContainer = $Modal
 @onready var modal_title: Label = $Modal/Margin/VBox/Title
 @onready var modal_copy: Label = $Modal/Margin/VBox/Copy
 @onready var music_player: AudioStreamPlayer = $MusicPlayer
+@onready var vinyl_player: AudioStreamPlayer = $VinylPlayer
 
 @onready var start_choice_modal: PanelContainer = $StartChoiceModal
 @onready var continue_button: Button = $StartChoiceModal/Margin/VBox/ContinueButton
@@ -33,16 +40,21 @@ func _ready() -> void:
 	Engine.time_scale = 1.0
 	AppSettings.load_settings()
 	music_player.bus = &"Music"
+	vinyl_player.bus = &"Music"
 	get_tree().paused = false
 	_play_music_looped()
+	resized.connect(_layout_menu)
+	_layout_menu()
+	$MenuCanvas/Footage.finished.connect($MenuCanvas/Footage.play)
 	start_button.pressed.connect(_on_start_pressed)
-	level_select_button.pressed.connect(_show_level_select)
-	challenges_button.pressed.connect(_show_challenges)
+	$MenuCanvas/ShopButton.pressed.connect(_show_shop)
+	$MenuCanvas/GamesButton.pressed.connect(_show_games)
+	$MenuCanvas/SurvivalButton.pressed.connect(_launch_challenge.bind("survival"))
+	$MenuCanvas/SandboxButton.pressed.connect(_launch_challenge.bind("sandbox"))
 	almanac_button.pressed.connect(_show_almanac)
 	achievements_button.pressed.connect(_show_achievements)
 	options_button.pressed.connect(_show_options)
 	profile_button.pressed.connect(_show_profiles)
-	quit_button.pressed.connect(_quit_game)
 	$Modal/Margin/VBox/BackButton.pressed.connect(func() -> void: modal.hide())
 	continue_button.pressed.connect(_on_continue_pressed)
 	new_game_button.pressed.connect(_on_new_game_pressed)
@@ -54,9 +66,41 @@ func _ready() -> void:
 	almanac = AlmanacPanelScript.new()
 	add_child(almanac)
 	almanac.closed.connect(almanac_button.grab_focus)
-	start_button.grab_focus()
+	for overlay in [modal, start_choice_modal, start_dialogue, almanac]:
+		overlay.visibility_changed.connect(_sync_menu_input)
 	if _autostart_requested():
 		call_deferred("_on_new_game_pressed")
+
+func _layout_menu() -> void:
+	var factor := minf(size.x / 1280.0, size.y / 720.0)
+	$MenuCanvas.scale = Vector2.ONE * factor
+	$MenuCanvas.position = (size - Vector2(1280, 720) * factor) * 0.5
+
+func _sync_menu_input() -> void:
+	var blocked := modal.visible or start_choice_modal.visible or start_dialogue.visible or almanac.visible
+	$ModalBlocker.visible = blocked
+	for child in $MenuCanvas.get_children():
+		if child is Button:
+			child.mouse_filter = Control.MOUSE_FILTER_IGNORE if blocked else Control.MOUSE_FILTER_STOP
+			child.focus_mode = Control.FOCUS_NONE if blocked else Control.FOCUS_ALL
+	if modal.visible:
+		_back_button().grab_focus()
+
+func _show_shop() -> void:
+	_prepare_interactive_modal("SHOP", "Coming soon.")
+	_expand_modal(280.0, 150.0)
+	modal.show()
+
+func _show_games() -> void:
+	_prepare_interactive_modal("GAMES & MORE", "Choose your next railway job.")
+	for entry in [["CHALLENGES", _show_challenges], ["LEVEL SELECT", _show_level_select]]:
+		var button := Button.new()
+		button.text = entry[0]
+		button.custom_minimum_size = Vector2(400, 54)
+		button.pressed.connect(entry[1])
+		_add_dynamic_before_back(button)
+	_expand_modal(280.0, 200.0)
+	modal.show()
 
 ## `?autostart` on the Web URL (or `--autostart` natively) begins a new
 ## campaign without a click, so an exported build can be smoke-tested in a
@@ -98,10 +142,18 @@ func _unhandled_input(event: InputEvent) -> void:
 			_quit_game()
 
 func _play_music_looped() -> void:
-	var stream: AudioStreamMP3 = music_player.stream as AudioStreamMP3
-	if stream:
-		stream.loop = true
+	if _title_track_index < 0:
+		_title_track_index = randi_range(0, TITLE_MUSIC_TRACKS.size() - 1)
+	var track := TITLE_MUSIC_TRACKS[_title_track_index]
+	track.loop = true
+	music_player.stream = track
+	(vinyl_player.stream as AudioStreamOggVorbis).loop = true
 	music_player.play()
+	vinyl_player.play()
+
+func _stop_menu_music() -> void:
+	music_player.stop()
+	vinyl_player.stop()
 
 ## Start resumes the active profile's campaign immediately. Challenges never
 ## participate in this path; a profile with no campaign save gets the new-game
@@ -140,7 +192,7 @@ func _launch_game() -> void:
 		return
 	starting = true
 	start_button.disabled = true
-	music_player.stop()
+	_stop_menu_music()
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
 
 func _show_level_select() -> void:
@@ -236,9 +288,7 @@ func _clear_challenge_buttons() -> void:
 			old_button.queue_free()
 
 func _show_challenges() -> void:
-	modal_title.text = "CHALLENGE JOB CARDS"
-	modal_copy.text = "Pick one strange railway job. Challenge runs do not overwrite campaign progress."
-	_clear_challenge_buttons()
+	_prepare_interactive_modal("CHALLENGE JOB CARDS", "Pick one strange railway job. Challenge runs do not overwrite campaign progress.")
 	var back_button: Button = $Modal/Margin/VBox/BackButton
 	for challenge in CampaignManager.CHALLENGES:
 		var button := Button.new()
@@ -285,6 +335,11 @@ func _show_options() -> void:
 		AppSettings.save_settings()
 	)
 	_add_dynamic_before_back(speed_toggle)
+	var quit := Button.new()
+	quit.text = "QUIT GAME"
+	quit.custom_minimum_size.y = 42
+	quit.pressed.connect(_quit_game)
+	_add_dynamic_before_back(quit)
 	_expand_modal(300.0, 230.0)
 	modal.show()
 
@@ -338,8 +393,7 @@ func _expand_modal(half_width: float, half_height: float) -> void:
 
 func _quit_game() -> void:
 	if OS.has_feature("web"):
-		modal_title.text = "THANKS FOR PLAYING!"
-		modal_copy.text = "This browser tab can be closed whenever you are ready."
+		_prepare_interactive_modal("THANKS FOR PLAYING!", "This browser tab can be closed whenever you are ready.")
 		modal.show()
 		return
 	get_tree().quit()

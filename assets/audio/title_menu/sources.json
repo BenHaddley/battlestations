@@ -1,0 +1,32 @@
+[
+  {
+    "source": "Track_1.wav",
+    "source_sha256": "9a805edd6e4e9693ea8c978ede85c299404fb87fe753c9cc972110b7a0767069",
+    "runtime": "track_1.ogg",
+    "gain_db": 0
+  },
+  {
+    "source": "Track_2.wav",
+    "source_sha256": "7c0dfa8f198069ccab292fbef7ad41d5ab7202544c1bfe4dda3dd170c72ad035",
+    "runtime": "track_2.ogg",
+    "gain_db": 6
+  },
+  {
+    "source": "Track_3.wav",
+    "source_sha256": "798c8d5f0275dacdb145169892d79085ff07fb1c1e61a0de3fb0d4db3142e23d",
+    "runtime": "track_3.ogg",
+    "gain_db": 5.5
+  },
+  {
+    "source": "Track_4.wav",
+    "source_sha256": "e784b5764ae683397422c415010ba71643db3ad89516fe4b14bb50b36351d7f7",
+    "runtime": "track_4.ogg",
+    "gain_db": 8.8
+  },
+  {
+    "source": "Vinyl Backround sound.wav",
+    "source_sha256": "e8db7c25eb904b24d102e9e42efb9336e9ae2bb8975a2f58294da069cfaee219",
+    "runtime": "vinyl.ogg",
+    "gain_db": 0
+  }
+]

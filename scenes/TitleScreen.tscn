@@ -1,18 +1,32 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=31 format=3]
 
 [ext_resource type="Script" path="res://scripts/title_screen.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/background.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/frame.png" id="2"]
 [ext_resource type="FontFile" path="res://assets/fonts/ArchitectsDaughter-Regular.ttf" id="3"]
-[ext_resource type="AudioStream" path="res://assets/audio/opening screen musicMountain Banjo.mp3" id="4"]
-[ext_resource type="Script" path="res://scripts/animated_menu_button.gd" id="5"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/start_game.png" id="6"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/level_select.png" id="7"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/challenges.png" id="8"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/almanac.png" id="9"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/achievements.png" id="10"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/settings_gear.png" id="11"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/profile.png" id="12"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/generated/close_x.png" id="13"]
+[ext_resource type="AudioStream" path="res://assets/audio/title_menu/vinyl.ogg" id="4"]
+[ext_resource type="Script" path="res://scripts/illustrated_menu_button.gd" id="5"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/letterbox.png" id="bars"]
+[ext_resource type="FontFile" path="res://assets/fonts/DkCoolCrayon.ttf" id="logo_font"]
+[ext_resource type="VideoStream" path="res://assets/video/main_menu_steam.ogv" id="footage"]
+[ext_resource type="Texture2D" path="res://assets/video/main_menu_steam_poster.jpg" id="poster"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_1_a.png" id="1a"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_1_b.png" id="1b"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_2_a.png" id="2a"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_2_b.png" id="2b"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_3_a.png" id="3a"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_3_b.png" id="3b"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_4_a.png" id="4a"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_4_b.png" id="4b"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_5_a.png" id="5a"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_5_b.png" id="5b"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_6_a.png" id="6a"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_6_b.png" id="6b"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_7_a.png" id="7a"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_7_b.png" id="7b"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_8_a.png" id="8a"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_8_b.png" id="8b"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_9_a.png" id="9a"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_9_b.png" id="9b"]
 
 [sub_resource type="StyleBoxFlat" id="HitNormal"]
 bg_color = Color(1, 1, 1, 0.015)
@@ -52,6 +66,7 @@ corner_radius_bottom_left = 9
 shadow_color = Color(0, 0, 0, 0.55)
 shadow_size = 18
 
+
 [node name="TitleScreen" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -63,116 +78,217 @@ theme_override_fonts/font = ExtResource("3")
 script = ExtResource("1")
 
 [node name="MusicPlayer" type="AudioStreamPlayer" parent="."]
+volume_db = -8.0
+
+[node name="VinylPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("4")
 volume_db = -8.0
 
-[node name="Artwork" type="TextureRect" parent="."]
+[node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="MenuCanvas" type="Control" parent="."]
+layout_mode = 0
+offset_right = 1280.0
+offset_bottom = 720.0
+mouse_filter = 2
+clip_contents = true
+
+[node name="FootagePoster" type="TextureRect" parent="MenuCanvas"]
+layout_mode = 0
+offset_top = -120.0
+offset_right = 1280.0
+offset_bottom = 840.0
+mouse_filter = 2
+texture = ExtResource("poster")
+expand_mode = 1
+
+[node name="Footage" type="VideoStreamPlayer" parent="MenuCanvas"]
+layout_mode = 0
+offset_top = -120.0
+offset_right = 1280.0
+offset_bottom = 840.0
+mouse_filter = 2
+stream = ExtResource("footage")
+expand = true
+autoplay = true
+volume = 0.0
+
+[node name="Letterbox" type="TextureRect" parent="MenuCanvas"]
+layout_mode = 0
+offset_right = 1280.0
+offset_bottom = 720.0
+mouse_filter = 2
+texture = ExtResource("bars")
+expand_mode = 1
+
+[node name="LogoBattle" type="Label" parent="MenuCanvas"]
+layout_mode = 0
+offset_left = 36.0
+offset_top = 514.0
+offset_right = 371.0
+offset_bottom = 578.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("logo_font")
+theme_override_font_sizes/font_size = 60
+theme_override_colors/font_color = Color(1, 0.96, 0.62, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 12
+text = "BATTLE"
+horizontal_alignment = 1
+
+[node name="LogoStations" type="Label" parent="MenuCanvas"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 580.0
+offset_right = 377.0
+offset_bottom = 662.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("logo_font")
+theme_override_font_sizes/font_size = 63
+theme_override_colors/font_color = Color(0.55, 0.66, 0.95, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 12
+text = "STATIONS!"
+horizontal_alignment = 1
+
+[node name="StartButton" type="Button" parent="MenuCanvas"]
+layout_mode = 0
+offset_left = 542.000000
+offset_top = 13.666667
+offset_right = 1011.666667
+offset_bottom = 258.000000
+focus_next = NodePath("../ShopButton")
+focus_previous = NodePath("../OptionsButton")
+script = ExtResource("5")
+normal_texture = ExtResource("1a")
+hover_texture = ExtResource("1b")
+label = "Story Mode"
+
+[node name="ShopButton" type="Button" parent="MenuCanvas"]
+layout_mode = 0
+offset_left = 1001.666667
+offset_top = 13.666667
+offset_right = 1251.666667
+offset_bottom = 126.333333
+focus_next = NodePath("../AlmanacButton")
+focus_previous = NodePath("../StartButton")
+script = ExtResource("5")
+normal_texture = ExtResource("2a")
+hover_texture = ExtResource("2b")
+label = "Shop"
+
+[node name="AlmanacButton" type="Button" parent="MenuCanvas"]
+layout_mode = 0
+offset_left = 960.000000
+offset_top = 148.000000
+offset_right = 1209.000000
+offset_bottom = 258.000000
+focus_next = NodePath("../GamesButton")
+focus_previous = NodePath("../ShopButton")
+script = ExtResource("5")
+normal_texture = ExtResource("3a")
+hover_texture = ExtResource("3b")
+label = "Almanac"
+
+[node name="GamesButton" type="Button" parent="MenuCanvas"]
+layout_mode = 0
+offset_left = 478.666667
+offset_top = 280.333333
+offset_right = 832.666667
+offset_bottom = 457.666667
+focus_next = NodePath("../SurvivalButton")
+focus_previous = NodePath("../AlmanacButton")
+script = ExtResource("5")
+normal_texture = ExtResource("4a")
+hover_texture = ExtResource("4b")
+label = "Games & More"
+
+[node name="SurvivalButton" type="Button" parent="MenuCanvas"]
+layout_mode = 0
+offset_left = 801.666667
+offset_top = 280.333333
+offset_right = 1167.333333
+offset_bottom = 458.333333
+focus_next = NodePath("../SandboxButton")
+focus_previous = NodePath("../GamesButton")
+script = ExtResource("5")
+normal_texture = ExtResource("5a")
+hover_texture = ExtResource("5b")
+label = "Survival"
+
+[node name="SandboxButton" type="Button" parent="MenuCanvas"]
+layout_mode = 0
+offset_left = 440.000000
+offset_top = 483.000000
+offset_right = 941.333333
+offset_bottom = 581.333333
+focus_next = NodePath("../AchievementsButton")
+focus_previous = NodePath("../SurvivalButton")
+script = ExtResource("5")
+normal_texture = ExtResource("6a")
+hover_texture = ExtResource("6b")
+label = "Sandbox"
+
+[node name="AchievementsButton" type="Button" parent="MenuCanvas"]
+layout_mode = 0
+offset_left = 401.333333
+offset_top = 604.000000
+offset_right = 903.000000
+offset_bottom = 703.333333
+focus_next = NodePath("../ProfileButton")
+focus_previous = NodePath("../SandboxButton")
+script = ExtResource("5")
+normal_texture = ExtResource("7a")
+hover_texture = ExtResource("7b")
+label = "Achievements"
+
+[node name="ProfileButton" type="Button" parent="MenuCanvas"]
+layout_mode = 0
+offset_left = 935.666667
+offset_top = 483.000000
+offset_right = 1103.333333
+offset_bottom = 581.333333
+focus_next = NodePath("../OptionsButton")
+focus_previous = NodePath("../AchievementsButton")
+script = ExtResource("5")
+normal_texture = ExtResource("8a")
+hover_texture = ExtResource("8b")
+label = "Profile"
+
+[node name="OptionsButton" type="Button" parent="MenuCanvas"]
+layout_mode = 0
+offset_left = 897.000000
+offset_top = 604.000000
+offset_right = 1065.000000
+offset_bottom = 703.333333
+focus_next = NodePath("../StartButton")
+focus_previous = NodePath("../ProfileButton")
+script = ExtResource("5")
+normal_texture = ExtResource("9a")
+hover_texture = ExtResource("9b")
+label = "Settings"
+
+[node name="Frame" type="TextureRect" parent="MenuCanvas"]
+layout_mode = 0
+offset_right = 1280.0
+offset_bottom = 720.0
 mouse_filter = 2
 texture = ExtResource("2")
 expand_mode = 1
-stretch_mode = 6
 
-[node name="StartButton" type="Button" parent="."]
+[node name="ModalBlocker" type="ColorRect" parent="."]
+visible = false
 layout_mode = 1
-anchor_left = 0.630273
-anchor_top = 0.071744
-anchor_right = 0.988213
-anchor_bottom = 0.381898
-grow_horizontal = 2
-grow_vertical = 2
-mouse_default_cursor_shape = 2
-script = ExtResource("5")
-button_texture = ExtResource("6")
-
-[node name="LevelSelectButton" type="Button" parent="."]
-layout_mode = 1
-anchor_left = 0.584367
-anchor_top = 0.409492
-anchor_right = 0.782258
-anchor_bottom = 0.592715
-grow_horizontal = 2
-grow_vertical = 2
-mouse_default_cursor_shape = 2
-script = ExtResource("5")
-button_texture = ExtResource("7")
-
-[node name="ChallengesButton" type="Button" parent="."]
-layout_mode = 1
-anchor_left = 0.785980
-anchor_top = 0.409492
-anchor_right = 0.985732
-anchor_bottom = 0.593819
-grow_horizontal = 2
-grow_vertical = 2
-mouse_default_cursor_shape = 2
-script = ExtResource("5")
-button_texture = ExtResource("8")
-
-[node name="AlmanacButton" type="Button" parent="."]
-layout_mode = 1
-anchor_left = 0.547146
-anchor_top = 0.605960
-anchor_right = 0.758065
-anchor_bottom = 0.781457
-grow_horizontal = 2
-grow_vertical = 2
-mouse_default_cursor_shape = 2
-script = ExtResource("5")
-button_texture = ExtResource("9")
-
-[node name="AchievementsButton" type="Button" parent="."]
-layout_mode = 1
-anchor_left = 0.758065
-anchor_top = 0.609272
-anchor_right = 0.980769
-anchor_bottom = 0.796910
-grow_horizontal = 2
-grow_vertical = 2
-mouse_default_cursor_shape = 2
-script = ExtResource("5")
-button_texture = ExtResource("10")
-
-[node name="OptionsButton" type="Button" parent="."]
-layout_mode = 1
-anchor_left = 0.517990
-anchor_top = 0.785872
-anchor_right = 0.619107
-anchor_bottom = 0.940397
-grow_horizontal = 2
-grow_vertical = 2
-mouse_default_cursor_shape = 2
-script = ExtResource("5")
-button_texture = ExtResource("11")
-
-[node name="ProfileButton" type="Button" parent="."]
-layout_mode = 1
-anchor_left = 0.615385
-anchor_top = 0.792494
-anchor_right = 0.861042
-anchor_bottom = 0.968000
-grow_horizontal = 2
-grow_vertical = 2
-mouse_default_cursor_shape = 2
-script = ExtResource("5")
-button_texture = ExtResource("12")
-
-[node name="QuitButton" type="Button" parent="."]
-layout_mode = 1
-anchor_left = 0.866005
-anchor_top = 0.812362
-anchor_right = 0.975806
-anchor_bottom = 0.974614
-grow_horizontal = 2
-grow_vertical = 2
-mouse_default_cursor_shape = 2
-script = ExtResource("5")
-button_texture = ExtResource("13")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.45)
 
 [node name="Modal" type="PanelContainer" parent="."]
 visible = false

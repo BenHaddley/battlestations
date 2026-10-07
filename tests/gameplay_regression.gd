@@ -39,6 +39,7 @@ func _run() -> void:
 	_check(_test_challenge_job_cards() == true, "_test_challenge_job_cards aborted on a script error")
 	_check((await _test_unit_sandbox()) == true, "_test_unit_sandbox aborted on a script error")
 	_check(_test_music_playlist_rotation() == true, "_test_music_playlist_rotation aborted on a script error")
+	_check((await _test_title_music_session()) == true, "title music session checks aborted")
 	_check(_test_game_over_modes() == true, "_test_game_over_modes aborted on a script error")
 	_check((await _test_title_feature_modals()) == true, "_test_title_feature_modals aborted on a script error")
 	_check((await _test_reported_combat_regressions()) == true, "_test_reported_combat_regressions aborted on a script error")
@@ -551,10 +552,49 @@ func _test_game_over_modes() -> bool:
 	challenge.queue_free()
 	return true
 
+func _test_title_music_session() -> bool:
+	var title = TitleScene.instantiate()
+	add_child(title)
+	await get_tree().process_frame
+	var chosen: AudioStream = title.music_player.stream
+	_check(chosen in title.TITLE_MUSIC_TRACKS and title.TITLE_MUSIC_TRACKS.size() == 4, "title music did not select one of the four supplied songs")
+	_check(title.music_player.playing and title.vinyl_player.playing, "title song and vinyl did not start together")
+	_check(chosen.loop and title.vinyl_player.stream.loop, "title song or vinyl bed will stop at the end")
+	_check(title.music_player.bus == &"Music" and title.vinyl_player.bus == &"Music", "title audio layers do not share the Music volume control")
+	var music_voice: AudioStreamPlayer = title.music_player
+	var vinyl_voice: AudioStreamPlayer = title.vinyl_player
+	title._stop_menu_music()
+	_check(not music_voice.playing and not vinyl_voice.playing, "starting gameplay leaves a title audio layer playing")
+	title.queue_free()
+	await get_tree().process_frame
+	_check(not is_instance_valid(music_voice) and not is_instance_valid(vinyl_voice), "title audio players outlive their scene")
+	var returned_title = TitleScene.instantiate()
+	add_child(returned_title)
+	await get_tree().process_frame
+	_check(returned_title.music_player.stream == chosen, "returning to the menu changed the song chosen at boot")
+	_check(returned_title.music_player.playing and returned_title.vinyl_player.playing, "returning to the menu did not restart both audio layers")
+	returned_title.queue_free()
+	await get_tree().process_frame
+	return true
+
 func _test_title_feature_modals() -> bool:
 	var title = TitleScene.instantiate()
 	add_child(title)
 	await get_tree().process_frame
+	var plate: Button = title.start_button
+	_check(plate._has_point(plate.size * 0.5), "illustrated menu ignores the centre of a tile")
+	_check(not plate._has_point(Vector2(1, 1)), "slanted menu tile steals clicks in its top-left corner")
+	_check(not plate._has_point(plate.size - Vector2(1, 1)), "slanted menu tile steals clicks in its bottom-right corner")
+	title._show_games()
+	_check(title.modal_title.text == "GAMES & MORE" and title.get_node("ModalBlocker").visible, "games menu did not block the title buttons")
+	_check(plate.focus_mode == Control.FOCUS_NONE, "keyboard can focus menu plates behind an open modal")
+	await get_tree().process_frame
+	title._show_challenges()
+	await get_tree().process_frame
+	_check(title._modal_content().find_children("Challenge*", "Button", false, false).size() == 7, "Games & More did not reach all challenge jobs")
+	_check(title._modal_content().get_child_count() == 10, "Games & More buttons leaked into challenge jobs")
+	title.modal.hide()
+	_check(plate.focus_mode == Control.FOCUS_ALL and not title.get_node("ModalBlocker").visible, "closing a modal did not restore menu navigation")
 	title._show_level_select()
 	_check(title.modal.visible and title.modal_title.text == "LEVEL SELECT", "level-select grid did not replace its placeholder")
 	await get_tree().process_frame
@@ -572,6 +612,18 @@ func _test_title_feature_modals() -> bool:
 	_check(title.modal_title.text == "PROFILES", "three-slot profile selector did not open")
 	title.queue_free()
 	await get_tree().process_frame
+	var story_index := CampaignManager.current_level_index
+	var story_complete := CampaignManager.campaign_complete
+	_check(CampaignManager.start_challenge("survival"), "Survival did not start")
+	_check(CampaignManager.current_level().wave_count == 0 and not CampaignManager.is_sandbox(), "Survival must be endless with normal car prices")
+	_check(CampaignManager.current_level_index == story_index and CampaignManager.campaign_complete == story_complete, "Survival changed story progress")
+	var survival_main = MainScene.instantiate()
+	add_child(survival_main)
+	await get_tree().process_frame
+	_check(survival_main.convoys.size() == 1 and survival_main.track.routes.size() > 0, "Survival did not spawn a train and railway")
+	survival_main.queue_free()
+	await get_tree().process_frame
+	CampaignManager.clear_challenge()
 	return true
 
 func _test_station_attackers() -> bool:

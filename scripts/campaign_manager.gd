@@ -21,6 +21,10 @@ var campaign_complete: bool = false
 var tutorial_requested: bool = false
 var active_challenge_id: String = ""
 
+## A standalone endless run uses the challenge save boundary, so entering
+## Survival from the title screen cannot mark the story campaign complete.
+const SURVIVAL := {"id":"survival", "name":"SURVIVAL", "waves":0, "currency":600, "track":-1, "trains":1, "cars":1, "shop":true, "speed":1.0, "reverse":true, "enemy":""}
+
 const CHALLENGES: Array[Dictionary] = [
 	{"id":"last_train", "name":"LAST TRAIN STANDING", "tagline":"One engine. One Gunner. No shopping.", "waves":5, "currency":0, "track":0, "special_track":"bottom_figure_eight", "trains":1, "cars":1, "shop":false, "speed":1.0, "reverse":true, "enemy":""},
 	{"id":"heavy_haul", "name":"HEAVY HAUL", "tagline":"A loaded train with a very tired engine.", "waves":5, "currency":150, "track":3, "trains":1, "cars":5, "shop":true, "speed":0.48, "reverse":true, "enemy":""},
@@ -73,6 +77,11 @@ func is_tower_unlocked(tower_index: int) -> bool:
 	return level != null and tower_index in level.unlocked_tower_indices
 
 func start_challenge(challenge_id: String) -> bool:
+	if challenge_id == "survival":
+		active_challenge_id = challenge_id
+		tutorial_requested = false
+		reset_for_current_level()
+		return true
 	for challenge in CHALLENGES:
 		if String(challenge.id) == challenge_id:
 			active_challenge_id = challenge_id
@@ -90,6 +99,8 @@ func is_challenge_active() -> bool:
 	return not active_challenge_id.is_empty()
 
 func active_challenge() -> Dictionary:
+	if active_challenge_id == "survival":
+		return SURVIVAL
 	for challenge in CHALLENGES:
 		if String(challenge.id) == active_challenge_id:
 			return challenge

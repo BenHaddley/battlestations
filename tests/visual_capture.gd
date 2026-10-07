@@ -10,9 +10,37 @@ func _ready() -> void:
 	if "--title" in arguments:
 		var title := TitleScene.instantiate()
 		add_child(title)
+		if "--tall-menu" in arguments:
+			get_window().content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
+			get_window().size = Vector2i(1000, 800)
 		for frame in range(12):
 			await get_tree().process_frame
-		# Opens the job-card list so its layout can be checked at full height.
+		if "--check-video-loop" in arguments:
+			get_viewport().set_disable_input(true)
+			var loops := [0]
+			var footage: VideoStreamPlayer = title.get_node("MenuCanvas/Footage")
+			footage.finished.connect(func() -> void: loops[0] += 1)
+			await get_tree().create_timer(23.0).timeout
+			get_viewport().set_disable_input(false)
+			if loops[0] == 0 or not footage.is_playing():
+				push_error("Background footage did not loop")
+				get_tree().quit(1)
+				return
+			print("MENU VIDEO LOOP PASS")
+		if "--hover-story" in arguments:
+			var motion := InputEventMouseMotion.new()
+			motion.position = title.start_button.get_global_rect().get_center()
+			motion.global_position = motion.position
+			get_viewport().push_input(motion)
+			for frame in range(6):
+				await get_tree().process_frame
+			if not title.start_button.is_hovered():
+				push_error("Story Mode did not receive pointer hover")
+				get_tree().quit(1)
+				return
+		if "--focus-settings" in arguments:
+			title.options_button.grab_focus()
+			await get_tree().process_frame
 		if "--challenges-modal" in arguments:
 			title._show_challenges()
 			for frame in range(6):
@@ -143,6 +171,7 @@ func _save_capture(arguments: PackedStringArray, fallback: String) -> void:
 	var flag_index := arguments.find("--capture-path")
 	if flag_index >= 0 and flag_index + 1 < arguments.size():
 		output = arguments[flag_index + 1]
+	await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png(output)
 	print("VISUAL CAPTURE: %s" % output)
 	get_tree().quit()
