@@ -6,7 +6,7 @@
 [ext_resource type="AudioStream" path="res://assets/audio/title_menu/vinyl.ogg" id="4"]
 [ext_resource type="Script" path="res://scripts/illustrated_menu_button.gd" id="5"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/letterbox.png" id="bars"]
-[ext_resource type="FontFile" path="res://assets/fonts/DkCoolCrayon.ttf" id="logo_font"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/logo.png" id="logo"]
 [ext_resource type="VideoStream" path="res://assets/video/main_menu_steam.ogv" id="footage"]
 [ext_resource type="Texture2D" path="res://assets/video/main_menu_steam_poster.jpg" id="poster"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/authored/item_1_a.png" id="1a"]
@@ -127,35 +127,16 @@ mouse_filter = 2
 texture = ExtResource("bars")
 expand_mode = 1
 
-[node name="LogoBattle" type="Label" parent="MenuCanvas"]
+[node name="Logo" type="TextureRect" parent="MenuCanvas"]
 layout_mode = 0
-offset_left = 36.0
-offset_top = 514.0
-offset_right = 371.0
-offset_bottom = 578.0
+offset_left = 16.0
+offset_top = 482.0
+offset_right = 376.0
+offset_bottom = 660.0
 mouse_filter = 2
-theme_override_fonts/font = ExtResource("logo_font")
-theme_override_font_sizes/font_size = 60
-theme_override_colors/font_color = Color(1, 0.96, 0.62, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 12
-text = "BATTLE"
-horizontal_alignment = 1
-
-[node name="LogoStations" type="Label" parent="MenuCanvas"]
-layout_mode = 0
-offset_left = 24.0
-offset_top = 580.0
-offset_right = 377.0
-offset_bottom = 662.0
-mouse_filter = 2
-theme_override_fonts/font = ExtResource("logo_font")
-theme_override_font_sizes/font_size = 63
-theme_override_colors/font_color = Color(0.55, 0.66, 0.95, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 12
-text = "STATIONS!"
-horizontal_alignment = 1
+texture = ExtResource("logo")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="StartButton" type="Button" parent="MenuCanvas"]
 layout_mode = 0

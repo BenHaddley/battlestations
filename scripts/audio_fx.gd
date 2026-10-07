@@ -53,6 +53,11 @@ func _voice_key(stream: AudioStream) -> String:
 
 ## Short procedural UI cues avoid adding provenance-sensitive placeholder files.
 func play_cue(cue: StringName) -> void:
+	if cue == &"menu_hover":
+		if not _cue_cache.has(cue):
+			_cue_cache[cue] = _rail_clack()
+		play(_cue_cache[cue], -12.0)
+		return
 	var settings: Array = {
 		&"purchase": [660.0, 0.09, -10.0],
 		&"upgrade": [880.0, 0.12, -9.0],
@@ -73,9 +78,39 @@ func _tone(frequency: float, duration: float) -> AudioStreamWAV:
 		var envelope := sin(PI * progress)
 		var sample := sin(TAU * frequency * float(frame) / SAMPLE_RATE) * envelope
 		bytes.encode_s16(frame * 2, int(sample * 16000.0))
+	return _mono_wav(bytes, SAMPLE_RATE)
+
+## Two damped steel ticks, the second softer, like wheels crossing a rail joint.
+func _rail_clack() -> AudioStreamWAV:
+	const SAMPLE_RATE := 22050
+	const JOINT_GAP := 0.032
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var samples := PackedFloat32Array()
+	samples.resize(roundi(SAMPLE_RATE * 0.075))
+	var peak := 0.0
+	for frame in range(samples.size()):
+		var t := float(frame) / SAMPLE_RATE
+		var noise := rng.randf_range(-1.0, 1.0)
+		samples[frame] = _steel_tick(t, noise) + 0.6 * _steel_tick(t - JOINT_GAP, noise)
+		peak = maxf(peak, absf(samples[frame]))
+	var bytes := PackedByteArray()
+	bytes.resize(samples.size() * 2)
+	for frame in range(samples.size()):
+		bytes.encode_s16(frame * 2, int(samples[frame] / peak * 16000.0))
+	return _mono_wav(bytes, SAMPLE_RATE)
+
+## A noise transient over two inharmonic partials that ring out in ~15 ms.
+func _steel_tick(t: float, noise: float) -> float:
+	if t < 0.0:
+		return 0.0
+	var ring := sin(TAU * 1180.0 * t) * 0.6 + sin(TAU * 2870.0 * t) * 0.4
+	return 0.55 * noise * exp(-t / 0.0015) + 0.8 * ring * exp(-t / 0.014)
+
+func _mono_wav(bytes: PackedByteArray, mix_rate: int) -> AudioStreamWAV:
 	var stream := AudioStreamWAV.new()
 	stream.format = AudioStreamWAV.FORMAT_16_BITS
-	stream.mix_rate = SAMPLE_RATE
+	stream.mix_rate = mix_rate
 	stream.stereo = false
 	stream.data = bytes
 	return stream

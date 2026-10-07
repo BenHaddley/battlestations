@@ -191,7 +191,7 @@ kept alongside them.
 
 | Scene | Current content |
 |---|---|
-| `TitleScreen.tscn` | October 2026 authored nine-panel menu, hover/focus label artwork, looping silent 1903 steam footage, Story Mode, Games & More, Survival, Sandbox, Almanac, Achievements, Profile, Settings and a Shop placeholder; Quit is in Settings |
+| `TitleScreen.tscn` | October 2026 authored nine-panel menu and logo, hover/focus label artwork with a procedural rail-joint click, looping silent 1903 steam footage, Story Mode, Games & More, Survival, Sandbox, Almanac, Achievements, Profile, Settings and a Shop placeholder; Quit is in Settings |
 | `Main.tscn` | Fitted board, generated railway, default black engine, station, spawner, and gutter HUD |
 | `Enemy.tscn` | Shared scene for nine campaign-unlocked spider archetypes, including staged dots and special behaviors |
 | `Turret.tscn` | Gunner Car — normalized art, 315-unit detection area, bullet scene |

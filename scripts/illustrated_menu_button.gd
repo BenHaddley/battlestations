@@ -16,7 +16,7 @@ func _ready() -> void:
 	resized.connect(queue_redraw)
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(queue_redraw)
-	focus_entered.connect(queue_redraw)
+	focus_entered.connect(_on_focus_entered)
 	focus_exited.connect(queue_redraw)
 	button_down.connect(queue_redraw)
 	button_up.connect(queue_redraw)
@@ -26,6 +26,14 @@ func _on_mouse_entered() -> void:
 	var focused := get_viewport().gui_get_focus_owner()
 	if focused != null and focused.get_script() == get_script():
 		focused.release_focus()
+	if not disabled:
+		AudioFX.play_cue(&"menu_hover")
+	queue_redraw()
+
+func _on_focus_entered() -> void:
+	# A click also focuses the plate; the pointer already ticked on entering it.
+	if not is_hovered():
+		AudioFX.play_cue(&"menu_hover")
 	queue_redraw()
 
 func _polygon() -> PackedVector2Array:

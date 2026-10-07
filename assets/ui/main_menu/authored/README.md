@@ -25,7 +25,7 @@ grey rectangular corners. Hover, press and keyboard focus use the B artwork.
 | 8 | Profile | Existing three profile slots |
 | 9 | Settings | Music, effects, starting speed, and quit |
 
-The archive does not include the logo shown in the mockup. Two text labels hold
-its place until the separate logo asset is supplied.
+The archive does not include the logo. The separately supplied logo is
+`../logo.png`, unedited, fitted into the space left of the frame.
 
 Background footage provenance and reproduction command: `assets/video/README.md`.
