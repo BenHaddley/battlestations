@@ -11,7 +11,7 @@ returning from gameplay restarts the same selection. A fresh launch (or Web
 page reload) makes a new pick, which may naturally be the same track.
 
 `vinyl.ogg` loops independently underneath the song. Both scene-owned players
-use the Music bus at -8 dB, follow the profile's Music volume, and stop when
+use the Music bus at -11 dB, follow the profile's Music volume, and stop when
 leaving the menu. These tracks do not enter the gameplay playlist.
 
 Runtime copies use Ogg Vorbis quality 5 at the source 48 kHz stereo format.

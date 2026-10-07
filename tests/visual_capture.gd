@@ -45,6 +45,9 @@ func _ready() -> void:
 			title._show_challenges()
 			for frame in range(6):
 				await get_tree().process_frame
+		if "--story-modal" in arguments:
+			title._on_start_pressed()
+			await get_tree().process_frame
 		_save_capture(arguments, "/tmp/battle-stations-title.png")
 		return
 	if "--spider-assault" in arguments:

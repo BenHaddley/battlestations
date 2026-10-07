@@ -15,10 +15,10 @@ grey rectangular corners. Hover, press and keyboard focus use the B artwork.
 
 | Item | Artwork label | Destination |
 | --- | --- | --- |
-| 1 | Story Mode | Existing campaign continue / new game flow |
+| 1 | Story Mode | Continue / New Game choices; Continue disabled without a save |
 | 2 | Shop | Coming soon |
 | 3 | Almanac | Existing illustrated Almanac |
-| 4 | Games & More | Challenges and level select |
+| 4 | Games & More | Challenges |
 | 5 | Survival | Standalone endless run, ordinary prices, no campaign progress changes |
 | 6 | Sandbox | Existing free-build unit sandbox |
 | 7 | Achievements | Existing profile medals |

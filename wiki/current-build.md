@@ -257,9 +257,14 @@ settled solutions.
 
 ## Title-screen music
 
+Story Mode opens Continue and New Game, with Continue disabled for a profile
+that has no campaign save. Games & More contains Challenges; the old mission
+grid is removed pending the planned story world map.
+
 The title screen chooses one of the four supplied October 2026 tracks at random
 per app launch and loops it with an independent vinyl bed. Returning from
-gameplay keeps that session's selection. Both layers follow the Music slider
+gameplay keeps that session's selection. The mix is 3 dB quieter following
+the October 8 feedback. Both layers follow the Music slider
 and stop when the menu closes. Original WAVs are archived under
 `assets/_reference/audio/title_menu/`; compact runtime copies and conversion
 notes are in [the title music folder](../assets/audio/title_menu/README.md).

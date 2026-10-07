@@ -591,6 +591,11 @@ func _test_title_feature_modals() -> bool:
 	title._show_games()
 	_check(title.modal_title.text == "GAMES & MORE" and title.get_node("ModalBlocker").visible, "games menu did not block the title buttons")
 	_check(plate.focus_mode == Control.FOCUS_NONE, "keyboard can focus menu plates behind an open modal")
+	var games_actions: Array[String] = []
+	for child in title._modal_content().get_children():
+		if child is Button and child != title._back_button():
+			games_actions.append(child.text)
+	_check(games_actions == ["CHALLENGES"], "Games & More still exposes story level selection")
 	await get_tree().process_frame
 	title._show_challenges()
 	await get_tree().process_frame
@@ -598,8 +603,31 @@ func _test_title_feature_modals() -> bool:
 	_check(title._modal_content().get_child_count() == 10, "Games & More buttons leaked into challenge jobs")
 	title.modal.hide()
 	_check(plate.focus_mode == Control.FOCUS_ALL and not title.get_node("ModalBlocker").visible, "closing a modal did not restore menu navigation")
-	title._show_level_select()
-	_check(title.modal.visible and title.modal_title.text == "LEVEL SELECT", "level-select grid did not replace its placeholder")
+	# Exercise both profile states without touching a real career (the suite
+	# redirects ProfileManager to its temporary sandbox before running).
+	var save_path := ProfileManager.profile_path(CampaignManager.SAVE_FILE)
+	var had_save := FileAccess.file_exists(save_path)
+	var saved_data := FileAccess.get_file_as_bytes(save_path) if had_save else PackedByteArray()
+	if had_save:
+		DirAccess.remove_absolute(save_path)
+	title._on_start_pressed()
+	_check(title.start_choice_modal.visible and title.continue_button.disabled, "a fresh profile should see Story Mode with Continue disabled")
+	_check(title.new_game_button.has_focus() and not title.starting, "fresh Story Mode should focus New Game without launching")
+	title._on_continue_pressed()
+	_check(not title.starting, "Continue launched a campaign without a save")
+	title._close_story_choices()
+	_check(not title.start_choice_modal.visible and plate.has_focus(), "Back did not return focus to Story Mode")
+	CampaignManager.save_progress()
+	title._on_start_pressed()
+	_check(title.start_choice_modal.visible and not title.continue_button.disabled and not title.starting, "saved careers should show choices instead of immediately launching")
+	_check(title.continue_button.has_focus(), "saved Story Mode should focus Continue")
+	title._close_story_choices()
+	if had_save:
+		var save_file := FileAccess.open(save_path, FileAccess.WRITE)
+		save_file.store_buffer(saved_data)
+		save_file.close()
+	else:
+		DirAccess.remove_absolute(save_path)
 	await get_tree().process_frame
 	title._show_options()
 	_check(title._modal_content().find_children("*", "HSlider", true, false).size() == 2, "settings modal is missing separate music and SFX sliders")

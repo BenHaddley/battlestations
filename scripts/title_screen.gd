@@ -1,7 +1,6 @@
 extends Control
 ## Authored A/B menu plates over silent archival railway footage.
 
-const StartGameDialogueScript := preload("res://scripts/start_game_dialogue.gd")
 const AlmanacPanelScript := preload("res://scripts/almanac_panel.gd")
 const TUTORIAL_SAVE_FILE := "tutorial.cfg"
 const TITLE_MUSIC_TRACKS: Array[AudioStreamOggVorbis] = [
@@ -30,7 +29,6 @@ static var _title_track_index := -1
 @onready var new_game_button: Button = $StartChoiceModal/Margin/VBox/NewGameButton
 
 var starting := false
-var start_dialogue: Control
 var almanac: AlmanacPanel
 
 func _ready() -> void:
@@ -58,15 +56,11 @@ func _ready() -> void:
 	$Modal/Margin/VBox/BackButton.pressed.connect(func() -> void: modal.hide())
 	continue_button.pressed.connect(_on_continue_pressed)
 	new_game_button.pressed.connect(_on_new_game_pressed)
-	start_dialogue = StartGameDialogueScript.new()
-	add_child(start_dialogue)
-	start_dialogue.continue_selected.connect(_on_continue_pressed)
-	start_dialogue.restart_selected.connect(_on_new_game_pressed)
-	start_dialogue.closed.connect(start_button.grab_focus)
+	$StartChoiceModal/Margin/VBox/BackButton.pressed.connect(_close_story_choices)
 	almanac = AlmanacPanelScript.new()
 	add_child(almanac)
 	almanac.closed.connect(almanac_button.grab_focus)
-	for overlay in [modal, start_choice_modal, start_dialogue, almanac]:
+	for overlay in [modal, start_choice_modal, almanac]:
 		overlay.visibility_changed.connect(_sync_menu_input)
 	if _autostart_requested():
 		call_deferred("_on_new_game_pressed")
@@ -77,7 +71,7 @@ func _layout_menu() -> void:
 	$MenuCanvas.position = (size - Vector2(1280, 720) * factor) * 0.5
 
 func _sync_menu_input() -> void:
-	var blocked := modal.visible or start_choice_modal.visible or start_dialogue.visible or almanac.visible
+	var blocked := modal.visible or start_choice_modal.visible or almanac.visible
 	$ModalBlocker.visible = blocked
 	for child in $MenuCanvas.get_children():
 		if child is Button:
@@ -85,6 +79,8 @@ func _sync_menu_input() -> void:
 			child.focus_mode = Control.FOCUS_NONE if blocked else Control.FOCUS_ALL
 	if modal.visible:
 		_back_button().grab_focus()
+	elif start_choice_modal.visible:
+		(new_game_button if continue_button.disabled else continue_button).grab_focus()
 
 func _show_shop() -> void:
 	_prepare_interactive_modal("SHOP", "Coming soon.")
@@ -93,12 +89,11 @@ func _show_shop() -> void:
 
 func _show_games() -> void:
 	_prepare_interactive_modal("GAMES & MORE", "Choose your next railway job.")
-	for entry in [["CHALLENGES", _show_challenges], ["LEVEL SELECT", _show_level_select]]:
-		var button := Button.new()
-		button.text = entry[0]
-		button.custom_minimum_size = Vector2(400, 54)
-		button.pressed.connect(entry[1])
-		_add_dynamic_before_back(button)
+	var button := Button.new()
+	button.text = "CHALLENGES"
+	button.custom_minimum_size = Vector2(400, 54)
+	button.pressed.connect(_show_challenges)
+	_add_dynamic_before_back(button)
 	_expand_modal(280.0, 200.0)
 	modal.show()
 
@@ -129,15 +124,13 @@ func _unhandled_input(event: InputEvent) -> void:
 				almanac.close()
 			get_viewport().set_input_as_handled()
 		return
-	if event.is_action_pressed("ui_accept") and not modal.visible and not start_choice_modal.visible and not start_dialogue.visible:
+	if event.is_action_pressed("ui_accept") and not modal.visible and not start_choice_modal.visible:
 		_on_start_pressed()
 	elif event.is_action_pressed("ui_cancel"):
 		if modal.visible:
 			modal.hide()
-		elif start_dialogue.visible:
-			start_dialogue.close()
 		elif start_choice_modal.visible:
-			start_choice_modal.hide()
+			_close_story_choices()
 		else:
 			_quit_game()
 
@@ -155,20 +148,22 @@ func _stop_menu_music() -> void:
 	music_player.stop()
 	vinyl_player.stop()
 
-## Start resumes the active profile's campaign immediately. Challenges never
-## participate in this path; a profile with no campaign save gets the new-game
-## choice and its character-led introduction instead.
+## Story Mode always presents both choices. The future world map belongs here;
+## until then Continue resumes the active profile and New Game replays its tutorial.
 func _on_start_pressed() -> void:
 	if starting:
 		return
+	modal.hide()
+	continue_button.disabled = not CampaignManager.has_campaign_save()
+	start_choice_modal.show()
+
+func _close_story_choices() -> void:
 	start_choice_modal.hide()
-	if CampaignManager.has_campaign_save():
-		CampaignManager.continue_saved_game()
-		_launch_game()
-	else:
-		start_dialogue.open(false)
+	start_button.grab_focus()
 
 func _on_continue_pressed() -> void:
+	if starting or not CampaignManager.has_campaign_save():
+		return
 	start_choice_modal.hide()
 	CampaignManager.continue_saved_game()
 	_launch_game()
@@ -193,36 +188,6 @@ func _launch_game() -> void:
 	starting = true
 	start_button.disabled = true
 	_stop_menu_music()
-	get_tree().change_scene_to_file("res://scenes/Main.tscn")
-
-func _show_level_select() -> void:
-	_prepare_interactive_modal("LEVEL SELECT", "Choose an unlocked mission to replay.")
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 12)
-	grid.add_theme_constant_override("v_separation", 12)
-	_mark_dynamic(grid)
-	_modal_content().add_child(grid)
-	_modal_content().move_child(grid, _back_button().get_index())
-	for index in range(CampaignManager.levels.size()):
-		var level: LevelData = CampaignManager.levels[index]
-		var unlocked := CampaignManager.campaign_complete or index <= CampaignManager.current_level_index
-		var card := Button.new()
-		card.custom_minimum_size = Vector2(280, 74)
-		card.text = "%s\n%d WAVES" % [level.level_name, level.wave_count] if unlocked else "???\nLOCKED — REACH MISSION %d" % (index + 1)
-		card.disabled = not unlocked
-		card.modulate = Color.WHITE if unlocked else Color(0.48, 0.48, 0.48, 0.72)
-		if unlocked:
-			card.pressed.connect(_launch_level.bind(index))
-		grid.add_child(card)
-	_expand_modal(330.0, 330.0)
-	modal.show()
-
-func _launch_level(index: int) -> void:
-	CampaignManager.clear_challenge()
-	CampaignManager.current_level_index = clampi(index, 0, CampaignManager.levels.size() - 1)
-	CampaignManager.tutorial_requested = false
-	CampaignManager.reset_for_current_level()
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
 
 func _show_almanac() -> void:
